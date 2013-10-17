@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<renderPass name="DiffusePass" sortMode="none" clearMode="color_depth_stenicl" clearColor="128,128,128" clearDepth="1.0" clearStencil="0">
+  <viewport name="MainViewport" src="./mainViewport.xml"/>
+  <camera name="MainCamera" src="./mainCamera.xml"/>
+  <renderTarget name="MainRenderTarget" src="./mainRenderTarget.xml"/>
+  <depthTarget name="MainDepthTarget" src="./mainDepthTarget.xml"/>
+</renderPass>

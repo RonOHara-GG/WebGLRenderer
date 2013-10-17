@@ -1,0 +1,12 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<scene>
+  <renderPass name="ShadowPass" src="./shadowPass.xml">
+    <renderObject name="pyramid" src="./pyramid.xml"/>
+  </renderPass>
+  <renderPass name="DiffusePass" src="./diffusePass.xml">
+    <renderObject name="pyramid" src="./pyramid.xml"/>
+    
+    <renderObject name="ground" src="./ground.xml"/>
+  </renderPass>
+</scene>

@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<camera name="ShadowCamera">
+  <position x="10" y="-2" z="15"/>
+  <lookAt x="0" y="0" z="3"/>
+</camera>

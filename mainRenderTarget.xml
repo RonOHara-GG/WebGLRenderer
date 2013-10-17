@@ -1,0 +1,3 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<renderTarget name="MainRenderTarget" width="1280" height="720" format="RGBA32"/>

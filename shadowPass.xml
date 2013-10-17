@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<renderPass name="ShadowPass" sortMode="none">
+  <viewport name="ShadowViewport" src="./shadowViewport.xml"/>
+  <camera name="ShadowCamera" src="./shadowCamera.xml"/>
+  <renderTarget/>
+  <depthTarget name="ShadowMap" src="./shadowMap.xml"/>
+</renderPass>
