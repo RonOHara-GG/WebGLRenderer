@@ -1,8 +1,14 @@
+function BindCamera(gl)
+{
+}
+
 function Camera(scene, name, src)
 {
 	this.scene = scene;
 	this.name = name;
 	this.src = src;
+
+	this.bind = BindCamera;
 
 	this.posX = 0;
 	this.posY = 0;

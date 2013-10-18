@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<renderobject name="pyramidMainRO" pos="0,0,0" rot="0,0,0,1">
+  <mesh name="pyrmaid" src="./pyramid.xml"></mesh>
+</renderobject>

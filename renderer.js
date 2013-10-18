@@ -7,8 +7,8 @@ function initGL(canvas)
 	try
 	{
 		gl = canvas.getContext("experimental-webgl");
-		gl.viewportWidth = canvas.width;
-		gl.viewportHeight = canvas.height;
+		gl.canvasWidth = canvas.width;
+		gl.canvasHeight = canvas.height;
 	} catch (e)
 	{
 	}
@@ -187,6 +187,13 @@ function drawScene()
 
 function webGLStart()
 {
+	window.requestAnimFrame = (function(callback) {
+        return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
+        function(callback) {
+          window.setTimeout(callback, 1000 / 60);
+        };
+      })();
+
 	TheCanvas = document.getElementById("GLCanvas");
 	initGL(TheCanvas);
 	initShaders();

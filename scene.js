@@ -8,7 +8,7 @@ function GetRenderPass(passName, src)
 	}
 
 	// Doesnt exist, load it now
-	renderPass = new RenderPass(this, passName, src);
+	var renderPass = new RenderPass(this, passName, src);
 	this.renderPasses.push(renderPass);
 	return renderPass;
 }
@@ -22,7 +22,7 @@ function GetRenderObject(objName, src)
 	}	
 
 	// Doesnt exist, load it now
-	renderObj = new RenderObject(this, objName, src);
+	var renderObj = new RenderObject(this, objName, src);
 	this.renderObjects.push(renderObj);
 	return renderObj;
 }
@@ -36,7 +36,7 @@ function GetViewport(name, src)
 	}
 
 	// Doesnt exist, load it now
-	viewport = new Viewport(this, name, src);
+	var viewport = new Viewport(this, name, src);
 	this.viewports.push(viewport);
 	return viewport;
 }
@@ -50,7 +50,7 @@ function GetCamera(name, src)
 	}
 
 	// Doesnt exist, load it now
-	camera = new Camera(this, name, src);
+	var camera = new Camera(this, name, src);
 	this.cameras.push(camera);
 	return camera;
 }
@@ -64,7 +64,7 @@ function GetRenderTarget(name, src)
 	}
 
 	// Doesnt exist, load it now
-	renderTarget = new RenderTarget(this, name, src);
+	var renderTarget = new RenderTarget(this, name, src);
 	this.renderTargets.push(renderTarget);
 	return renderTarget;
 }
@@ -78,16 +78,29 @@ function GetDepthTarget(name, src)
 	}
 
 	// Doesnt exist, load it now
-	depthTarget = new DepthTarget(this, name, src);
+	var depthTarget = new DepthTarget(this, name, src);
 	this.depthTargets.push(depthTarget);
 	return depthTarget;
 }
 
+function GetMesh(name, src)
+{
+	for( var i = 0; i < this.meshes.length; i++ )
+	{
+		if( this.meshes[i].name == name )
+			return this.meshes[i];
+	}
+
+	var mesh = new Mesh(this, name, src);
+	this.meshes.push(mesh);
+	return mesh;
+}
+
 function Draw(gl)
 {
-	for (var i = 0; i < renderPasses.length; i++)
+	for (var i = 0; i < this.renderPasses.length; i++)
 	{
-		renderPasses[i].draw(gl);
+		this.renderPasses[i].draw(gl);
 	}
 }
 
@@ -99,6 +112,7 @@ function Scene(sceneXML)
 	this.cameras = [];
 	this.renderTargets = [];
 	this.depthTargets = [];
+	this.meshes = [];
 
 	this.getRenderPass = GetRenderPass;
 	this.getRenderObject = GetRenderObject;
@@ -106,6 +120,7 @@ function Scene(sceneXML)
 	this.getCamera = GetCamera;
 	this.getRenderTarget = GetRenderTarget;
 	this.getDepthTarget = GetDepthTarget;
+	this.getMesh = GetMesh;
 	this.draw = Draw;
 
 	childNodes = sceneXML.documentElement.childNodes

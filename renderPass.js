@@ -20,10 +20,12 @@ function DoClear(gl)
 function DrawRenderPass(gl)
 {
 	// Bind render target
-	this.renderTarget.bind(gl);
+	if( this.renderTarget )
+		this.renderTarget.bind(gl);
 
 	// Bind depth target
-	this.depthTarget.bind(gl);
+	if( this.depthTarget )
+		this.depthTarget.bind(gl);
 
 	// Set viewport
 	this.viewport.bind(gl);
@@ -32,12 +34,12 @@ function DrawRenderPass(gl)
 	this.camera.bind(gl);
 
 	// Clear
-	clear(gl);
+	this.clear(gl);
 
 	// Draw objects
-	for (var i = 0; i < renderObjects.length; i++)
+	for (var i = 0; i < this.renderObjects.length; i++)
 	{
-		//renderObjects[i].draw(gl);
+		//this.renderObjects[i].draw(gl);
 	}
 }
 
@@ -82,10 +84,10 @@ function RenderPass(scene, name, src)
 		this.clearDepth = rpXML.documentElement.attributes.getNamedItem("clearDepth").value;
 		this.clearStencil = rpXML.documentElement.attributes.getNamedItem("clearStencil").value;
 		var clearColor = rpXML.documentElement.attributes.getNamedItem("clearColor").value;
-		var clearColors = clearColor.csvToArray;
-		this.clearColorRed = parseInt(clearColors[0]);
-		this.clearColorGreen = parseInt(clearColors[1]);
-		this.clearColorBlue = parseInt(clearColors[2]);
+		var clearColors = clearColor.csvToArray();
+		this.clearColorRed = parseInt(clearColors[0][0]) / 255.0;
+		this.clearColorGreen = parseInt(clearColors[0][1]) / 255.0;
+		this.clearColorBlue = parseInt(clearColors[0][2]) / 255.0;
 
 		childElements = rpXML.documentElement.childNodes;
 		for (var i = 0; i < childElements.length; i++)

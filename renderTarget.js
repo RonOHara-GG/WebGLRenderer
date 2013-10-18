@@ -1,8 +1,14 @@
+function BindRenderTarget(gl)
+{
+}
+
 function RenderTarget(scene, name, src)
 {
 	this.scene = scene;
 	this.name = name;
 	this.src = src;
+
+	this.bind = BindRenderTarget
 
 	this.width = 0;
 	this.height = 0;

@@ -1,8 +1,14 @@
+function BindDepthTarget(gl)
+{
+}
+
 function DepthTarget(scene, name, src)
 {
 	this.scene = scene;
 	this.name = name;
 	this.src = src;
+
+	this.bind = BindDepthTarget
 
 	this.width = 0;
 	this.height = 0;

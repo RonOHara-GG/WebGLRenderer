@@ -1,8 +1,26 @@
+function BindViewport(gl)
+{
+	if( this.percentageMode )
+	{
+		var tempLeft = this.left * gl.canvasWidth;
+		var tempTop = this.top * gl.canvasHeight;
+		var tempWidth = this.width * gl.canvasWidth;
+		var tempHeight = this.height * gl.canvasHeight;
+		gl.viewport(tempLeft, tempTop, tempWidth, tempHeight);
+	}
+	else
+	{
+		gl.viewport(this.left, this.top, this.width, this.height);
+	}
+}
+
 function Viewport(scene, name, src)
 {
 	this.scene = scene;
 	this.name = name;
 	this.src = src;
+
+	this.bind = BindViewport
 
 	this.left = 0;
 	this.top = 0;
