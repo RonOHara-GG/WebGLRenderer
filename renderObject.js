@@ -21,7 +21,7 @@ function RenderObject(scene, name, src)
 		{
 			if( children[i].nodeType == 1 )
 			{
-				var nodeName = chidren[i].attributes.getNamedItem("name").value;
+				var nodeName = children[i].attributes.getNamedItem("name").value;
 				var nodeSrc = children[i].attributes.getNamedItem("src").value;
 				if( children[i].nodeName == "mesh" )
 				{
