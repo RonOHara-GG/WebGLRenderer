@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
-<mesh name="pyramid">
+<mesh name="pyramid" triangleCount="6">
   <verts count="18" format="P3N3">
     <positions>
       <v3>-1,-1,0</v3><v3>1,-1,0</v3><v3>0,0,1</v3>

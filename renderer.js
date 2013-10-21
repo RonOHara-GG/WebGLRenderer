@@ -200,7 +200,8 @@ function webGLStart()
 	initBuffers();
 
 	var sceneXML = LoadXML("./scene.xml");
-	TheScene = new Scene(sceneXML);
+	TheScene = new Scene(sceneXML, gl);
+	TheScene.resize(TheCanvas.width, TheCanvas.height);
 
 	gl.clearColor(0.0, 0.0, 0.0, 1.0);
 	gl.enable(gl.DEPTH_TEST);

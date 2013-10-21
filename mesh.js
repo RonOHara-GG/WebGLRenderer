@@ -1,16 +1,52 @@
+function DrawMesh(gl)
+{
+	if (this.vb)
+	{
+		gl.bindBuffer(gl.ARRAY_BUFFER, this.vb);
+		switch (this.vertFormat)
+		{
+			case "P3N3":
+				gl.enableVertexAttribArray(0);
+				gl.enableVertexAttribArray(1);
+				gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 6*4, 0*4);
+				gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 6*4, 3*4);
+				break;
+			default:
+				alert("unsupported vertex format: " + this.vertFormat);
+				break; 
+		}
+
+		if (this.ib)
+		{
+			// Indexed draw
+			gl.drawElements(gl.TRIANGLES, this.triangleCount, gl.UNSIGNED_SHORT, 0);
+		}
+		else
+		{
+			// Non indexed draw
+			gl.drawArrays(gl.TRIANGLES, 0, this.triangleCount);
+		}
+	}
+}
+
 function Mesh(scene, name, src)
 {
 	this.scene = scene;
 	this.name = name;
 	this.src = src;
 
+	this.draw = DrawMesh;
+
 	this.vb = null;
 	this.ib = null;
+	this.triangleCount = 0;
 
 	meshXML = LoadXML(src);
 	if( meshXML )
 	{
 		//http://wiki.delphigl.com/index.php/Tutorial_WebGL_Sample
+
+		this.triangleCount = parseInt(meshXML.documentElement.attributes.getNamedItem("triangleCount"));
 
 		meshChildren = meshXML.documentElement.childNodes;
 		for (var i = 0; i < meshChildren.length; i++)
@@ -19,8 +55,8 @@ function Mesh(scene, name, src)
 			{
 				if (meshChildren[i].nodeName == "verts")
 				{
-					var vertCount = parseInt(meshChildren[i].attributes.getNamedItem("count").value);
-					var vertFormat = meshChildren[i].attributes.getNamedItem("format").value;
+					this.vertCount = parseInt(meshChildren[i].attributes.getNamedItem("count").value);
+					this.vertFormat = meshChildren[i].attributes.getNamedItem("format").value;
 
 
 					var posArray = [];
@@ -40,7 +76,7 @@ function Mesh(scene, name, src)
 									{
 										if (positions[k].nodeName == "v3")
 										{
-											var pos = new Vector3(positions[k].value);
+											var pos = new Vector3(positions[k].textContent);
 											posArray.push(pos);
 										}
 									}
@@ -55,7 +91,7 @@ function Mesh(scene, name, src)
 									{
 										if (normals[k].nodeName == "v3")
 										{
-											var nrm = new Vector3(normals[k].value);
+											var nrm = new Vector3(normals[k].textContent);
 											nrmArray.push(nrm);
 										}
 									}
@@ -65,15 +101,19 @@ function Mesh(scene, name, src)
 					}
 
 					var interleaved = [];
-					for( var j = 0; j < vertCount; j++ )
+					for( var j = 0; j < this.vertCount; j++ )
 					{
-						interleaved.push(posArray[j]);
-						interleaved.push(nrmArray[j]);
+						interleaved.push(posArray[j].x);
+						interleaved.push(posArray[j].y);
+						interleaved.push(posArray[j].z);
+						interleaved.push(nrmArray[j].x);
+						interleaved.push(nrmArray[j].y);
+						interleaved.push(nrmArray[j].z);
 					}
 
 					this.vb = scene.gl.createBuffer();
-					scene.gl.bindBuffer(gl.ARRAY_BUFFER, this.vb);
-					scene.gl.bufferData(gl.ARRAY_BUFFER, new WebGLFloatArray(interleaved), gl.STATIC_DRAW);
+					scene.gl.bindBuffer(scene.gl.ARRAY_BUFFER, this.vb);
+					scene.gl.bufferData(scene.gl.ARRAY_BUFFER, new Float32Array(interleaved), scene.gl.STATIC_DRAW);
 				}
 			}
 		}

@@ -96,6 +96,19 @@ function GetMesh(name, src)
 	return mesh;
 }
 
+function GetShader(name, src)
+{
+	for (var i = 0; i < this.shaders.length; i++)
+	{
+		if (this.shaders[i].name == name)
+			return this.shaders[i];
+	}
+
+	var shader = new Shader(this, name, src);
+	this.shaders.push(shader);
+	return shader;
+}
+
 function Draw(gl)
 {
 	for (var i = 0; i < this.renderPasses.length; i++)
@@ -104,7 +117,16 @@ function Draw(gl)
 	}
 }
 
-function Scene(sceneXML)
+function ResizeScene(width, height)
+{
+	var ar = width / height;
+	for (var i = 0; i < this.cameras.length; i++)
+	{
+		this.cameras[i].resize(ar);
+	}
+}
+
+function Scene(sceneXML, gl)
 {
 	this.renderPasses = [];
 	this.renderObjects = [];
@@ -113,6 +135,9 @@ function Scene(sceneXML)
 	this.renderTargets = [];
 	this.depthTargets = [];
 	this.meshes = [];
+	this.shaders = [];
+
+	this.gl = gl;
 
 	this.getRenderPass = GetRenderPass;
 	this.getRenderObject = GetRenderObject;
@@ -121,7 +146,9 @@ function Scene(sceneXML)
 	this.getRenderTarget = GetRenderTarget;
 	this.getDepthTarget = GetDepthTarget;
 	this.getMesh = GetMesh;
+	this.getShader = GetShader;
 	this.draw = Draw;
+	this.resize = ResizeScene;
 
 	childNodes = sceneXML.documentElement.childNodes
 	for (var i = 0; i < childNodes.length; i++)

@@ -39,7 +39,7 @@ function DrawRenderPass(gl)
 	// Draw objects
 	for (var i = 0; i < this.renderObjects.length; i++)
 	{
-		//this.renderObjects[i].draw(gl);
+		this.renderObjects[i].draw(gl);
 	}
 }
 
