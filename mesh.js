@@ -5,12 +5,16 @@ function DrawMesh(gl)
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vb);
 		switch (this.vertFormat)
 		{
-			case "P3N3":
-				gl.enableVertexAttribArray(0);
-				gl.enableVertexAttribArray(1);
-				gl.vertexAttribPointer(0, 3, gl.FLOAT, false, 6*4, 0*4);
-				gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 6*4, 3*4);
+			case "P3":
+				gl.enableVertexAttribArray(gl.shaderPositionLocation);
+				gl.vertexAttribPointer(gl.shaderPositionLocation, 3, gl.FLOAT, false, 0, 0);
 				break;
+			case "P3N3":
+				gl.enableVertexAttribArray(gl.shaderPositionLocation);
+				gl.enableVertexAttribArray(1);
+				gl.vertexAttribPointer(gl.shaderPositionLocation, 3, gl.FLOAT, false, 6 * 4, 0 * 4);
+				gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 6*4, 3*4);
+				break;				
 			default:
 				alert("unsupported vertex format: " + this.vertFormat);
 				break; 
@@ -24,7 +28,7 @@ function DrawMesh(gl)
 		else
 		{
 			// Non indexed draw
-			gl.drawArrays(gl.TRIANGLES, 0, this.triangleCount);
+			gl.drawArrays(gl.TRIANGLES, 0, this.triangleCount * 3);
 		}
 	}
 }
@@ -44,9 +48,7 @@ function Mesh(scene, name, src)
 	meshXML = LoadXML(src);
 	if( meshXML )
 	{
-		//http://wiki.delphigl.com/index.php/Tutorial_WebGL_Sample
-
-		this.triangleCount = parseInt(meshXML.documentElement.attributes.getNamedItem("triangleCount"));
+		this.triangleCount = parseInt(meshXML.documentElement.attributes.getNamedItem("triangleCount").value);
 
 		meshChildren = meshXML.documentElement.childNodes;
 		for (var i = 0; i < meshChildren.length; i++)
@@ -76,7 +78,8 @@ function Mesh(scene, name, src)
 									{
 										if (positions[k].nodeName == "v3")
 										{
-											var pos = new Vector3(positions[k].textContent);
+											var posVals = positions[k].textContent.csvToArray();
+											var pos = vec3.fromValues(posVals[0][0], posVals[0][1], posVals[0][2]);
 											posArray.push(pos);
 										}
 									}
@@ -90,8 +93,9 @@ function Mesh(scene, name, src)
 									if (normals[k].nodeType == 1)
 									{
 										if (normals[k].nodeName == "v3")
-										{
-											var nrm = new Vector3(normals[k].textContent);
+										{	
+											var vals = normals[k].textContent.csvToArray();
+											var nrm = vec3.fromValues(vals[0][0], vals[0][1], vals[0][2]);
 											nrmArray.push(nrm);
 										}
 									}
@@ -101,14 +105,27 @@ function Mesh(scene, name, src)
 					}
 
 					var interleaved = [];
-					for( var j = 0; j < this.vertCount; j++ )
+					switch (this.vertFormat)
 					{
-						interleaved.push(posArray[j].x);
-						interleaved.push(posArray[j].y);
-						interleaved.push(posArray[j].z);
-						interleaved.push(nrmArray[j].x);
-						interleaved.push(nrmArray[j].y);
-						interleaved.push(nrmArray[j].z);
+						case "P3":
+							for (var j = 0; j < this.vertCount; j++)
+							{
+								interleaved.push(posArray[j][0]);
+								interleaved.push(posArray[j][1]);
+								interleaved.push(posArray[j][2]);
+							}
+							break;
+						case "P3N3":
+							for (var j = 0; j < this.vertCount; j++)
+							{
+								interleaved.push(posArray[j][0]);
+								interleaved.push(posArray[j][1]);
+								interleaved.push(posArray[j][2]);
+								interleaved.push(nrmArray[j][0]);
+								interleaved.push(nrmArray[j][1]);
+								interleaved.push(nrmArray[j][2]);
+							}
+							break;
 					}
 
 					this.vb = scene.gl.createBuffer();

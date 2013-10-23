@@ -28,6 +28,13 @@ function CreateShaderProgram(gl, vs, fs)
 function BindShader(gl)
 {
 	gl.useProgram(this.shaderProgram);
+
+	gl.shaderPositionLocation = this.positionAttribute;
+}
+
+function SetMVP(gl, mvp)
+{
+	gl.uniformMatrix4fv(this.mvpUniform, false, mvp);
 }
 
 function Shader(scene, name, src)
@@ -37,9 +44,12 @@ function Shader(scene, name, src)
 	this.src = src;
 
 	this.bind = BindShader;
+	this.setMVP = SetMVP;
 
 	this.shaderProgram = null;
+
 	this.mvpUniform = 0;
+	this.positionAttribute = 0;
 
 	shaderXML = LoadXML(src);
 	if (shaderXML)
@@ -57,10 +67,10 @@ function Shader(scene, name, src)
 				switch (children[i].nodeName)
 				{
 					case "vertshader":
-						vertShaderSrc = LoadFile(src);
+						vertShaderSrc = LoadFile(childSrc);
 						break;
 					case "fragshader":
-						fragShaderSrc = LoadFile(src);
+						fragShaderSrc = LoadFile(childSrc);
 						break;
 				}
 			}
@@ -78,5 +88,6 @@ function Shader(scene, name, src)
 	if (this.shaderProgram)
 	{
 		this.mvpUniform = scene.gl.getUniformLocation(this.shaderProgram, "uMVPMatrix");
+		this.positionAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
 	}
 }

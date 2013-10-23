@@ -4,8 +4,10 @@ function DrawRenderObject(gl)
 	this.shader.bind(gl);
 
 	// Update shader params
-	mvp = mat4.create();
-	mat4.mul(mvp, worldMatrix, viewProj);
+	var mvp = mat4.create();
+	//mat4.mul(mvp, this.worldMatrix, gl.viewProj);
+	mat4.mul(mvp, gl.proj, this.worldMatrix);
+	this.shader.setMVP(gl, mvp);
 
 	// Draw mesh
 	if (this.mesh)
@@ -39,10 +41,10 @@ function RenderObject(scene, name, src)
 	{
 		var pos = roXML.documentElement.attributes.getNamedItem("pos").value;
 		var values = pos.csvToArray();
-		this.pos.fromValues(values[0][0], values[0][1], values[0][2]);
+		this.pos = vec3.fromValues(values[0][0], values[0][1], values[0][2]);
 		var rot = roXML.documentElement.attributes.getNamedItem("rot").value;
 		values = rot.csvToArray();
-		this.rot.fromValues(values[0][0], values[0][1], values[0][2], values[0][3]);
+		this.rot = quat.fromValues(values[0][0], values[0][1], values[0][2], values[0][3]);
 
 		var children = roXML.documentElement.childNodes;
 		for( var i = 0; i < children.length; i++ )
@@ -57,11 +59,11 @@ function RenderObject(scene, name, src)
 				}
 				else if (children[i].nodeName == "shader")
 				{
-					this.shader = scene.getShader(nodeName, src);
+					this.shader = scene.getShader(nodeName, nodeSrc);
 				}
 			}
 		}
 	}
 
-	ROUpdateWorldMatrix();
+	this.updateWorldMatrix();
 }

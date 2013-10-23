@@ -83,6 +83,8 @@ function Camera(scene, name, src)
 				case "static":
 					this.static = (attrib.value == "true");
 					break;
+				default:
+					break;
 			}
 		}
 
@@ -96,14 +98,14 @@ function Camera(scene, name, src)
 					var posX = parseFloat(children[i].attributes.getNamedItem("x").value);
 					var posY = parseFloat(children[i].attributes.getNamedItem("y").value);
 					var posZ = parseFloat(children[i].attributes.getNamedItem("z").value);
-					this.pos.fromValues(posX, posY, posZ);
+					this.pos = vec3.fromValues(posX, posY, posZ);
 				}
 				else if (children[i].nodeName == "lookAt")
 				{
 					var lookAtX = parseFloat(children[i].attributes.getNamedItem("x").value);
 					var lookAtY = parseFloat(children[i].attributes.getNamedItem("y").value);
 					var lookAtZ = parseFloat(children[i].attributes.getNamedItem("z").value);
-					this.target.fromValues(lookAtX, lookAtY, lookAtZ);
+					this.target = vec3.fromValues(lookAtX, lookAtY, lookAtZ);
 				}
 			}
 		}

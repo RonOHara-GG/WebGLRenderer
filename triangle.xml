@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<mesh name="triangle" triangleCount="1">
+  <verts count="3" format="P3">
+    <positions>
+      <v3>0.0, 1.0, 0.0,</v3>
+      <v3>-1.0, -1.0, 0.0,</v3>
+      <v3>1.0, -1.0, 0.0</v3>
+    </positions>
+  </verts>
+</mesh>
