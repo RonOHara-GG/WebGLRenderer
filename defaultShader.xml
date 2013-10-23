@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<shader name="defaultShader">
+<shader name="defaultShader" maxLights="1">
   <vertshader name="defaultVS" src="./vertShader.glsl"></vertshader>
   <fragshader name="defaultFS" src="./fragShader.glsl"></fragshader>
 </shader>

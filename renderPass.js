@@ -17,6 +17,40 @@ function DoClear(gl)
 		gl.clear(clearBits);
 }
 
+function UpdateLights()
+{
+	this.lightUpdateToken++;
+	for (var i = 0; i < this.renderObjects.length; i++)
+	{
+		if (this.renderObjects[i].shader.lightUpdateToken != this.lightUpdateToken)
+		{
+			this.renderObjects[i].shader.lightUpdateToken = this.lightUpdateToken;
+			this.renderObjects[i].shader.lightCount = 0;
+			this.renderObjects[i].shader.bind(this.scene.gl);
+			for (var j = 0; j < this.lights.length; j++)
+			{
+				this.renderObjects[i].shader.addLight(this.lights[j]);
+			}
+		}
+	}
+	this.lightsDirty = false;
+}
+
+function UpdateRenderPass(deltaTimeMS)
+{
+	if (this.lightsDirty)
+		this.updateLights();
+
+	// Update camera
+	this.camera.update(deltaTimeMS);
+
+	// Update render objects
+	for (var i = 0; i < this.renderObjects.length; i++)
+	{
+		this.renderObjects[i].update(deltaTimeMS);
+	}
+}
+
 function DrawRenderPass(gl)
 {
 	// Bind render target
@@ -31,7 +65,6 @@ function DrawRenderPass(gl)
 	this.viewport.bind(gl);
 
 	// Set camera
-	this.camera.update();
 	this.camera.bind(gl);
 
 	// Clear
@@ -47,6 +80,7 @@ function DrawRenderPass(gl)
 function RenderPass(scene, name, src)
 {
 	this.renderObjects = [];
+	this.lights = [];
 
 	this.scene = scene;
 	this.name = name;
@@ -68,8 +102,13 @@ function RenderPass(scene, name, src)
 	this.renderTarget = null;
 	this.depthTarget = null;
 
+	this.lightUpdateToken = 0;
+	this.lightsDirty = false;
+
+	this.update = UpdateRenderPass
 	this.draw = DrawRenderPass
 	this.clear = DoClear
+	this.updateLights = UpdateLights;
 
 	// Load the source
 	rpXML = LoadXML(src);

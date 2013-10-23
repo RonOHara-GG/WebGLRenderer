@@ -5,7 +5,7 @@ function BindCamera(gl)
 	mat4.mul(gl.viewProj, gl.proj, gl.view);
 }
 
-function UpdateCamera()
+function UpdateCamera(deltaTimeMS)
 {
 	// Update view matrix
 	mat4.lookAt(this.view, this.pos, this.target, this.up);

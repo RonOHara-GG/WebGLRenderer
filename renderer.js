@@ -18,10 +18,18 @@ function initGL(canvas)
 	}
 }
 
-function drawScene()
-{
-	window.requestAnimFrame(drawScene, TheCanvas);
+var lastFrameTime = 0;
 
+function runFrame()
+{
+	window.requestAnimFrame(runFrame, TheCanvas);
+	
+	var now = new Date().getTime();
+	var deltaTime = (now - lastFrameTime);
+	lastFrameTime = now;
+	document.getElementById('FPSCounter').innerHTML = deltaTime;
+
+	TheScene.update(deltaTime);
 	TheScene.draw(gl);
 }
 
@@ -44,5 +52,6 @@ function webGLStart()
 
 	gl.enable(gl.DEPTH_TEST);
 
-	drawScene();
+	lastFrameTime = new Date().getTime();
+	runFrame();
 }

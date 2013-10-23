@@ -109,6 +109,27 @@ function GetShader(name, src)
 	return shader;
 }
 
+function GetLight(name, src)
+{
+	for (var i = 0; i < this.lights.length; i++)
+	{
+		if (this.lights[i].name == name)
+			return this.lights[i];
+	}
+
+	var light = new Light(this, name, src);
+	this.lights.push(light);
+	return light;
+}
+
+function UpdateScene(deltaTimeMS)
+{
+	for (var i = 0; i < this.renderPasses.length; i++)
+	{
+		this.renderPasses[i].update(deltaTimeMS);
+	}
+}
+
 function Draw(gl)
 {
 	for (var i = 0; i < this.renderPasses.length; i++)
@@ -136,6 +157,7 @@ function Scene(sceneXML, gl)
 	this.depthTargets = [];
 	this.meshes = [];
 	this.shaders = [];
+	this.lights = [];
 
 	this.gl = gl;
 
@@ -147,7 +169,9 @@ function Scene(sceneXML, gl)
 	this.getDepthTarget = GetDepthTarget;
 	this.getMesh = GetMesh;
 	this.getShader = GetShader;
+	this.getLight = GetLight;
 	this.draw = Draw;
+	this.update = UpdateScene;
 	this.resize = ResizeScene;
 
 	childNodes = sceneXML.documentElement.childNodes
@@ -176,6 +200,17 @@ function Scene(sceneXML, gl)
 
 							// Reference this object in the render pass
 							renderPass.renderObjects.push(renderObj);
+						}
+						else if (renderObjectNodes[j].nodeName == "light")
+						{
+							objName = renderObjectNodes[j].attributes.getNamedItem("name").value;
+							objSrc = renderObjectNodes[j].attributes.getNamedItem("src").value;
+
+							// Try to find this render object if its already loaded
+							var light = this.getLight(objName, objSrc);
+
+							renderPass.lights.push(light);
+							renderPass.lightsDirty = true;
 						}
 					}
 				}

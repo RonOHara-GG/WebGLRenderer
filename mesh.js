@@ -11,9 +11,9 @@ function DrawMesh(gl)
 				break;
 			case "P3N3":
 				gl.enableVertexAttribArray(gl.shaderPositionLocation);
-				gl.enableVertexAttribArray(1);
-				gl.vertexAttribPointer(gl.shaderPositionLocation, 3, gl.FLOAT, false, 6 * 4, 0 * 4);
-				gl.vertexAttribPointer(1, 3, gl.FLOAT, false, 6*4, 3*4);
+				gl.enableVertexAttribArray(gl.shaderNormalLocation);
+				gl.vertexAttribPointer(gl.shaderPositionLocation, 3, gl.FLOAT, false, 24, 0);
+				gl.vertexAttribPointer(gl.shaderNormalLocation, 3, gl.FLOAT, false, 24, 12);
 				break;				
 			default:
 				alert("unsupported vertex format: " + this.vertFormat);
@@ -23,7 +23,8 @@ function DrawMesh(gl)
 		if (this.ib)
 		{
 			// Indexed draw
-			gl.drawElements(gl.TRIANGLES, this.triangleCount, gl.UNSIGNED_SHORT, 0);
+			gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ib);
+			gl.drawElements(gl.TRIANGLES, this.triangleCount * 3, gl.UNSIGNED_SHORT, 0);
 		}
 		else
 		{
@@ -93,7 +94,7 @@ function Mesh(scene, name, src)
 									if (normals[k].nodeType == 1)
 									{
 										if (normals[k].nodeName == "v3")
-										{	
+										{
 											var vals = normals[k].textContent.csvToArray();
 											var nrm = vec3.fromValues(vals[0][0], vals[0][1], vals[0][2]);
 											nrmArray.push(nrm);
@@ -131,6 +132,14 @@ function Mesh(scene, name, src)
 					this.vb = scene.gl.createBuffer();
 					scene.gl.bindBuffer(scene.gl.ARRAY_BUFFER, this.vb);
 					scene.gl.bufferData(scene.gl.ARRAY_BUFFER, new Float32Array(interleaved), scene.gl.STATIC_DRAW);
+				}
+				else if (meshChildren[i].nodeName == "indices")
+				{
+					var vals = meshChildren[i].textContent.csvToArray();
+
+					this.ib = scene.gl.createBuffer();
+					scene.gl.bindBuffer(scene.gl.ELEMENT_ARRAY_BUFFER, this.ib);
+					scene.gl.bufferData(scene.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vals[0]), scene.gl.STATIC_DRAW);
 				}
 			}
 		}

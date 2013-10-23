@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<mesh name="ground" triangleCount="2">
+  <verts count="4" format="P3N3">
+    <positions>
+      <v3>-10, -10, 0.0</v3>
+      <v3>-10, 10, 0.0</v3>
+      <v3>10, 10, 0.0</v3>
+      <v3>10, -10, 0.0</v3>
+    </positions>
+    <normals>
+      <v3>0, 0, 1.0</v3>
+      <v3>0, 0, 1.0</v3>
+      <v3>0, 0, 1.0</v3>
+      <v3>0, 0, 1.0</v3>
+    </normals>
+  </verts>
+  <indices>0,1,2,0,2,3</indices>
+</mesh>

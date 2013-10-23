@@ -1,6 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
-<renderPass name="ShadowPass" sortMode="none" clearMode="depth" clearColor="0,0,0" clearDepth="1.0" clearStencil="0">
+<renderPass name="ShadowPass" sortMode="none" clearMode="depth" clearDepth="1.0">
   <viewport name="ShadowViewport" src="./shadowViewport.xml"/>
   <camera name="ShadowCamera" src="./shadowCamera.xml"/>
   <depthTarget name="ShadowMap" src="./shadowMap.xml"/>

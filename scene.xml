@@ -2,10 +2,12 @@
 
 <scene>
   <renderPass name="ShadowPass" src="./shadowPass.xml">
+    <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
   </renderPass>
   <renderPass name="DiffusePass" src="./diffusePass.xml">
     <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
-    
-    <!--<renderObject name="ground" src="./ground.xml"/>-->
+    <renderObject name="ground" src="./groundRO.xml"/>
+
+    <light name="sun" src="./sunlight.xml"></light>
   </renderPass>
 </scene>
