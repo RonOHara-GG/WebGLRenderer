@@ -166,7 +166,7 @@ function Scene(sceneXML, gl)
 				{
 					if (renderObjectNodes[j].nodeType == 1)
 					{
-						if (renderObjectNodes[j].nodeName == "renderobject")
+						if (renderObjectNodes[j].nodeName == "renderObject")
 						{
 							objName = renderObjectNodes[j].attributes.getNamedItem("name").value;
 							objSrc = renderObjectNodes[j].attributes.getNamedItem("src").value;

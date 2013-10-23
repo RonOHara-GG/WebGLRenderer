@@ -5,8 +5,7 @@ function DrawRenderObject(gl)
 
 	// Update shader params
 	var mvp = mat4.create();
-	//mat4.mul(mvp, this.worldMatrix, gl.viewProj);
-	mat4.mul(mvp, gl.proj, this.worldMatrix);
+	mat4.mul(mvp, gl.viewProj, this.worldMatrix);
 	this.shader.setMVP(gl, mvp);
 
 	// Draw mesh

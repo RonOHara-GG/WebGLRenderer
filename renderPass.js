@@ -31,6 +31,7 @@ function DrawRenderPass(gl)
 	this.viewport.bind(gl);
 
 	// Set camera
+	this.camera.update();
 	this.camera.bind(gl);
 
 	// Clear

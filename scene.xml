@@ -4,8 +4,7 @@
   <renderPass name="ShadowPass" src="./shadowPass.xml">
   </renderPass>
   <renderPass name="DiffusePass" src="./diffusePass.xml">
-    <renderobject name="triangleRO" src="./triangleRO.xml"></renderobject>
-    <!--<renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"/>-->
+    <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
     
     <!--<renderObject name="ground" src="./ground.xml"/>-->
   </renderPass>

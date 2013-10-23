@@ -2,7 +2,7 @@ function BindCamera(gl)
 {
 	gl.view = this.view;
 	gl.proj = this.proj;
-	mat4.mul(gl.viewProj, gl.view, gl.proj);
+	mat4.mul(gl.viewProj, gl.proj, gl.view);
 }
 
 function UpdateCamera()
@@ -35,7 +35,7 @@ function Camera(scene, name, src)
 
 	this.pos = vec3.create();
 	this.target = vec3.create();
-	this.up = vec3.fromValues(0.0, 0.0, 1.0);
+	this.up = vec3.fromValues(0.0, 1.0, 0.0);
 	this.ortho = false;
 	this.static = false;
 	this.fov = 45;
@@ -107,6 +107,14 @@ function Camera(scene, name, src)
 					var lookAtZ = parseFloat(children[i].attributes.getNamedItem("z").value);
 					this.target = vec3.fromValues(lookAtX, lookAtY, lookAtZ);
 				}
+				else if (children[i].nodeName == "up")
+				{
+					var upX = parseFloat(children[i].attributes.getNamedItem("x").value);
+					var upY = parseFloat(children[i].attributes.getNamedItem("y").value);
+					var upZ = parseFloat(children[i].attributes.getNamedItem("z").value);
+					this.up = vec3.fromValues(upX, upY, upZ);
+				}
+
 			}
 		}
 	}
