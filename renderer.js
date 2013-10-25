@@ -46,6 +46,7 @@ function webGLStart()
 	initGL(TheCanvas);
 
 	gl.viewProj = mat4.create();
+	gl.lightUpdateToken = 0;
 	var sceneXML = LoadXML("./scene.xml");
 	TheScene = new Scene(sceneXML, gl);
 	TheScene.resize(TheCanvas.width, TheCanvas.height);

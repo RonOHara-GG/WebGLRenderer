@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<shader name="ShadowShader">
+  <vertshader name="shadowVS" src="./shadowVS.glsl"></vertshader>
+  <fragshader name="shadowFS" src="./shadowFS.glsl"></fragshader>
+</shader>

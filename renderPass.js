@@ -19,12 +19,12 @@ function DoClear(gl)
 
 function UpdateLights()
 {
-	this.lightUpdateToken++;
+	gl.lightUpdateToken++;
 	for (var i = 0; i < this.renderObjects.length; i++)
 	{
-		if (this.renderObjects[i].shader.lightUpdateToken != this.lightUpdateToken)
+		if (this.renderObjects[i].shader.lightUpdateToken != gl.lightUpdateToken)
 		{
-			this.renderObjects[i].shader.lightUpdateToken = this.lightUpdateToken;
+			this.renderObjects[i].shader.lightUpdateToken = gl.lightUpdateToken;
 			this.renderObjects[i].shader.lightCount = 0;
 			this.renderObjects[i].shader.bind(this.scene.gl);
 			for (var j = 0; j < this.lights.length; j++)
@@ -33,26 +33,13 @@ function UpdateLights()
 			}
 		}
 	}
-	this.lightsDirty = false;
-}
-
-function UpdateRenderPass(deltaTimeMS)
-{
-	if (this.lightsDirty)
-		this.updateLights();
-
-	// Update camera
-	this.camera.update(deltaTimeMS);
-
-	// Update render objects
-	for (var i = 0; i < this.renderObjects.length; i++)
-	{
-		this.renderObjects[i].update(deltaTimeMS);
-	}
 }
 
 function DrawRenderPass(gl)
 {
+	if (gl.lightsDirty)
+		this.updateLights();
+
 	// Bind render target
 	if( this.renderTarget )
 		this.renderTarget.bind(gl);
@@ -70,11 +57,18 @@ function DrawRenderPass(gl)
 	// Clear
 	this.clear(gl);
 
+	// Bind override shader
+	if( this.overrideShader )
+		this.overrideShader.bindOverride(gl);
+
 	// Draw objects
 	for (var i = 0; i < this.renderObjects.length; i++)
 	{
 		this.renderObjects[i].draw(gl);
 	}
+
+	if( this.overrideShader )
+		this.overrideShader.unbindOverride(gl);
 }
 
 function RenderPass(scene, name, src)
@@ -102,32 +96,48 @@ function RenderPass(scene, name, src)
 	this.renderTarget = null;
 	this.depthTarget = null;
 
-	this.lightUpdateToken = 0;
 	this.lightsDirty = false;
 
-	this.update = UpdateRenderPass
 	this.draw = DrawRenderPass
 	this.clear = DoClear
 	this.updateLights = UpdateLights;
+	this.overrideShader = null;
 
 	// Load the source
 	rpXML = LoadXML(src);
 	if (rpXML)
 	{
 		// Get the attribute properties
-		this.sortMode = rpXML.documentElement.attributes.getNamedItem("sortMode").value;
-		var clearMode = rpXML.documentElement.attributes.getNamedItem("clearMode").value;
-		this.clearColor = (clearMode.indexOf("color") >= 0);
-		this.clearDepth = (clearMode.indexOf("depth") >= 0);
-		this.clearStencil = (clearMode.indexOf("stencil") >= 0);
-
-		this.clearDepth = rpXML.documentElement.attributes.getNamedItem("clearDepth").value;
-		this.clearStencil = rpXML.documentElement.attributes.getNamedItem("clearStencil").value;
-		var clearColor = rpXML.documentElement.attributes.getNamedItem("clearColor").value;
-		var clearColors = clearColor.csvToArray();
-		this.clearColorRed = parseInt(clearColors[0][0]) / 255.0;
-		this.clearColorGreen = parseInt(clearColors[0][1]) / 255.0;
-		this.clearColorBlue = parseInt(clearColors[0][2]) / 255.0;
+		for( var i = 0; i < rpXML.documentElement.attributes.length; i++ )
+		{
+			var attrib = rpXML.documentElement.attributes[i];
+			switch( attrib.name )
+			{
+				case "sortMode":
+					this.sortMode = attrib.value;
+					break;
+				case "clearMode":
+					var clearMode = attrib.value;
+					this.clearColor = (clearMode.indexOf("color") >= 0);
+					this.clearDepth = (clearMode.indexOf("depth") >= 0);
+					this.clearStencil = (clearMode.indexOf("stencil") >= 0);
+					break;
+				case "clearDepth":
+					this.clearDepth = attrib.value;
+					break;
+				case "clearStencil":
+					this.clearStencil = attrib.value;
+					break;
+				case "clearColor":
+					var clearColors = attrib.value.csvToArray();
+					this.clearColorRed = parseInt(clearColors[0][0]) / 255.0;
+					this.clearColorGreen = parseInt(clearColors[0][1]) / 255.0;
+					this.clearColorBlue = parseInt(clearColors[0][2]) / 255.0;
+					break;
+				default:
+					break;
+			}
+		}
 
 		childElements = rpXML.documentElement.childNodes;
 		for (var i = 0; i < childElements.length; i++)
@@ -151,6 +161,10 @@ function RenderPass(scene, name, src)
 				else if (childElements[i].nodeName == "depthTarget")
 				{
 					this.depthTarget = scene.getDepthTarget(objName, objSrc);
+				}
+				else if (childElements[i].nodeName == "overrideShader")
+				{
+					this.overrideShader = scene.getShader(objName, objSrc);
 				}
 			}
 		}

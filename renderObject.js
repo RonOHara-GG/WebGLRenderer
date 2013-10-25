@@ -14,11 +14,11 @@ function DrawRenderObject(gl)
 	// Update shader params
 	var mvp = mat4.create();
 	mat4.mul(mvp, gl.viewProj, this.worldMatrix);
-	this.shader.setMVP(gl, mvp);
+	gl.uniformMatrix4fv(gl.uMVP, false, mvp);
 
 	var nrm = mat3.create();
 	mat3.fromMat4(nrm, this.worldMatrix);
-	this.shader.setNormalMatrix(gl, nrm);
+	gl.uniformMatrix3fv(gl.uNrmMtx, false, nrm);
 
 	// Draw mesh
 	if (this.mesh)

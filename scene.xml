@@ -1,6 +1,10 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
 <scene>
+  <updatePass name="WorldUpdate" src="./worldUpdatePass.xml">
+    <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
+    <camera name="MainCamera" src="./mainCamera.xml"/>
+  </updatePass>
   <renderPass name="ShadowPass" src="./shadowPass.xml">
     <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
   </renderPass>

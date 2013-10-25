@@ -13,6 +13,20 @@ function GetRenderPass(passName, src)
 	return renderPass;
 }
 
+function GetUpdatePass(passName, src)
+{
+	for (var i = 0; i < this.updatePasses.length; i++)
+	{
+		if (this.updatePasses[i].name == passName)
+			return this.updatePasses[i];
+	}
+
+	// Doesnt exist, load it now
+	var updatePass = new UpdatePass(this, passName, src);
+	this.updatePasses.push(updatePass);
+	return updatePass;
+}
+
 function GetRenderObject(objName, src)
 {
 	for (var i = 0; i < this.renderObjects.length; i++)
@@ -124,9 +138,9 @@ function GetLight(name, src)
 
 function UpdateScene(deltaTimeMS)
 {
-	for (var i = 0; i < this.renderPasses.length; i++)
+	for (var i = 0; i < this.updatePasses.length; i++)
 	{
-		this.renderPasses[i].update(deltaTimeMS);
+		this.updatePasses[i].update(deltaTimeMS);
 	}
 }
 
@@ -136,6 +150,8 @@ function Draw(gl)
 	{
 		this.renderPasses[i].draw(gl);
 	}
+	
+	gl.lightsDirty = false;
 }
 
 function ResizeScene(width, height)
@@ -150,6 +166,7 @@ function ResizeScene(width, height)
 function Scene(sceneXML, gl)
 {
 	this.renderPasses = [];
+	this.updatePasses = [];
 	this.renderObjects = [];
 	this.viewports = [];
 	this.cameras = [];
@@ -162,6 +179,7 @@ function Scene(sceneXML, gl)
 	this.gl = gl;
 
 	this.getRenderPass = GetRenderPass;
+	this.getUpdatePass = GetUpdatePass;
 	this.getRenderObject = GetRenderObject;
 	this.getViewport = GetViewport;
 	this.getCamera = GetCamera;
@@ -179,11 +197,16 @@ function Scene(sceneXML, gl)
 	{
 		if( childNodes[i].nodeType == 1 )
 		{
-			if (childNodes[i].nodeName == "renderPass")
+			if (childNodes[i].nodeName == "renderPass" || childNodes[i].nodeName == "updatePass")
 			{
 				var passName = childNodes[i].attributes.getNamedItem("name").value
 				var srcFile = childNodes[i].attributes.getNamedItem("src").value
-				var renderPass = this.getRenderPass(passName, srcFile)
+				
+				var thePass;
+				if (childNodes[i].nodeName == "renderPass" )
+					thePass = this.getRenderPass(passName, srcFile)
+				else
+					thePass = this.getUpdatePass(passName, srcFile);
 
 				renderObjectNodes = childNodes[i].childNodes;
 				for (var j = 0; j < renderObjectNodes.length; j++)
@@ -199,7 +222,7 @@ function Scene(sceneXML, gl)
 							var renderObj = this.getRenderObject(objName, objSrc);
 
 							// Reference this object in the render pass
-							renderPass.renderObjects.push(renderObj);
+							thePass.renderObjects.push(renderObj);
 						}
 						else if (renderObjectNodes[j].nodeName == "light")
 						{
@@ -209,8 +232,16 @@ function Scene(sceneXML, gl)
 							// Try to find this render object if its already loaded
 							var light = this.getLight(objName, objSrc);
 
-							renderPass.lights.push(light);
-							renderPass.lightsDirty = true;
+							thePass.lights.push(light);
+							gl.lightsDirty = true;
+						}
+						else if (renderObjectNodes[j].nodeName == "camera")
+						{
+							objName = renderObjectNodes[j].attributes.getNamedItem("name").value;
+							objSrc = renderObjectNodes[j].attributes.getNamedItem("src").value;
+							var cam = this.getCamera(objName, objSrc);
+
+							thePass.cameras.push(cam);
 						}
 					}
 				}

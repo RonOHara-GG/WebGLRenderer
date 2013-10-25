@@ -11,9 +11,13 @@ function DrawMesh(gl)
 				break;
 			case "P3N3":
 				gl.enableVertexAttribArray(gl.shaderPositionLocation);
-				gl.enableVertexAttribArray(gl.shaderNormalLocation);
 				gl.vertexAttribPointer(gl.shaderPositionLocation, 3, gl.FLOAT, false, 24, 0);
-				gl.vertexAttribPointer(gl.shaderNormalLocation, 3, gl.FLOAT, false, 24, 12);
+
+				if( gl.shaderNormalLocation >= 0 )
+				{
+					gl.enableVertexAttribArray(gl.shaderNormalLocation);
+					gl.vertexAttribPointer(gl.shaderNormalLocation, 3, gl.FLOAT, false, 24, 12);
+				}
 				break;				
 			default:
 				alert("unsupported vertex format: " + this.vertFormat);

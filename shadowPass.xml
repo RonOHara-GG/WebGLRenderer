@@ -4,4 +4,5 @@
   <viewport name="ShadowViewport" src="./shadowViewport.xml"/>
   <camera name="ShadowCamera" src="./shadowCamera.xml"/>
   <depthTarget name="ShadowMap" src="./shadowMap.xml"/>
+  <overrideShader name="ShadowShader" src="./shadowShader.xml"/>
 </renderPass>

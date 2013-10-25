@@ -27,20 +27,28 @@ function CreateShaderProgram(gl, vs, fs)
 
 function BindShader(gl)
 {
-	gl.useProgram(this.shaderProgram);
+	if( !gl.overrideShader )
+	{
+		gl.useProgram(this.shaderProgram);
 
-	gl.shaderPositionLocation = this.positionAttribute;
-	gl.shaderNormalLocation = this.normalAttribute;
+		gl.shaderPositionLocation = this.positionAttribute;
+		gl.shaderNormalLocation = this.normalAttribute;
+
+		gl.uMVP = this.mvpUniform;
+		gl.uNrmMtx = this.normalUniform;
+	}
 }
 
-function SetMVP(gl, mvp)
+function BindOverrideShader(gl)
 {
-	gl.uniformMatrix4fv(this.mvpUniform, false, mvp);
+	this.unbindOverride(gl);
+	this.bind(gl);
+	gl.overrideShader = this;
 }
 
-function SetNormalMatrix(gl, mtx)
+function UnbindOverrideShader(gl)
 {
-	gl.uniformMatrix3fv(this.normalUniform, false, mtx);
+	gl.overrideShader = null;
 }
 
 function AddLight(light)
@@ -60,8 +68,8 @@ function Shader(scene, name, src)
 	this.src = src;
 
 	this.bind = BindShader;
-	this.setMVP = SetMVP;
-	this.setNormalMatrix = SetNormalMatrix;
+	this.bindOverride = BindOverrideShader
+	this.unbindOverride = UnbindOverrideShader
 	this.addLight = AddLight;
 	this.createShader = CreateShader;
 	this.createShaderProgram = CreateShaderProgram;

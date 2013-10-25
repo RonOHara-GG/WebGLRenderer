@@ -13,13 +13,16 @@ function UpdateCamera(deltaTimeMS)
 
 function ResizeCamera(aspectRatio)
 {
-	if (this.ortho)
+	if( !this.static )
 	{
-		mat4.ortho(this.proj, this.left, this.right, this.bottom, this.top, this.near, this.far);
-	}
-	else
-	{
-		mat4.perspective(this.proj, this.fov, aspectRatio, this.near, this.far);
+		if (this.ortho)
+		{
+			mat4.ortho(this.proj, this.left, this.right, this.bottom, this.top, this.near, this.far);
+		}
+		else
+		{
+			mat4.perspective(this.proj, this.fov, aspectRatio, this.near, this.far);
+		}
 	}
 }
 
@@ -47,6 +50,8 @@ function Camera(scene, name, src)
 	this.right = 0;
 	this.top = 0;
 	this.bottom = 0;
+	this.shadowLight = null;
+	this.shadowDistance = 100;
 
 	cameraXML = LoadXML(src);
 	if (cameraXML)
@@ -83,6 +88,9 @@ function Camera(scene, name, src)
 				case "static":
 					this.static = (attrib.value == "true");
 					break;
+				case "shadowDistance":
+					this.shadowDistance = parseFloat(attrib.value);
+					break;
 				default:
 					break;
 			}
@@ -114,8 +122,26 @@ function Camera(scene, name, src)
 					var upZ = parseFloat(children[i].attributes.getNamedItem("z").value);
 					this.up = vec3.fromValues(upX, upY, upZ);
 				}
-
+				else if (children[i].nodeName == "shadowLight")
+				{
+					this.shadowLight = scene.getLight(children[i].attributes.getNamedItem("name").value, children[i].attributes.getNamedItem("src").value);
+				}
 			}
+		}
+	}
+
+
+	if( this.shadowLight )
+	{
+		switch( this.shadowLight.type )
+		{
+			case "dir":
+				var temp = vec3.create();
+				vec3.scale(temp, this.shadowLight.dir, -this.shadowDistance);
+				vec3.add(this.pos, this.target, temp);
+				break;
+			default:
+				break;
 		}
 	}
 }
