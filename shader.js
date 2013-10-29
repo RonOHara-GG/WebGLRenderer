@@ -33,9 +33,12 @@ function BindShader(gl)
 
 		gl.shaderPositionLocation = this.positionAttribute;
 		gl.shaderNormalLocation = this.normalAttribute;
+		gl.shaderUVLocattion = this.uvAttribute;
 
 		gl.uMVP = this.mvpUniform;
 		gl.uNrmMtx = this.normalUniform;
+		gl.uWorldMtx = this.worldUniform;
+		gl.uShadowMtx = this.shadowMtxUniform;
 	}
 }
 
@@ -78,14 +81,19 @@ function Shader(scene, name, src)
 
 	this.mvpUniform = 0;
 	this.normalUniform = 0;
+	this.worldUniform = 0;
+	this.shadowMtxUniform = 0;
 	this.positionAttribute = 0;
 	this.normalAttribute = 0;
+	this.uvAttribute = 0;
 	this.lightDirs = [];
 	this.lightCols = [];
 
 	this.lightCount = 0;
 	this.maxLights = 0;
 	this.lightUpdateToken = 0;
+
+	this.textureCount = 0;
 
 	shaderXML = LoadXML(src);
 	if (shaderXML)
@@ -98,6 +106,8 @@ function Shader(scene, name, src)
 				case "maxLights":
 					this.maxLights = parseInt(attrib.value);
 					break;
+				case "textureCount":
+					this.textureCount = parseInt(attrib.value);
 				default:
 					break;
 			}
@@ -138,9 +148,18 @@ function Shader(scene, name, src)
 	if (this.shaderProgram)
 	{
 		this.mvpUniform = scene.gl.getUniformLocation(this.shaderProgram, "uMVPMatrix");
+		this.worldUniform = scene.gl.getUniformLocation(this.shaderProgram, "uWorldMatrix");
 		this.normalUniform = scene.gl.getUniformLocation(this.shaderProgram, "uNormalMatrix");
+		this.shadowMtxUniform = scene.gl.getUniformLocation(this.shaderProgram, "uShadowMatrix");
 		this.positionAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
 		this.normalAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexNormal");
+		this.uvAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexUV");
+
+		for (var i = 0; i < this.textureCount; i++ )
+		{
+			var texSampler = scene.gl.getUniformLocation(this.shaderProgram, "texture" + i);
+			gl.uniform1i(texSampler, i);
+		}	
 
 		for (var i = 0; i < this.maxLights; i++)
 		{

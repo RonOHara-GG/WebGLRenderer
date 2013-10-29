@@ -9,6 +9,8 @@ function initGL(canvas)
 		gl = canvas.getContext("experimental-webgl");
 		gl.canvasWidth = canvas.width;
 		gl.canvasHeight = canvas.height;
+		
+		gl.depthTextureExt = gl.getExtension("WEBKIT_WEBGL_depth_texture");
 	} catch (e)
 	{
 	}

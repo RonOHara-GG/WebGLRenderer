@@ -3,10 +3,13 @@ function Light(scene, name, src)
 	this.scene = scene;
 	this.name = name;
 	this.src = src;
-
+	
 	this.type = "dir";
 	this.color = vec3.fromValues(1.0, 1.0, 1.0);
 	this.dir = vec3.create();
+
+	this.shadowMatrix = mat4.create();
+	this.shadowMap = null;
 
 	var xml = LoadXML(src);
 	if (xml)

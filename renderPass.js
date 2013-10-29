@@ -41,12 +41,10 @@ function DrawRenderPass(gl)
 		this.updateLights();
 
 	// Bind render target
-	if( this.renderTarget )
-		this.renderTarget.bind(gl);
-
-	// Bind depth target
-	if( this.depthTarget )
-		this.depthTarget.bind(gl);
+	if( this.frameBuffer )
+		this.frameBuffer.bind(gl);
+	else
+		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
 	// Set viewport
 	this.viewport.bind(gl);
@@ -56,7 +54,7 @@ function DrawRenderPass(gl)
 
 	// Clear
 	this.clear(gl);
-
+	
 	// Bind override shader
 	if( this.overrideShader )
 		this.overrideShader.bindOverride(gl);
@@ -93,8 +91,7 @@ function RenderPass(scene, name, src)
 
 	this.viewport = null;
 	this.camera = null;
-	this.renderTarget = null;
-	this.depthTarget = null;
+	this.frameBuffer = null;
 
 	this.lightsDirty = false;
 
@@ -154,13 +151,9 @@ function RenderPass(scene, name, src)
 				{
 					this.camera = scene.getCamera(objName, objSrc);
 				}
-				else if (childElements[i].nodeName == "renderTarget")
+				else if (childElements[i].nodeName == "frameBuffer")
 				{
-					this.renderTarget = scene.getRenderTarget(objName, objSrc);
-				}
-				else if (childElements[i].nodeName == "depthTarget")
-				{
-					this.depthTarget = scene.getDepthTarget(objName, objSrc);
+					this.frameBuffer = scene.getFrameBuffer(objName, objSrc);
 				}
 				else if (childElements[i].nodeName == "overrideShader")
 				{

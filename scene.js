@@ -69,32 +69,21 @@ function GetCamera(name, src)
 	return camera;
 }
 
-function GetRenderTarget(name, src)
+function GetFrameBuffer(name, src)
 {
-	for (var i = 0; i < this.renderTargets.length; i++)
+	for (var i = 0; i < this.frameBuffers.length; i++)
 	{
-		if( this.renderTargets[i].name == name )
-			return this.renderTargets[i];
+		if( this.frameBuffers[i].name == name )
+			return this.frameBuffers[i];
 	}
 
-	// Doesnt exist, load it now
-	var renderTarget = new RenderTarget(this, name, src);
-	this.renderTargets.push(renderTarget);
-	return renderTarget;
-}
-
-function GetDepthTarget(name, src)
-{
-	for (var i = 0; i < this.depthTargets.length; i++)
+	if( src )
 	{
-		if( this.depthTargets[i].name == name )
-			return this.depthTargets[i];
+		// Doesnt exist, load it now
+		var frameBuffer = new FrameBuffer(this, name, src);
+		this.frameBuffers.push(frameBuffer);
+		return frameBuffer;
 	}
-
-	// Doesnt exist, load it now
-	var depthTarget = new DepthTarget(this, name, src);
-	this.depthTargets.push(depthTarget);
-	return depthTarget;
 }
 
 function GetMesh(name, src)
@@ -136,6 +125,19 @@ function GetLight(name, src)
 	return light;
 }
 
+function GetTexture(name, src)
+{
+	for (var i = 0; i < this.textures.length; i++)
+	{
+		if (this.textures[i].name == name)
+			return this.textures[i];
+	}
+
+	var tex = new Texture(this, name, src);
+	this.textures.push(tex);
+	return tex;
+}
+
 function UpdateScene(deltaTimeMS)
 {
 	for (var i = 0; i < this.updatePasses.length; i++)
@@ -170,11 +172,11 @@ function Scene(sceneXML, gl)
 	this.renderObjects = [];
 	this.viewports = [];
 	this.cameras = [];
-	this.renderTargets = [];
-	this.depthTargets = [];
+	this.frameBuffers = [];
 	this.meshes = [];
 	this.shaders = [];
 	this.lights = [];
+	this.textures = [];
 
 	this.gl = gl;
 
@@ -183,11 +185,11 @@ function Scene(sceneXML, gl)
 	this.getRenderObject = GetRenderObject;
 	this.getViewport = GetViewport;
 	this.getCamera = GetCamera;
-	this.getRenderTarget = GetRenderTarget;
-	this.getDepthTarget = GetDepthTarget;
+	this.getFrameBuffer = GetFrameBuffer;
 	this.getMesh = GetMesh;
 	this.getShader = GetShader;
 	this.getLight = GetLight;
+	this.getTexture = GetTexture;
 	this.draw = Draw;
 	this.update = UpdateScene;
 	this.resize = ResizeScene;

@@ -3,4 +3,7 @@
 <renderobject name="groundRO" pos="0,0,0" rot="0,0,0,1">
   <shader name="defaultShader" src="./defaultShader.xml"></shader>
   <mesh name="ground" src="./ground.xml"></mesh>
+  <texture name="ShadowMap" src="frameBuffer" depthTexture="true" texIndex="0"/>
+  <!--<texture name="BluePlus" src="./blueplus.jpg" texIndex="0"/>-->
+  <shadowCamera name="ShadowCamera" src="./shadowCamera.xml"/>
 </renderobject>

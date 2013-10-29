@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<shader name="spriteShader" maxLights="0" textureCount="0">
+  <vertshader name="spriteVS" src="./spriteVS.glsl"></vertshader>
+  <fragshader name="spriteFS" src="./spriteFS.glsl"></fragshader>
+</shader>

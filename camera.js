@@ -8,21 +8,38 @@ function BindCamera(gl)
 function UpdateCamera(deltaTimeMS)
 {
 	// Update view matrix
-	mat4.lookAt(this.view, this.pos, this.target, this.up);
+	if( !this.identityView )
+		mat4.lookAt(this.view, this.pos, this.target, this.up);
+	else
+		mat4.identity(this.view);
+
+	if( this.shadowCamera )
+	{
+		var depthScaleMtx = mat4.create();
+		depthScaleMtx[0] = depthScaleMtx[5] = depthScaleMtx[10] = depthScaleMtx[12] = depthScaleMtx[13] = depthScaleMtx[14] = 0.5;
+		this.shadowMatrix = mat4.create();
+		mat4.mul(this.shadowMatrix, this.proj, this.view);
+		mat4.mul(this.shadowMatrix, depthScaleMtx, this.shadowMatrix);
+	}
+}
+
+function BuildProjectionMatrix(aspectRatio)
+{
+	if (this.ortho)
+	{
+		mat4.ortho(this.proj, this.left, this.right, this.bottom, this.top, this.near, this.far);
+	}
+	else
+	{
+		mat4.perspective(this.proj, this.fov, aspectRatio, this.near, this.far);
+	}
 }
 
 function ResizeCamera(aspectRatio)
 {
 	if( !this.static )
 	{
-		if (this.ortho)
-		{
-			mat4.ortho(this.proj, this.left, this.right, this.bottom, this.top, this.near, this.far);
-		}
-		else
-		{
-			mat4.perspective(this.proj, this.fov, aspectRatio, this.near, this.far);
-		}
+		this.buildProj(aspectRatio);
 	}
 }
 
@@ -35,6 +52,7 @@ function Camera(scene, name, src)
 	this.bind = BindCamera;
 	this.update = UpdateCamera;
 	this.resize = ResizeCamera;
+	this.buildProj = BuildProjectionMatrix;
 
 	this.pos = vec3.create();
 	this.target = vec3.create();
@@ -52,6 +70,9 @@ function Camera(scene, name, src)
 	this.bottom = 0;
 	this.shadowLight = null;
 	this.shadowDistance = 100;
+	this.identityView = false;
+	this.shadowCamera = false;
+	this.shadowMatrix = null;
 
 	cameraXML = LoadXML(src);
 	if (cameraXML)
@@ -91,6 +112,8 @@ function Camera(scene, name, src)
 				case "shadowDistance":
 					this.shadowDistance = parseFloat(attrib.value);
 					break;
+				case "identityView":
+					this.identityView = (attrib.value === "true");
 				default:
 					break;
 			}
@@ -133,6 +156,7 @@ function Camera(scene, name, src)
 
 	if( this.shadowLight )
 	{
+		this.shadowCamera = true;
 		switch( this.shadowLight.type )
 		{
 			case "dir":
@@ -144,4 +168,7 @@ function Camera(scene, name, src)
 				break;
 		}
 	}
+
+	if( this.static )
+		this.buildProj(1);
 }

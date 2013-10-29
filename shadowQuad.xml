@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<renderobject name="shadowQuad" pos="0,0,0" rot="0,0,0,1" scale="256,256,0">
+  <shader name="spriteShader" src="./spriteShader.xml"></shader>
+  <mesh name="sprite" src="./sprite.xml"></mesh>
+  <texture name="ShadowMap" src="frameBuffer" depthTexture="true" texIndex="0"/>
+</renderobject>

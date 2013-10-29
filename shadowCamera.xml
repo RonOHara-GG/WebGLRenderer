@@ -1,7 +1,8 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 
-<camera name="ShadowCamera" ortho="true" near="1" far="1000" static="true" shadowDistance="100">
+<camera name="ShadowCamera" ortho="false" near="1" far="1000" static="true" shadowDistance="10">
   <position x="10" y="-2" z="15"/>
   <lookAt x="0" y="0" z="0"/>
+  <up x="0" y="0" z="1"/>
   <shadowLight name="sun" src="./sunlight.xml"/>
 </camera>

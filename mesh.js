@@ -18,7 +18,17 @@ function DrawMesh(gl)
 					gl.enableVertexAttribArray(gl.shaderNormalLocation);
 					gl.vertexAttribPointer(gl.shaderNormalLocation, 3, gl.FLOAT, false, 24, 12);
 				}
-				break;				
+				break;
+			case "P3T2":
+				gl.enableVertexAttribArray(gl.shaderPositionLocation);
+				gl.vertexAttribPointer(gl.shaderPositionLocation, 3, gl.FLOAT, false, 20, 0);
+
+				if( gl.shaderUVLocattion >= 0 )
+				{
+					gl.enableVertexAttribArray(gl.shaderUVLocattion);
+					gl.vertexAttribPointer(gl.shaderUVLocattion, 2, gl.FLOAT, false, 20, 12);
+				}
+				break;
 			default:
 				alert("unsupported vertex format: " + this.vertFormat);
 				break; 
@@ -68,6 +78,7 @@ function Mesh(scene, name, src)
 
 					var posArray = [];
 					var nrmArray = [];
+					var uvArray = [];
 
 					vertPieces = meshChildren[i].childNodes;
 					for (var j = 0; j < vertPieces.length; j++)
@@ -76,7 +87,7 @@ function Mesh(scene, name, src)
 						{
 							if (vertPieces[j].nodeName == "positions")
 							{
-								positions = vertPieces[j].childNodes;
+								var positions = vertPieces[j].childNodes;
 								for (var k = 0; k < positions.length; k++)
 								{
 									if (positions[k].nodeType == 1)
@@ -92,7 +103,7 @@ function Mesh(scene, name, src)
 							}
 							else if (vertPieces[j].nodeName == "normals")
 							{
-								normals = vertPieces[j].childNodes;
+								var normals = vertPieces[j].childNodes;
 								for (var k = 0; k < normals.length; k++)
 								{
 									if (normals[k].nodeType == 1)
@@ -102,6 +113,22 @@ function Mesh(scene, name, src)
 											var vals = normals[k].textContent.csvToArray();
 											var nrm = vec3.fromValues(vals[0][0], vals[0][1], vals[0][2]);
 											nrmArray.push(nrm);
+										}
+									}
+								}
+							}
+							else if (vertPieces[j].nodeName == "texcoords")
+							{
+								var uvs = vertPieces[j].childNodes;
+								for (var k = 0; k < uvs.length; k++)
+								{
+									if (uvs[k].nodeType == 1)
+									{
+										if (uvs[k].nodeName == "v2")
+										{
+											var vals = uvs[k].textContent.csvToArray();
+											var uv = vec2.fromValues(vals[0][0], vals[0][1]);
+											uvArray.push(uv);
 										}
 									}
 								}
@@ -130,6 +157,19 @@ function Mesh(scene, name, src)
 								interleaved.push(nrmArray[j][1]);
 								interleaved.push(nrmArray[j][2]);
 							}
+							break;
+						case "P3T2":
+							for (var j = 0; j < this.vertCount; j++)
+							{
+								interleaved.push(posArray[j][0]);
+								interleaved.push(posArray[j][1]);
+								interleaved.push(posArray[j][2]);
+								interleaved.push(uvArray[j][0]);
+								interleaved.push(uvArray[j][1]);
+							}
+							break;
+						default:
+							alert("unsupported vertex format: " + this.vertFormat);
 							break;
 					}
 

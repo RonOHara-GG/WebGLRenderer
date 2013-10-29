@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<renderobject name="pyramidMainRO" pos="0,0,3" rot="0,0,0,1" update="UpdatePyramid">
+<renderobject name="pyramidMainRO" pos="0,0,1.5" rot="0,0,0,1" update="UpdatePyramid">
   <shader name="defaultShader" src="./defaultShader.xml"></shader>
   <mesh name="pyrmaid" src="./pyramid.xml"></mesh>
+  <texture name="ShadowMap" src="frameBuffer" depthTexture="true" texIndex="0"/>
+  <!--<texture name="BluePlus" src="./blueplus.jpg" texIndex="0"/>-->
+  <shadowCamera name="ShadowCamera" src="./shadowCamera.xml"/>
 </renderobject>

@@ -1,0 +1,3 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<camera name="2DCamera" ortho="true" near="0.1" far="100.0" static="false" left="0" right="1024" top="0" bottom="768" identityView="true"/>
