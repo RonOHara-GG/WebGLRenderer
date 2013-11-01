@@ -134,7 +134,7 @@ namespace WebGLEditor
         void Draw(GLContext gl)
         {
 	        // Bind shader
-	        this.shader.Bind();
+	        this.shader.Bind(gl);
 
 	        // Update shader params
 	        if( gl.uMVP )
@@ -163,7 +163,7 @@ namespace WebGLEditor
 	        {
 		        if( this.textures[i] != null )
 		        {
-			        this.textures[i].bind(gl, i);
+			        this.textures[i].Bind(i);
 		        }
 	        }
 

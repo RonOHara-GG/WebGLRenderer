@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
+using System.IO;
 
 namespace WebGLEditor
 {
@@ -19,6 +20,23 @@ namespace WebGLEditor
             Application.SetCompatibleTextRenderingDefault(false);
             TheForm = new Form1();
             Application.Run(TheForm);
+        }
+
+        public static string LoadTextFile(string filePath)
+        {
+            string fileData = null;
+            try
+            {
+                StreamReader sr = new StreamReader(File.OpenRead(filePath));
+                fileData = sr.ReadToEnd();
+                sr.Close();
+            }
+            catch (Exception)
+            {
+                fileData = null;
+            }
+
+            return fileData;
         }
     }
 }

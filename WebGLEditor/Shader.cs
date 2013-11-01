@@ -10,6 +10,8 @@ namespace WebGLEditor
 {
     public class Shader : Asset
     {
+        public int shaderProgram = 0;
+
         public int mvpUniform = 0;
         public int normalUniform = 0;
         public int worldUniform = 0;
@@ -33,8 +35,6 @@ namespace WebGLEditor
         {
             lightDirs = new List<int>();
             lightCols = new List<int>();
-
-	        this.shaderProgram = null;
             
             try
 	        {
@@ -49,6 +49,7 @@ namespace WebGLEditor
 					        break;
 				        case "textureCount":
 					        this.textureCount = Convert.ToInt32(attrib.Value);
+                            break;
 				        default:
 					        break;
 			        }
@@ -58,31 +59,30 @@ namespace WebGLEditor
 		        string vertShaderSrc = null;
 		        string fragShaderSrc = null;
 
-		        var children = shaderXML.documentElement.childNodes;
-		        for (var i = 0; i < children.length; i++)
+                foreach( XmlNode child in shaderXML.DocumentElement.ChildNodes)
 		        {
-			        if (children[i].nodeType == 1)
+			        if (child.NodeType == XmlNodeType.Element)
 			        {
-				        var childName = children[i].attributes.getNamedItem("name").value;
-				        var childSrc = children[i].attributes.getNamedItem("src").value;
-				        switch (children[i].nodeName)
+				        string childName = child.Attributes.GetNamedItem("name").Value;
+				        string childSrc = child.Attributes.GetNamedItem("src").Value;
+				        switch (child.Name)
 				        {
 					        case "vertshader":
-						        vertShaderSrc = LoadFile(childSrc);
+						        vertShaderSrc = Program.LoadTextFile(childSrc);
 						        break;
 					        case "fragshader":
-						        fragShaderSrc = LoadFile(childSrc);
+						        fragShaderSrc = Program.LoadTextFile(childSrc);
 						        break;
 				        }
 			        }
 		        }
 
-		        var vs = this.createShader(scene.gl, scene.gl.VERTEX_SHADER, vertShaderSrc);
-		        var fs = this.createShader(scene.gl, scene.gl.FRAGMENT_SHADER, fragShaderSrc);
+		        int vs = CreateShader(ShaderType.VertexShader, vertShaderSrc);
+		        int fs = CreateShader(ShaderType.FragmentShader, fragShaderSrc);
 
-		        if (vs && fs)
+		        if (vs > 0 && fs > 0)
 		        {
-			        this.shaderProgram = this.createShaderProgram(scene.gl, vs, fs);
+			        this.shaderProgram = CreateShaderProgram(vs, fs);
 		        }
 	        }
             catch(Exception)
@@ -90,65 +90,74 @@ namespace WebGLEditor
                 System.Windows.Forms.MessageBox.Show("Failed to load shader: " + src);
             }
 
-	        if (this.shaderProgram)
+	        if (this.shaderProgram > 0)
 	        {
-		        this.mvpUniform = scene.gl.getUniformLocation(this.shaderProgram, "uMVPMatrix");
-		        this.worldUniform = scene.gl.getUniformLocation(this.shaderProgram, "uWorldMatrix");
-		        this.normalUniform = scene.gl.getUniformLocation(this.shaderProgram, "uNormalMatrix");
-		        this.shadowMtxUniform = scene.gl.getUniformLocation(this.shaderProgram, "uShadowMatrix");
-		        this.positionAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
-		        this.normalAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexNormal");
-		        this.uvAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexUV");
+		        this.mvpUniform = GL.GetUniformLocation(this.shaderProgram, "uMVPMatrix");
+		        this.worldUniform = GL.GetUniformLocation(this.shaderProgram, "uWorldMatrix");
+		        this.normalUniform = GL.GetUniformLocation(this.shaderProgram, "uNormalMatrix");
+		        this.shadowMtxUniform = GL.GetUniformLocation(this.shaderProgram, "uShadowMatrix");
+		        this.positionAttribute = GL.GetAttribLocation(this.shaderProgram, "aVertexPosition");
+		        this.normalAttribute = GL.GetAttribLocation(this.shaderProgram, "aVertexNormal");
+		        this.uvAttribute = GL.GetAttribLocation(this.shaderProgram, "aVertexUV");
 
 		        for (var i = 0; i < this.textureCount; i++ )
 		        {
-			        var texSampler = scene.gl.getUniformLocation(this.shaderProgram, "texture" + i);
-			        gl.uniform1i(texSampler, i);
+			        int texSampler = GL.GetUniformLocation(this.shaderProgram, "texture" + i);
+                    GL.Uniform1(texSampler, i);
 		        }	
 
 		        for (var i = 0; i < this.maxLights; i++)
 		        {
-			        var lightDir = scene.gl.getUniformLocation(this.shaderProgram, "uLightDir" + i);
-			        var lightCol = scene.gl.getUniformLocation(this.shaderProgram, "uLightColor" + i);
+			        int lightDir = GL.GetUniformLocation(this.shaderProgram, "uLightDir" + i);
+			        int lightCol = GL.GetUniformLocation(this.shaderProgram, "uLightColor" + i);
 
-			        this.lightDirs.push(lightDir);
-			        this.lightCols.push(lightCol);
+			        this.lightDirs.Add(lightDir);
+			        this.lightCols.Add(lightCol);
 		        }
 	        }
         }
 
-        function CreateShader(gl, type, src)
-        {
-	        var shader = gl.createShader(type);
-	        gl.shaderSource(shader, src);
-	        gl.compileShader(shader);
-	        if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
-	        {
-		        alert("shader compile error(" + this.name + "): " + gl.getShaderInfoLog(shader));
-		        return null;
-	        }
-	        return shader;
+        int CreateShader(ShaderType type, string src)
+        {            
+            int shader = GL.CreateShader(type);
+            GL.ShaderSource(shader, src);
+            GL.CompileShader(shader);
+
+            int compileResult;
+            GL.GetShader(shader, ShaderParameter.CompileStatus, out compileResult);
+            if( compileResult != 1 )
+            {
+                System.Windows.Forms.MessageBox.Show("shader compile error(" + name + "): " + GL.GetShaderInfoLog(shader));
+                GL.DeleteShader(shader);
+                shader = 0;
+            }
+
+            return shader;
         }
 
-        function CreateShaderProgram(gl, vs, fs)
+        int CreateShaderProgram(int vs, int fs)
         {
-	        var shaderProgram = gl.createProgram();
-	        gl.attachShader(shaderProgram, vs);
-	        gl.attachShader(shaderProgram, fs);
-	        gl.linkProgram(shaderProgram);
-	        if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS))
-	        {
-		        alert("Failed to create shader program: " + this.name);
-		        return null;
-	        }
-	        return shaderProgram;
+            int prg = GL.CreateProgram();
+            GL.AttachShader(prg, vs);
+            GL.AttachShader(prg, fs);
+            GL.LinkProgram(prg);
+            int linkStatus;
+            GL.GetProgram(prg, ProgramParameter.LinkStatus, out linkStatus);
+            if( linkStatus != 1 )
+            {
+                System.Windows.Forms.MessageBox.Show("Failed to create shader program: " + this.name);
+                GL.DeleteProgram(prg);
+                prg = 0;
+            }
+
+            return prg;
         }
 
-        function BindShader(gl)
+        public void Bind(GLContext gl)
         {
-	        if( !gl.overrideShader )
+	        if( gl.overrideShader <= 0)
 	        {
-		        gl.useProgram(this.shaderProgram);
+                GL.UseProgram(shaderProgram);
 
 		        gl.shaderPositionLocation = this.positionAttribute;
 		        gl.shaderNormalLocation = this.normalAttribute;
@@ -161,24 +170,24 @@ namespace WebGLEditor
 	        }
         }
 
-        function BindOverrideShader(gl)
+        public void BindOverride(GLContext gl)
         {
-	        this.unbindOverride(gl);
-	        this.bind(gl);
+	        this.UnbindOverride(gl);
+	        this.Bind(gl);
 	        gl.overrideShader = this;
         }
 
-        function UnbindOverrideShader(gl)
+        public void UnbindOverride(GLContext gl)
         {
 	        gl.overrideShader = null;
         }
 
-        function AddLight(light)
+        public void AddLight(Light light)
         {
 	        if( this.lightCount < this.maxLights )
 	        {	
-		        this.scene.gl.uniform3fv(this.lightDirs[this.lightCount], light.dir);
-		        this.scene.gl.uniform3fv(this.lightCols[this.lightCount], light.color);
+                GL.Uniform3(lightDirs[lightCount], light.dir);
+                GL.Uniform3(lightCols[lightCount], light.color);
 		        this.lightCount++;
 	        }
         }
