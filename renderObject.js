@@ -100,6 +100,7 @@ function RenderObject(scene, name, src)
 				case "scale":
 					var values = attrib.value.csvToArray();
 					this.scale = vec3.fromValues(values[0][0], values[0][1], values[0][2]);
+					break;
 				case "update":
 					this.updateCallback = window[attrib.value];
 					break;
