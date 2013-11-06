@@ -36,7 +36,7 @@ namespace WebGLEditor
             }
         }
 
-        void Bind(GLContext gl)
+        public void Bind(GLContext gl)
         {
 	        if( this.percentageMode )
 	        {

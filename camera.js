@@ -31,7 +31,7 @@ function BuildProjectionMatrix(aspectRatio)
 	}
 	else
 	{
-		mat4.perspective(this.proj, this.fov, aspectRatio, this.near, this.far);
+		mat4.perspective(this.proj, this.fov * 0.0174532925, aspectRatio, this.near, this.far);
 	}
 }
 

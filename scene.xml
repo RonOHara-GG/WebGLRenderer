@@ -6,17 +6,20 @@
     <camera name="MainCamera" src="./mainCamera.xml"/>
     <camera name="ShadowCamera" src="./shadowCamera.xml"/>
   </updatePass>
+  <!---->
   <renderPass name="ShadowPass" src="./shadowPass.xml">
     <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
   </renderPass>
-  
+
+ <!---->
   <renderPass name="DiffusePass" src="./diffusePass.xml">
     <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
-    <renderObject name="ground" src="./groundRO.xml"/>
+     <renderObject name="ground" src="./groundRO.xml"/>
 
     <light name="sun" src="./sunlight.xml"></light>
   </renderPass>
-  <renderPass name="2DOverlay" src="./overlay.xml">
-    <renderObject name="shadowQuad" src="./shadowQuad.xml"/>
-  </renderPass><!---->
+
+    <renderPass name="2DOverlay" src="./overlay.xml">
+      <renderObject name="shadowQuad" src="./shadowQuad.xml"/>
+    </renderPass>
 </scene>

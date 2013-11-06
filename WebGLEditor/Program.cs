@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Reflection;
 using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
@@ -18,6 +19,7 @@ namespace WebGLEditor
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
+            
             TheForm = new Form1();
             Application.Run(TheForm);
         }

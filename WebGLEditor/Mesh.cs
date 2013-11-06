@@ -19,11 +19,20 @@ namespace WebGLEditor
         public Mesh(Scene scene, string name, string src)
             : base(scene, name, src)
         {
+
             try
-	        {
+            {
+                int posBuffer = -1;
+                int nrmBuffer = -1;
+                int uvBuffer = -1;
+
+                List<Vector3> posArray = new List<Vector3>();
+                List<Vector3> nrmArray = new List<Vector3>();
+                List<Vector2> uvArray = new List<Vector2>();
+
                 XmlDocument meshXML = new XmlDocument();
                 meshXML.Load(src);
-		        this.triangleCount = Convert.ToInt32(meshXML.DocumentElement.Attributes.GetNamedItem("triangleCount").Value);
+		        triangleCount = Convert.ToInt32(meshXML.DocumentElement.Attributes.GetNamedItem("triangleCount").Value);
                 
                 foreach( XmlNode child in meshXML.DocumentElement.ChildNodes )
 		        {
@@ -31,13 +40,9 @@ namespace WebGLEditor
 			        {
 				        if (child.Name == "verts")
 				        {
-					        this.vertCount = Convert.ToInt32(child.Attributes.GetNamedItem("count").Value);
-					        this.vertFormat = child.Attributes.GetNamedItem("format").Value;
+					        vertCount = Convert.ToInt32(child.Attributes.GetNamedItem("count").Value);
+					        vertFormat = child.Attributes.GetNamedItem("format").Value;
 
-
-					        List<Vector3> posArray = new List<Vector3>();
-					        List<Vector3> nrmArray = new List<Vector3>();
-					        List<Vector2> uvArray = new List<Vector2>();
 
                             foreach( XmlNode vertPiece in child.ChildNodes )
                             {
@@ -91,46 +96,46 @@ namespace WebGLEditor
 						        }
 					        }
 
-					        List<float> interleaved = new List<float>();
+                            List<float> interleaved = new List<float>();
                             int vertexSize = 0;
-					        switch (this.vertFormat)
-					        {
-						        case "P3":
-							        for (var j = 0; j < this.vertCount; j++)
-							        {
-								        interleaved.Add(posArray[j].X);
-								        interleaved.Add(posArray[j].Y);
-								        interleaved.Add(posArray[j].Z);
-							        }
+                            switch (this.vertFormat)
+                            {
+                                case "P3":
+                                    for (var j = 0; j < this.vertCount; j++)
+                                    {
+                                        interleaved.Add(posArray[j].X);
+                                        interleaved.Add(posArray[j].Y);
+                                        interleaved.Add(posArray[j].Z);
+                                    }
                                     vertexSize = 12;
-							        break;
-						        case "P3N3":
-							        for (var j = 0; j < this.vertCount; j++)
-							        {
-								        interleaved.Add(posArray[j].X);
-								        interleaved.Add(posArray[j].Y);
-								        interleaved.Add(posArray[j].Z);
-								        interleaved.Add(nrmArray[j].X);
-								        interleaved.Add(nrmArray[j].Y);
-								        interleaved.Add(nrmArray[j].Z);
-							        }
+                                    break;
+                                case "P3N3":
+                                    for (var j = 0; j < this.vertCount; j++)
+                                    {
+                                        interleaved.Add(posArray[j].X);
+                                        interleaved.Add(posArray[j].Y);
+                                        interleaved.Add(posArray[j].Z);
+                                        interleaved.Add(nrmArray[j].X);
+                                        interleaved.Add(nrmArray[j].Y);
+                                        interleaved.Add(nrmArray[j].Z);
+                                    }
                                     vertexSize = 24;
-							        break;
-						        case "P3T2":
-							        for (var j = 0; j < this.vertCount; j++)
-							        {
-								        interleaved.Add(posArray[j].X);
-								        interleaved.Add(posArray[j].Y);
-								        interleaved.Add(posArray[j].Z);
-								        interleaved.Add(uvArray[j].X);
-								        interleaved.Add(uvArray[j].Y);
-							        }
+                                    break;
+                                case "P3T2":
+                                    for (var j = 0; j < this.vertCount; j++)
+                                    {
+                                        interleaved.Add(posArray[j].X);
+                                        interleaved.Add(posArray[j].Y);
+                                        interleaved.Add(posArray[j].Z);
+                                        interleaved.Add(uvArray[j].X);
+                                        interleaved.Add(uvArray[j].Y);
+                                    }
                                     vertexSize = 20;
-							        break;
-						        default:
-							        System.Windows.Forms.MessageBox.Show("unsupported vertex format: " + this.vertFormat);
-							        break;
-					        }
+                                    break;
+                                default:
+                                    System.Windows.Forms.MessageBox.Show("unsupported vertex format: " + this.vertFormat);
+                                    break;
+                            }
 
                             GL.GenBuffers(1, out vb);
                             GL.BindBuffer(BufferTarget.ArrayBuffer, vb);
@@ -151,6 +156,54 @@ namespace WebGLEditor
 				        }
 			        }
 		        }
+
+                /*
+                if (posArray.Count > 0)
+                {
+                    GL.GenBuffers(1, out posBuffer);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, posBuffer);
+                    GL.BufferData<Vector3>(BufferTarget.ArrayBuffer, new IntPtr(posArray.Count * Vector3.SizeInBytes), posArray.ToArray(), BufferUsageHint.StaticDraw);
+                }
+                if (nrmArray.Count > 0)
+                {
+                    GL.GenBuffers(1, out nrmBuffer);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, nrmBuffer);
+                    GL.BufferData<Vector3>(BufferTarget.ArrayBuffer, new IntPtr(nrmArray.Count * Vector3.SizeInBytes), nrmArray.ToArray(), BufferUsageHint.StaticDraw);
+                }
+                if (uvArray.Count > 0)
+                {
+                    GL.GenBuffers(1, out uvBuffer);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, uvBuffer);
+                    GL.BufferData<Vector2>(BufferTarget.ArrayBuffer, new IntPtr(uvArray.Count * Vector2.SizeInBytes), uvArray.ToArray(), BufferUsageHint.StaticDraw);
+                }
+
+                GL.GenVertexArrays(1, out vb);
+                GL.BindVertexArray(vb);
+
+                GL.EnableVertexAttribArray(0);
+                GL.BindBuffer(BufferTarget.ArrayBuffer, posBuffer);
+                GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, false, Vector3.SizeInBytes, 0);
+
+                int stream = 1;
+                if (nrmBuffer > 0)
+                {
+                    GL.EnableVertexAttribArray(stream);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, nrmBuffer);
+                    GL.VertexAttribPointer(0, 3, VertexAttribPointerType.Float, true, Vector3.SizeInBytes, 0);
+                    stream++;
+                }
+                if (uvBuffer > 0)
+                {
+                    GL.EnableVertexAttribArray(stream);
+                    GL.BindBuffer(BufferTarget.ArrayBuffer, uvBuffer);
+                    GL.VertexAttribPointer(0, 2, VertexAttribPointerType.Float, false, Vector2.SizeInBytes, 0);
+                    stream++;
+                }
+
+                GL.BindBuffer(BufferTarget.ElementArrayBuffer, ib);
+                GL.BindVertexArray(0);
+                 * */
+
 	        }
             catch(Exception)
             {
@@ -160,10 +213,11 @@ namespace WebGLEditor
 
         public void Draw(GLContext gl)
         {
-	        if (this.vb != 0)
+	        if (vb != 0)
 	        {
                 GL.BindBuffer(BufferTarget.ArrayBuffer, vb);
-		        switch (this.vertFormat)
+                
+		        switch (vertFormat)
 		        {
 			        case "P3":
                         GL.EnableVertexAttribArray(gl.shaderPositionLocation);
@@ -190,26 +244,46 @@ namespace WebGLEditor
 				        }
 				        break;
 			        default:
-				        System.Windows.Forms.MessageBox.Show("unsupported vertex format: " + this.vertFormat);
+				        System.Windows.Forms.MessageBox.Show("unsupported vertex format: " + vertFormat);
 				        break; 
 		        }
+                //GL.BindVertexArray(vb);
 
-		        if (this.ib > 0)
+		        if (ib > 0)
 		        {
 			        // Indexed draw
-			        gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ib);
-			        gl.drawElements(gl.TRIANGLES, this.triangleCount * 3, gl.UNSIGNED_SHORT, 0);
-
                     GL.BindBuffer(BufferTarget.ElementArrayBuffer, ib);
                     GL.DrawElements(BeginMode.Triangles, triangleCount * 3, DrawElementsType.UnsignedShort, 0);
+                    GL.BindBuffer(BufferTarget.ElementArrayBuffer, 0);
 		        }
 		        else
 		        {
 			        // Non indexed draw
-                    GL.DrawArrays(BeginMode.Triangles, 0, triangleCount * 3);
+                    GL.DrawArrays(BeginMode.Triangles, 0, triangleCount * 3);                    
 		        }
+                
+                switch (vertFormat)
+                {
+                    case "P3":
+                        GL.DisableVertexAttribArray(gl.shaderPositionLocation);
+                        break;
+                    case "P3N3":
+                        GL.DisableVertexAttribArray(gl.shaderPositionLocation);
+
+                        if (gl.shaderNormalLocation >= 0)
+                            GL.DisableVertexAttribArray(gl.shaderNormalLocation);
+                        break;
+                    case "P3T2":
+                        GL.DisableVertexAttribArray(gl.shaderPositionLocation);
+                        if (gl.shaderUVLocattion >= 0)
+                            GL.DisableVertexAttribArray(gl.shaderUVLocattion);
+                        break;
+                    default:
+                        System.Windows.Forms.MessageBox.Show("unsupported vertex format: " + vertFormat);
+                        break;
+                }
+                GL.BindBuffer(BufferTarget.ArrayBuffer, 0);
 	        }
         }
-
     }
 }

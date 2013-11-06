@@ -15,6 +15,8 @@ namespace WebGLEditor
         public int mvpUniform = 0;
         public int normalUniform = 0;
         public int worldUniform = 0;
+        public int viewUniform = 0;
+        public int projUniform = 0;
         public int shadowMtxUniform = 0;
 
         public int positionAttribute = 0;
@@ -45,10 +47,10 @@ namespace WebGLEditor
 			        switch (attrib.Name)
 			        {
 				        case "maxLights":
-					        this.maxLights = Convert.ToInt32(attrib.Value);
+					        maxLights = Convert.ToInt32(attrib.Value);
 					        break;
 				        case "textureCount":
-					        this.textureCount = Convert.ToInt32(attrib.Value);
+					        textureCount = Convert.ToInt32(attrib.Value);
                             break;
 				        default:
 					        break;
@@ -82,7 +84,7 @@ namespace WebGLEditor
 
 		        if (vs > 0 && fs > 0)
 		        {
-			        this.shaderProgram = CreateShaderProgram(vs, fs);
+			        shaderProgram = CreateShaderProgram(vs, fs);
 		        }
 	        }
             catch(Exception)
@@ -90,29 +92,31 @@ namespace WebGLEditor
                 System.Windows.Forms.MessageBox.Show("Failed to load shader: " + src);
             }
 
-	        if (this.shaderProgram > 0)
+	        if (shaderProgram > 0)
 	        {
-		        this.mvpUniform = GL.GetUniformLocation(this.shaderProgram, "uMVPMatrix");
-		        this.worldUniform = GL.GetUniformLocation(this.shaderProgram, "uWorldMatrix");
-		        this.normalUniform = GL.GetUniformLocation(this.shaderProgram, "uNormalMatrix");
-		        this.shadowMtxUniform = GL.GetUniformLocation(this.shaderProgram, "uShadowMatrix");
-		        this.positionAttribute = GL.GetAttribLocation(this.shaderProgram, "aVertexPosition");
-		        this.normalAttribute = GL.GetAttribLocation(this.shaderProgram, "aVertexNormal");
-		        this.uvAttribute = GL.GetAttribLocation(this.shaderProgram, "aVertexUV");
+		        mvpUniform = GL.GetUniformLocation(shaderProgram, "uMVPMatrix");
+		        worldUniform = GL.GetUniformLocation(shaderProgram, "uWorldMatrix");
+                viewUniform = GL.GetUniformLocation(shaderProgram, "uViewMatrix");
+                projUniform = GL.GetUniformLocation(shaderProgram, "uProjMatrix");
+		        normalUniform = GL.GetUniformLocation(shaderProgram, "uNormalMatrix");
+		        shadowMtxUniform = GL.GetUniformLocation(shaderProgram, "uShadowMatrix");
+		        positionAttribute = GL.GetAttribLocation(shaderProgram, "aVertexPosition");
+		        normalAttribute = GL.GetAttribLocation(shaderProgram, "aVertexNormal");
+		        uvAttribute = GL.GetAttribLocation(shaderProgram, "aVertexUV");
 
-		        for (var i = 0; i < this.textureCount; i++ )
+		        for (var i = 0; i < textureCount; i++ )
 		        {
-			        int texSampler = GL.GetUniformLocation(this.shaderProgram, "texture" + i);
+			        int texSampler = GL.GetUniformLocation(shaderProgram, "texture" + i);
                     GL.Uniform1(texSampler, i);
 		        }	
 
-		        for (var i = 0; i < this.maxLights; i++)
+		        for (var i = 0; i < maxLights; i++)
 		        {
-			        int lightDir = GL.GetUniformLocation(this.shaderProgram, "uLightDir" + i);
-			        int lightCol = GL.GetUniformLocation(this.shaderProgram, "uLightColor" + i);
+			        int lightDir = GL.GetUniformLocation(shaderProgram, "uLightDir" + i);
+			        int lightCol = GL.GetUniformLocation(shaderProgram, "uLightColor" + i);
 
-			        this.lightDirs.Add(lightDir);
-			        this.lightCols.Add(lightCol);
+			        lightDirs.Add(lightDir);
+			        lightCols.Add(lightCol);
 		        }
 	        }
         }
@@ -145,7 +149,7 @@ namespace WebGLEditor
             GL.GetProgram(prg, ProgramParameter.LinkStatus, out linkStatus);
             if( linkStatus != 1 )
             {
-                System.Windows.Forms.MessageBox.Show("Failed to create shader program: " + this.name);
+                System.Windows.Forms.MessageBox.Show("Failed to create shader program: " + name);
                 GL.DeleteProgram(prg);
                 prg = 0;
             }
@@ -155,25 +159,27 @@ namespace WebGLEditor
 
         public void Bind(GLContext gl)
         {
-	        if( gl.overrideShader <= 0)
+	        if( gl.overrideShader == null)
 	        {
                 GL.UseProgram(shaderProgram);
 
-		        gl.shaderPositionLocation = this.positionAttribute;
-		        gl.shaderNormalLocation = this.normalAttribute;
-		        gl.shaderUVLocattion = this.uvAttribute;
+		        gl.shaderPositionLocation = positionAttribute;
+		        gl.shaderNormalLocation = normalAttribute;
+		        gl.shaderUVLocattion = uvAttribute;
 
-		        gl.uMVP = this.mvpUniform;
-		        gl.uNrmMtx = this.normalUniform;
-		        gl.uWorldMtx = this.worldUniform;
-		        gl.uShadowMtx = this.shadowMtxUniform;
+		        gl.uMVP = mvpUniform;
+		        gl.uNrmMtx = normalUniform;
+		        gl.uWorldMtx = worldUniform;
+                gl.uViewMtx = viewUniform;
+                gl.uProjMtx = projUniform;
+		        gl.uShadowMtx = shadowMtxUniform;
 	        }
         }
 
         public void BindOverride(GLContext gl)
         {
-	        this.UnbindOverride(gl);
-	        this.Bind(gl);
+	        UnbindOverride(gl);
+	        Bind(gl);
 	        gl.overrideShader = this;
         }
 
@@ -184,11 +190,11 @@ namespace WebGLEditor
 
         public void AddLight(Light light)
         {
-	        if( this.lightCount < this.maxLights )
+	        if( lightCount < maxLights )
 	        {	
                 GL.Uniform3(lightDirs[lightCount], light.dir);
                 GL.Uniform3(lightCols[lightCount], light.color);
-		        this.lightCount++;
+		        lightCount++;
 	        }
         }
     }

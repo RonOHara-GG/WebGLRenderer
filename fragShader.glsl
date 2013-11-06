@@ -15,5 +15,4 @@ void main(void) {
 	float lit = max(dot(normal, -uLightDir0), 0.0);
 	vec4 litColor = vec4(uLightColor0 * lit * shadowValue, 1.0);
 	gl_FragColor = vec4(litColor.x, litColor.y, litColor.z, 1.0);
-	//gl_FragColor = vec4(shadowValue, shadowValue, shadowValue, 1.0);
 }

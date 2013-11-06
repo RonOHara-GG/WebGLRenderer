@@ -19,9 +19,9 @@ namespace WebGLEditor
         public List<Shader> shaders;
         public List<Light> lights;
         public List<Texture> textures;
-        public GL gl;
+        public GLContext gl;
         
-        public Scene(string sceneXMLFile, GL glptr)
+        public Scene(string sceneXMLFile, int width, int height)
         {
             renderPasses = new List<RenderPass>();
             updatePasses = new List<UpdatePass>();
@@ -34,15 +34,17 @@ namespace WebGLEditor
             lights = new List<Light>();
             textures = new List<Texture>();
 
-            gl = glptr;
-
+            gl = new GLContext();
+            gl.canvasWidth = width;
+            gl.canvasHeight = height;
+            
             if (sceneXMLFile != null && sceneXMLFile.Length > 0)
             {
                 try
                 {
                     XmlDocument xml = new XmlDocument();
                     xml.Load(sceneXMLFile);
-                    foreach (XmlNode child in xml.ChildNodes)
+                    foreach (XmlNode child in xml.DocumentElement.ChildNodes)
                     {
                         if (child.NodeType == XmlNodeType.Element)
                         {
@@ -53,9 +55,9 @@ namespace WebGLEditor
 				
 				                Pass thePass = null;
                                 if (child.Name == "renderPass")
-                                    thePass = getRenderPass(passName, srcFile);
+                                    thePass = GetRenderPass(passName, srcFile);
                                 else
-                                    thePass = getUpdatePass(passName, srcFile);
+                                    thePass = GetUpdatePass(passName, srcFile);
 
                                 foreach( XmlNode node in child.ChildNodes )
                                 {
@@ -67,7 +69,7 @@ namespace WebGLEditor
                                             string objSrc = node.Attributes.GetNamedItem("src").Value;
 
 							                // Try to find this render object if its already loaded
-							                RenderObject renderObj = getRenderObject(objName, objSrc);
+							                RenderObject renderObj = GetRenderObject(objName, objSrc);
 
 							                // Reference this object in the render pass
 							                thePass.renderObjects.Add(renderObj);
@@ -78,7 +80,7 @@ namespace WebGLEditor
                                             string objSrc = node.Attributes.GetNamedItem("src").Value;
 
 							                // Try to find this render object if its already loaded
-							                Light light = getLight(objName, objSrc);
+							                Light light = GetLight(objName, objSrc);
 
 							                thePass.lights.Add(light);
 							                thePass.lightsDirty = true;
@@ -87,7 +89,7 @@ namespace WebGLEditor
                                         {
                                             string objName = node.Attributes.GetNamedItem("name").Value;
                                             string objSrc = node.Attributes.GetNamedItem("src").Value;
-							                Camera cam = getCamera(objName, objSrc);
+							                Camera cam = GetCamera(objName, objSrc);
 
 							                thePass.cameras.Add(cam);
 						                }
@@ -102,6 +104,8 @@ namespace WebGLEditor
                     System.Windows.Forms.MessageBox.Show("Failed to read scene file: " + sceneXMLFile);
                 }
 
+
+                Resize(width, height);
             }
         }
 
@@ -190,6 +194,8 @@ namespace WebGLEditor
 		        frameBuffers.Add(frameBuffer);
 		        return frameBuffer;
 	        }
+
+            return null;
         }
 
         public Mesh GetMesh(string name, string src)
@@ -244,7 +250,7 @@ namespace WebGLEditor
 	        return tex;
         }
 
-        public void UpdateScene(float deltaTimeMS)
+        public void Update(float deltaTimeMS)
         {
 	        for (var i = 0; i < updatePasses.Count; i++)
 	        {
@@ -252,17 +258,15 @@ namespace WebGLEditor
 	        }
         }
 
-        public void DrawScene(GL gl)
-        {
+        public void Draw()
+        {            
 	        for (var i = 0; i < renderPasses.Count; i++)
 	        {
 		        renderPasses[i].Draw(gl);
 	        }
-	
-	        //gl.lightsDirty = false;
         }
 
-        public void ResizeScene(float width, float height)
+        public void Resize(float width, float height)
         {
 	        float ar = width / height;
 	        for (var i = 0; i < cameras.Count; i++)

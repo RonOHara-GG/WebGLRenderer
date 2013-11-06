@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<renderobject name="cubeRO" pos="0,0,0" rot="0,0,0,1">
+  <shader name="defaultShader" src="./hgl3Shader.xml"></shader>
+  <mesh name="cube" src="./cube.xml"></mesh>
+</renderobject>

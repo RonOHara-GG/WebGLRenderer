@@ -19,37 +19,45 @@ namespace WebGLEditor
         public Light(Scene scene, string name, string src)
             : base(scene, name, src)
         {
-            this.color = new Vector3(1.0f, 1.0f, 1.0f);
-            this.dir = new Vector3();
+            color = new Vector3(1.0f, 1.0f, 1.0f);
+            dir = new Vector3();
+            shadowMatrix = Matrix4.Identity;
 
-            this.shadowMatrix = mat4.create();
-            this.shadowMap = null;
 
-            var xml = LoadXML(src);
-            if (xml)
+            try
             {
-                for (var i = 0; i < xml.documentElement.attributes.length; i++)
+                XmlDocument xml = new XmlDocument();
+                xml.Load(src);
+                foreach( XmlAttribute attrib in xml.DocumentElement.Attributes )
                 {
-                    var attrib = xml.documentElement.attributes[i];
-                    switch (attrib.name)
+                    string[] values;
+                    switch (attrib.Name)
                     {
                         case "type":
-                            this.type = attrib.value;
+                            type = attrib.Value;
                             break;
                         case "color":
-                            var values = attrib.value.csvToArray();
-                            this.color = vec3.fromValues(values[0][0] / 255.0, values[0][1] / 255.0, values[0][2] / 255.0);
+                            values = attrib.Value.Split(',');
+                            color = new Vector3(Convert.ToSingle(values[0]) / 255.0f, Convert.ToSingle(values[1]) / 255.0f, Convert.ToSingle(values[2]) / 255.0f);
                             break;
                         case "dir":
-                            var values = attrib.value.csvToArray();
-                            var temp = vec3.fromValues(values[0][0], values[0][1], values[0][2]);
-                            vec3.normalize(this.dir, temp);
+                            values = attrib.Value.Split(',');
+                            dir = new Vector3(Convert.ToSingle(values[0]), Convert.ToSingle(values[1]), Convert.ToSingle(values[2]));
+                            dir.Normalize();
                             break;
                         default:
                             break;
                     }
                 }
-            }	
+            }
+            catch (Exception)
+            {
+                System.Windows.Forms.MessageBox.Show("Failed to load light: " + src);
+            }
+        }
+
+        public void Update(float deltaTimeMS)
+        {
         }
     }
 }

@@ -37,7 +37,7 @@ namespace WebGLEditor
 	        target = new Vector3();
 	        up = new Vector3(0.0f, 1.0f, 0.0f);
 	        proj = new Matrix4();
-	        view = new Matrix4();
+            view = Matrix4.Identity;
 
             try
             {
@@ -108,15 +108,15 @@ namespace WebGLEditor
             }
 
 
-	        if( shadowLight )
+	        if( shadowLight != null )
 	        {
 		        shadowCamera = true;
 		        switch( shadowLight.type )
 		        {
 			        case "dir":
-				        var temp = vec3.create();
-				        vec3.scale(temp, shadowLight.dir, -shadowDistance);
-				        vec3.add(pos, target, temp);
+                        Vector3 tempVec = Vector3.Multiply(shadowLight.dir, -shadowDistance);
+                        pos = target;
+                        pos = Vector3.Add(target, tempVec);
 				        break;
 			        default:
 				        break;
@@ -131,7 +131,7 @@ namespace WebGLEditor
         {
 	        gl.view = view;
 	        gl.proj = proj;
-            gl.viewProj = Matrix4.Mult(gl.proj, gl.view);
+            gl.viewProj = Matrix4.Mult(gl.view, gl.proj);
         }
 
         public void Update(float deltaTimeMS)
@@ -141,13 +141,13 @@ namespace WebGLEditor
                 view = Matrix4.LookAt(pos, target, up);
 	        else
 		        view = Matrix4.Identity;
-
+            
 	        if( shadowCamera )
 	        {
                 Matrix4 depthScaleMtx = Matrix4.Identity;
 		        depthScaleMtx.M11 = depthScaleMtx.M22 = depthScaleMtx.M33 = depthScaleMtx.M41 = depthScaleMtx.M42 = depthScaleMtx.M43 = 0.5f;
-		        shadowMatrix = Matrix4.Mult(depthScaleMtx, Matrix4.Mult(proj, view));
-	        }
+                shadowMatrix = Matrix4.Mult(Matrix4.Mult(view, proj), depthScaleMtx);
+            }
         }
 
         public void BuildProj(float aspectRatio)
@@ -158,8 +158,9 @@ namespace WebGLEditor
 	        }
 	        else
 	        {
-                proj = Matrix4.CreatePerspectiveFieldOfView(fov, aspectRatio, near, far);
-	        }
+                proj = Matrix4.CreatePerspectiveFieldOfView(fov * 0.0174532925f, aspectRatio, near, far);
+            }
+
         }
 
         public void Resize(float aspectRatio)

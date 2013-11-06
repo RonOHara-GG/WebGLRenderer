@@ -1,0 +1,11 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<scene>
+  <updatePass name="WorldUpdate" src="./worldUpdatePass.xml">
+    <renderObject name="cubeRO" src="./cubeRO.xml"></renderObject>
+    <camera name="MainCamera" src="./hgl3Camera.xml"/>
+  </updatePass>  
+  <renderPass name="DiffusePass" src="./hgl3Pass.xml">
+    <renderObject name="cubeRO" src="./cubeRO.xml"></renderObject>
+  </renderPass>
+</scene>

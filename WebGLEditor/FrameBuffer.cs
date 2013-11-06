@@ -54,9 +54,17 @@ namespace WebGLEditor
             }
         }
 
-        void Bind()
+        public void Bind()
         {
             GL.BindFramebuffer(FramebufferTarget.Framebuffer, frameBuffer);
+        }
+
+        public static void Bind(FrameBuffer frameBuffer)
+        {
+            if (frameBuffer != null)
+                frameBuffer.Bind();
+            else
+                GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
         }
     }
 }

@@ -24,7 +24,6 @@ namespace WebGLEditor
         public FrameBuffer frameBuffer = null;
         public Shader overrideShader = null;
 
-        public bool lightsDirty = false;
         private int lightUpdateToken = 0;
 
         public RenderPass(Scene scene, string name, string src) : base(scene, name, src)
@@ -66,7 +65,7 @@ namespace WebGLEditor
 			        }
 		        }
 
-                foreach( XmlNode child in rpXML.ChildNodes )
+                foreach( XmlNode child in rpXML.DocumentElement.ChildNodes )
 		        {
 			        if (child.NodeType == XmlNodeType.Element)
 			        {
@@ -91,9 +90,9 @@ namespace WebGLEditor
 			        }
 		        }
 	        }
-            catch(Exception )
+            catch(Exception e)
             {
-                System.Windows.Forms.MessageBox.Show("Failed to load render pass: " + src);
+                System.Windows.Forms.MessageBox.Show("Failed to load render pass: " + src + "\r\n" + e.Message);
             }
         }
 
@@ -116,7 +115,7 @@ namespace WebGLEditor
 		        GL.Clear(clearBits);
         }
 
-        public void UpdateLights()
+        public void UpdateLights(GLContext gl)
         {
 	        lightUpdateToken++;
             foreach( RenderObject ro in renderObjects )
@@ -125,7 +124,7 @@ namespace WebGLEditor
 		        {
 			        ro.shader.lightUpdateToken = lightUpdateToken;
 			        ro.shader.lightCount = 0;
-			        ro.shader.Bind();
+			        ro.shader.Bind(gl);
 			        for (var j = 0; j < lights.Count; j++)
 			        {
 				        ro.shader.AddLight(lights[j]);
@@ -135,38 +134,37 @@ namespace WebGLEditor
             lightsDirty = false;
         }
 
-        public void DrawRenderPass()
+        public void Draw(GLContext gl)
         {
+            GL.Enable(EnableCap.DepthTest);
+
 	        if (lightsDirty)
-		        UpdateLights();
+		        UpdateLights(gl);
 
 	        // Bind render target
-	        if( frameBuffer )
-		        frameBuffer.Bind();
-	        else
-		        GL.BindFramebuffer(FramebufferTarget.Framebuffer, 0);
+            FrameBuffer.Bind(frameBuffer);
 
 	        // Set viewport
-	        viewport.Bind();
+	        viewport.Bind(gl);
 
 	        // Set camera
-	        camera.Bind();
+	        camera.Bind(gl);
 
 	        // Clear
 	        DoClear();
 	
 	        // Bind override shader
-	        if( overrideShader )
-		        overrideShader.BindOverride();
+	        if( overrideShader != null )
+		        overrideShader.BindOverride(gl);
 
 	        // Draw objects
 	        for (var i = 0; i < renderObjects.Count; i++)
 	        {
-		        renderObjects[i].Draw();
+		        renderObjects[i].Draw(gl);
 	        }
 
-	        if( overrideShader )
-		        overrideShader.UnbindOverride();
+	        if( overrideShader != null )
+		        overrideShader.UnbindOverride(gl);
         }
     }
 }

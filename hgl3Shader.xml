@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<shader name="defaultShader" maxLights="0">
+  <vertshader name="defaultVS" src="./hgl3VS.glsl"></vertshader>
+  <fragshader name="defaultFS" src="./hgl3FS.glsl"></fragshader>
+</shader>

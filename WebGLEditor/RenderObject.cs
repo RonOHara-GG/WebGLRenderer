@@ -26,10 +26,12 @@ namespace WebGLEditor
 
         public RenderObject(Scene scene, string name, string src) : base(scene, name, src)
         {
-            this.pos = new Vector3(0, 0, 0);
-            this.rot = new Quaternion(0, 0, 0, 1.0f);
-            this.scale = new Vector3(1.0f, 1.0f, 1.0f);
-            this.worldMatrix = new Matrix4();
+            textures = new List<Texture>();
+
+            pos = new Vector3(0, 0, 0);
+            rot = new Quaternion(0, 0, 0, 1.0f);
+            scale = new Vector3(1.0f, 1.0f, 1.0f);
+            worldMatrix = new Matrix4();
 
             try
 	        {
@@ -41,21 +43,21 @@ namespace WebGLEditor
 			        if( attrib.Name == "pos")
                     {
 					    string[] values = attrib.Value.Split(',');
-					    this.pos = new Vector3(values[0][0], values[0][1], values[0][2]);
+					    pos = new Vector3(Convert.ToSingle(values[0]), Convert.ToSingle(values[1]), Convert.ToSingle(values[2]));
 					}
                     else if( attrib.Name == "rot")
                     {
 					    string[] values = attrib.Value.Split(',');
-                        this.rot = new Quaternion(values[0][0], values[0][1], values[0][2], values[0][3]);
+                        rot = new Quaternion(Convert.ToSingle(values[0]), Convert.ToSingle(values[1]), Convert.ToSingle(values[2]), Convert.ToSingle(values[3]));
 					}
 				    else if( attrib.Name == "scale" )
                     {
 					    string[] values = attrib.Value.Split(',');
-                        this.scale = new Vector3(values[0][0], values[0][1], values[0][2]);
+                        scale = new Vector3(Convert.ToSingle(values[0]), Convert.ToSingle(values[1]), Convert.ToSingle(values[2]));
                     }
 				    else if( attrib.Name == "update" )
                     {
-					    this.updateCallback = Program.TheForm.FindUpdateFunction(attrib.Value);
+					    updateCallback = Program.TheForm.FindUpdateFunction(attrib.Value);
 					}
 		        }
 
@@ -67,11 +69,11 @@ namespace WebGLEditor
 				        string nodeSrc = child.Attributes.GetNamedItem("src").Value;
 				        if (child.Name == "mesh")
 				        {
-					        this.mesh = scene.GetMesh(nodeName, nodeSrc);
+					        mesh = scene.GetMesh(nodeName, nodeSrc);
 				        }
 				        else if (child.Name == "shader")
 				        {
-					        this.shader = scene.GetShader(nodeName, nodeSrc);
+					        shader = scene.GetShader(nodeName, nodeSrc);
 				        }
 				        else if (child.Name == "texture")
 				        {
@@ -83,8 +85,8 @@ namespace WebGLEditor
 						        if( dtAttr != null )
 							        depthTexture = (dtAttr.Value == "true");
 
-						        var fb = scene.GetFrameBuffer(nodeName, null);
-						        if( fb )
+						        FrameBuffer fb = scene.GetFrameBuffer(nodeName, null);
+						        if( fb != null )
 						        {
 							        if( depthTexture )
 								        tex = fb.depthTexture;
@@ -98,29 +100,31 @@ namespace WebGLEditor
 						        tex = scene.GetTexture(nodeName, nodeSrc);
 					        }
 											
-					        if( tex )
+					        if( tex != null )
 					        {						
 						        var texIndex = 0;
 						        XmlAttribute index = (XmlAttribute)child.Attributes.GetNamedItem("texIndex");
 						        if( index != null)
 							        texIndex = Convert.ToInt32(index.Value);
 
-						        this.textures[texIndex] = tex;
+                                while (textures.Count <= texIndex)
+                                    textures.Add(null);
+						        textures[texIndex] = tex;
 					        }
 				        }
 				        else if (child.Name == "shadowCamera")
 				        {
-					        this.shadowCamera = scene.GetCamera(nodeName, nodeSrc);
+					        shadowCamera = scene.GetCamera(nodeName, nodeSrc);
 				        }
 			        }
 		        }
 	        }
-            catch(Exception)
+            catch(Exception e)
             {
-                System.Windows.Forms.MessageBox.Show("Failed to load render object: " + src);
+                System.Windows.Forms.MessageBox.Show("Failed to load render object: " + src + "\r\n" + e.Message);
             }
 
-	        this.UpdateWorldMatrix();
+	        UpdateWorldMatrix();
         }
 
         public void Update(float deltaTimeMS)
@@ -131,52 +135,63 @@ namespace WebGLEditor
 	        }
         }
 
-        void Draw(GLContext gl)
+        public void Draw(GLContext gl)
         {
 	        // Bind shader
-	        this.shader.Bind(gl);
+	        shader.Bind(gl);
 
 	        // Update shader params
-	        if( gl.uMVP )
+	        if( gl.uMVP >= 0 )
 	        {
-		        Matrix4 mvp = Matrix4.Mult(gl.viewProj, this.worldMatrix);
-		        GL.UniformMatrix4(gl.uMVP, false, mvp);
+                Matrix4 mvp = Matrix4.Mult(worldMatrix, gl.viewProj);
+		        GL.UniformMatrix4(gl.uMVP, false, ref mvp);
 	        }
 
-	        if( gl.uWorldMtx )
+	        if( gl.uWorldMtx >= 0 )
 	        {
-                GL.UniformMatrix4(gl.uWorldMtx, false, this.worldMatrix);
+                GL.UniformMatrix4(gl.uWorldMtx, false, ref worldMatrix);
 	        }
+
+            if (gl.uViewMtx >= 0)
+            {
+                GL.UniformMatrix4(gl.uViewMtx, false, ref gl.view);
+            }
+
+            if (gl.uProjMtx >= 0)
+            {
+                GL.UniformMatrix4(gl.uProjMtx, false, ref gl.proj);
+            }
 	
-	        if( gl.uNrmMtx )
+	        if( gl.uNrmMtx >= 0 )
 	        {
-                GL.UniformMatrix3(gl.uNrmMtx, false, this.normalMatrix);
+                GL.UniformMatrix3(gl.uNrmMtx, 1, false, normalMatrix);
 	        }
 
-	        if( this.shadowCamera && gl.uShadowMtx )
+	        if( shadowCamera != null && gl.uShadowMtx > 0 )
 	        {
-		        gl.uniformMatrix4fv(gl.uShadowMtx, false, this.shadowCamera.shadowMatrix);
+                GL.UniformMatrix4(gl.uShadowMtx, false, ref shadowCamera.shadowMatrix);
 	        }
 
 	        // Bind Textures
-	        for( var i = 0; i < this.textures.Count; i++ )
+	        for( var i = 0; i < textures.Count; i++ )
 	        {
-		        if( this.textures[i] != null )
+		        if( textures[i] != null )
 		        {
-			        this.textures[i].Bind(i);
+			        textures[i].Bind(i);
 		        }
 	        }
 
 	        // Draw mesh
-	        if (this.mesh)
+	        if (mesh != null)
 	        {
-		        this.mesh.draw(gl);
+		        mesh.Draw(gl);
 	        }
         }
 
         public void UpdateWorldMatrix()
         {
-            this.worldMatrix = Matrix4.Mult(Matrix4.Mult(Matrix4.Rotate(rot), Matrix4.Translation(pos)), Matrix4.Scale(scale));
+            Matrix4 trans = Matrix4.CreateTranslation(pos);
+            worldMatrix = Matrix4.Mult(Matrix4.Mult(Matrix4.Rotate(rot), trans), Matrix4.Scale(scale));
 
             if (normalMatrix == null)
                 normalMatrix = new float[9];

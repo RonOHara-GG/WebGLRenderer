@@ -1,0 +1,6 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+
+<renderPass name="DiffusePass" sortMode="none" clearMode="color_depth" clearColor="0,0,128" clearDepth="1.0" clearStencil="0">
+  <viewport name="MainViewport" src="./mainViewport.xml"/>
+  <camera name="MainCamera" src="./hgl3Camera.xml"/>
+</renderPass>
