@@ -23,3 +23,25 @@ NATIVEENGINE_API void ResizeRenderWindow(HANDLE hWnd)
     if( gRenderer )
         gRenderer->ResizeWindow(hWnd);
 }
+
+NATIVEENGINE_API const char* LoadScene(const char* sceneFile)
+{
+    const char* scene = 0;
+    if( gRenderer )
+        scene = gRenderer->LoadScene(sceneFile);
+    return scene;
+}
+
+NATIVEENGINE_API const char* GetUpdatePassData(const char* passName)
+{
+    const char* data = 0;
+    if( gRenderer )
+        data = gRenderer->GetUpdatePassData(passName);
+    return data;
+}
+
+NATIVEENGINE_API void RipColladaFile(const char* fileName)
+{
+    if( gRenderer )
+        gRenderer->RipColladaFile(fileName);
+}

@@ -50,7 +50,7 @@ function DrawMesh(gl)
 
 function Mesh(scene, name, src)
 {
-	this.scene = scene;
+	//this.scene = scene;
 	this.name = name;
 	this.src = src;
 

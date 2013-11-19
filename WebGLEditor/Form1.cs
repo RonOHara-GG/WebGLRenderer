@@ -15,9 +15,6 @@ namespace WebGLEditor
 {
     public partial class Form1 : Form
     {
-        Scene theScene = null;
-        HelloGL3 hg3 = null;
-
         public Form1()
         {
             InitializeComponent();
@@ -25,48 +22,39 @@ namespace WebGLEditor
 
         private void Form1_Load(object sender, EventArgs e)
         {
-            
         }
-
-        void Application_Idle(object sender, EventArgs e)
-        {
-            Render();
-        }
-
-        private void Render()
-        {
-            if (theScene != null)
-            {
-                theScene.Update(0);
-                theScene.Draw();
-                glControl1.SwapBuffers();
-            }
-
-        }
-
-        private void glControl1_Paint(object sender, PaintEventArgs e)
-        {
-            Render();
-        }
-
+        
         public RenderObject.UpdateCallback FindUpdateFunction(string functionName)
         {    
             return null;
         }
 
-        private void glControl1_Load(object sender, EventArgs e)
-        {        
-            Console.WriteLine("glControl1_Load");
+        private void openSceneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "XML Files (*.xml)|*.xml|All Files (*.*)|*.*";
+            dlg.FilterIndex = 0;
+            dlg.InitialDirectory = Directory.GetCurrentDirectory();
+            dlg.FileName = "scene.xml";
+            if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.Cancel)
+            {
+                string sceneJson = NativeWrapper.LoadSceneFromFile(dlg.FileName);
+                treeView1.Nodes.Clear();
+                TreeNode node = treeView1.Nodes.Add(dlg.FileName);
+                node.Tag = new SceneJS(sceneJson, node);
+            }
+        }
 
-            
-            //theScene = new Scene("scene.xml", glControl1.Width, glControl1.Height);        
-            
-
-            GL.Enable(EnableCap.DepthTest);
-
-            Application.Idle += new EventHandler(Application_Idle);
-
-            Render();
+        private void ripColladaFileToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Filter = "Collada Files (*.dae)|*.dae|All Files (*.*)|*.*";
+            dlg.FilterIndex = 0;
+            dlg.InitialDirectory = Directory.GetCurrentDirectory();
+            if (dlg.ShowDialog() != System.Windows.Forms.DialogResult.Cancel)
+            {
+                NativeWrapper.RipColladaFile(dlg.FileName);
+            }
         }
     }
 }

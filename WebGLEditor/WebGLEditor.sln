@@ -2,6 +2,9 @@
 Microsoft Visual Studio Solution File, Format Version 11.00
 # Visual Studio 2010
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "WebGLEditor", "WebGLEditor.csproj", "{97D65418-9F05-4EED-87DF-4E18649D2093}"
+	ProjectSection(ProjectDependencies) = postProject
+		{A1E92EA9-82B7-4E5B-BA32-69A0161BF6D3} = {A1E92EA9-82B7-4E5B-BA32-69A0161BF6D3}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OpenTK", "..\..\..\..\Users\rono\Documents\OpenTK\1.0\Source\OpenTK\OpenTK.csproj", "{A37A7E14-0000-0000-0000-000000000000}"
 EndProject

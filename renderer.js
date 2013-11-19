@@ -2,14 +2,36 @@ var gl;
 var TheScene;
 var TheCanvas;
 
-function initGL(canvas)
+var lastFrameTime = 0;
+
+function runFrame()
 {
+	window.requestAnimFrame(runFrame, TheCanvas);
+
+	var now = new Date().getTime();
+	var deltaTime = (now - lastFrameTime);
+	lastFrameTime = now;
+	//document.getElementById('FPSCounter').innerHTML = deltaTime;
+
+	if (TheScene)
+	{
+		TheScene.update(deltaTime);
+		TheScene.draw(gl);
+	}
+}
+
+function webGLCanvasSetup()
+{
+	window.requestAnimFrame = (function (callback) { return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function (callback) { window.setTimeout(callback, 1000 / 60); }; })();
+	
+	TheCanvas = document.getElementById("GLCanvas");
+
 	try
 	{
-		gl = canvas.getContext("experimental-webgl");
-		gl.canvasWidth = canvas.width;
-		gl.canvasHeight = canvas.height;
-		
+		gl = TheCanvas.getContext("experimental-webgl");
+		gl.canvasWidth = TheCanvas.width;
+		gl.canvasHeight = TheCanvas.height;
+
 		gl.depthTextureExt = gl.getExtension("WEBGL_depth_texture");
 	} catch (e)
 	{
@@ -18,40 +40,27 @@ function initGL(canvas)
 	{
 		alert("Could not initialise WebGL, sorry :-(");
 	}
+
+	ripColladaFile("./Soldier/cube.dae");
+	
+	webGLStart();
+	setupScene("./scene.xml");
 }
 
-var lastFrameTime = 0;
-
-function runFrame()
+function setupScene(SceneFile)
 {
-	window.requestAnimFrame(runFrame, TheCanvas);
-	
-	var now = new Date().getTime();
-	var deltaTime = (now - lastFrameTime);
-	lastFrameTime = now;
-	document.getElementById('FPSCounter').innerHTML = deltaTime;
+	var sceneXML = LoadXML(SceneFile);
+	TheScene = new Scene(sceneXML, gl);
+	TheScene.resize(gl.canvasWidth, gl.canvasHeight);
 
-	TheScene.update(deltaTime);
-	TheScene.draw(gl);
+	var sceneJson = TheScene.toString();
+	return sceneJson;
 }
 
 function webGLStart()
 {
-	window.requestAnimFrame = (function(callback) {
-        return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame ||
-        function(callback) {
-          window.setTimeout(callback, 1000 / 60);
-        };
-      })();
-
-	TheCanvas = document.getElementById("GLCanvas");
-	initGL(TheCanvas);
-
 	gl.viewProj = mat4.create();
 	gl.lightUpdateToken = 0;
-	var sceneXML = LoadXML("./scene.xml");
-	TheScene = new Scene(sceneXML, gl);
-	TheScene.resize(TheCanvas.width, TheCanvas.height);
 
 	gl.enable(gl.DEPTH_TEST);
 

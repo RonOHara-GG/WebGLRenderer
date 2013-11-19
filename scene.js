@@ -150,7 +150,7 @@ function Draw(gl)
 {
 	for (var i = 0; i < this.renderPasses.length; i++)
 	{
-		this.renderPasses[i].draw(gl);
+		this.renderPasses[i].draw(gl, this);
 	}
 	
 	gl.lightsDirty = false;
@@ -167,6 +167,7 @@ function ResizeScene(width, height)
 
 function Scene(sceneXML, gl)
 {
+
 	this.renderPasses = [];
 	this.updatePasses = [];
 	this.renderObjects = [];
@@ -193,6 +194,7 @@ function Scene(sceneXML, gl)
 	this.draw = Draw;
 	this.update = UpdateScene;
 	this.resize = ResizeScene;
+	this.toString = SceneToString;
 
 	childNodes = sceneXML.documentElement.childNodes
 	for (var i = 0; i < childNodes.length; i++)
@@ -235,7 +237,7 @@ function Scene(sceneXML, gl)
 							var light = this.getLight(objName, objSrc);
 
 							thePass.lights.push(light);
-							gl.lightsDirty = true;
+							thePass.lightsDirty = true;
 						}
 						else if (renderObjectNodes[j].nodeName == "camera")
 						{
@@ -250,4 +252,82 @@ function Scene(sceneXML, gl)
 			}
 		}
 	}
+}
+
+function SceneToString()
+{
+	var str;
+
+	str = "";
+	for (var i = 0; i < this.updatePasses.length; i++)
+	{
+		str += this.updatePasses[i].name;
+		if (i != this.updatePasses.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.renderPasses.length; i++)
+	{
+		str += this.renderPasses[i].name;
+		if (i != this.renderPasses.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.renderObjects.length; i++)
+	{
+		str += this.renderObjects[i].name;
+		if (i != this.renderObjects.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.viewports.length; i++)
+	{
+		str += this.viewports[i].name;
+		if (i != this.viewports.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.cameras.length; i++)
+	{
+		str += this.cameras[i].name;
+		if (i != this.cameras.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.frameBuffers.length; i++)
+	{
+		str += this.frameBuffers[i].name;
+		if (i != this.frameBuffers.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.meshes.length; i++)
+	{
+		str += this.meshes[i].name;
+		if (i != this.meshes.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.shaders.length; i++)
+	{
+		str += this.shaders[i].name;
+		if (i != this.shaders.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.lights.length; i++)
+	{
+		str += this.lights[i].name;
+		if (i != this.lights.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.textures.length; i++)
+	{
+		str += this.textures[i].name;
+		if (i != this.textures.length - 1)
+			str += ","
+	}
+
+	return str;
 }

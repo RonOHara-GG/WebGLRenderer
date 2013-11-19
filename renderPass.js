@@ -17,7 +17,7 @@ function DoClear(gl)
 		gl.clear(clearBits);
 }
 
-function UpdateLights()
+function UpdateLights(scene)
 {
 	gl.lightUpdateToken++;
 	for (var i = 0; i < this.renderObjects.length; i++)
@@ -26,19 +26,20 @@ function UpdateLights()
 		{
 			this.renderObjects[i].shader.lightUpdateToken = gl.lightUpdateToken;
 			this.renderObjects[i].shader.lightCount = 0;
-			this.renderObjects[i].shader.bind(this.scene.gl);
+			this.renderObjects[i].shader.bind(scene.gl);
 			for (var j = 0; j < this.lights.length; j++)
 			{
-				this.renderObjects[i].shader.addLight(this.lights[j]);
+				this.renderObjects[i].shader.addLight(this.lights[j], scene);
 			}
 		}
 	}
+	this.lightsDirty = false;
 }
 
-function DrawRenderPass(gl)
+function DrawRenderPass(gl, scene)
 {
-	if (gl.lightsDirty)
-		this.updateLights();
+	if (this.lightsDirty)
+		this.updateLights(scene);
 
 	// Bind render target
 	if( this.frameBuffer )
@@ -74,7 +75,7 @@ function RenderPass(scene, name, src)
 	this.renderObjects = [];
 	this.lights = [];
 
-	this.scene = scene;
+	//this.scene = scene;
 	this.name = name;
 	this.src = src;
 

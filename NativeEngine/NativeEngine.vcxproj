@@ -54,9 +54,12 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>v8/Debug/lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>v8_base.ia32.lib;v8_snapshot.lib;winmm.lib;icuuc.lib;icui18n.lib;wsock32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>v8/Debug/lib;GL/Win32</AdditionalLibraryDirectories>
+      <AdditionalDependencies>v8_base.ia32.lib;v8_snapshot.lib;winmm.lib;icuuc.lib;icui18n.lib;OpenGL32.lib;wsock32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <PostBuildEvent>
+      <Command>xcopy $(TargetPath) $(SolutionDir)bin\$(Configuration)\$(TargetFileName) /Y</Command>
+    </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -78,6 +81,11 @@
     <None Include="ReadMe.txt" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="jsgl.h" />
+    <ClInclude Include="JSObject.h" />
+    <ClInclude Include="jsxml.h" />
+    <ClInclude Include="js_console.h" />
+    <ClInclude Include="js_window.h" />
     <ClInclude Include="NativeEngine.h" />
     <ClInclude Include="Renderer.h" />
     <ClInclude Include="stdafx.h" />
@@ -92,6 +100,11 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
       </PrecompiledHeader>
     </ClCompile>
+    <ClCompile Include="jsgl.cpp" />
+    <ClCompile Include="JSObject.cpp" />
+    <ClCompile Include="jsxml.cpp" />
+    <ClCompile Include="js_console.cpp" />
+    <ClCompile Include="js_window.cpp" />
     <ClCompile Include="NativeEngine.cpp" />
     <ClCompile Include="Renderer.cpp" />
     <ClCompile Include="stdafx.cpp">

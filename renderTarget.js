@@ -4,7 +4,7 @@ function BindRenderTarget(gl)
 
 function RenderTarget(scene, name, src)
 {
-	this.scene = scene;
+	//this.scene = scene;
 	this.name = name;
 	this.src = src;
 

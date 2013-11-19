@@ -20,3 +20,8 @@ function LoadXML(fileName)
 		result = xhr.responseXML;
 	return result;
 }
+
+function SaveFile(fileName, fileData)
+{
+	console.log("SaveFile: " + fileName + "\n" + fileData);
+}

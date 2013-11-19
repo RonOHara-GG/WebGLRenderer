@@ -26,10 +26,42 @@ function UpdatePass(scene, name, src)
 	this.lights = [];
 	this.cameras = [];
 
-	this.scene = scene;
+	//this.scene = scene;
 	this.name = name;
 	this.src = src;
 
-	
-	this.update = DoUpdatePass
+
+	this.update = DoUpdatePass;
+	this.toString = UpdatePassToString;
+}
+
+function UpdatePassToString()
+{
+	var str = this.name + ";";
+	str += this.src + ";";
+
+	for (var i = 0; i < this.renderObjects.length; i++)
+	{
+		str += this.renderObjects[i].name;
+		if (i < (this.renderObjects.length - 1))
+			str += ",";
+	}
+	str += ";";
+
+	for (var i = 0; i < this.lights.length; i++)
+	{
+		str += this.lights[i].name;
+		if (i < (this.lights.length - 1))
+			str += ",";
+	}
+	str += ";";
+
+	for (var i = 0; i < this.cameras.length; i++)
+	{
+		str += this.cameras[i].name;
+		if (i < (this.cameras.length - 1))
+			str += ",";
+	}
+
+	return str;
 }

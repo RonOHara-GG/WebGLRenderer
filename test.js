@@ -1,0 +1,4 @@
+function webGLStart()
+{
+	alert("webGLStart");
+}

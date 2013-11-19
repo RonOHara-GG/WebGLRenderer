@@ -2589,6 +2589,8 @@ class V8_EXPORT ArrayBuffer : public Object {
    */
   size_t ByteLength() const;
 
+  void* BaseAddress();
+
   /**
    * Create a new ArrayBuffer. Allocate |byte_length| bytes.
    * Allocated memory will be owned by a created ArrayBuffer and

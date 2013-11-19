@@ -10,5 +10,14 @@
 #define NATIVEENGINE_API __declspec(dllimport)
 #endif
 
+extern "C" {
+
 NATIVEENGINE_API void InitRenderWindow(HANDLE hWnd);
 NATIVEENGINE_API void ResizeRenderWindow(HANDLE hWnd);
+
+NATIVEENGINE_API const char* LoadScene(const char* sceneFile);
+NATIVEENGINE_API const char* GetUpdatePassData(const char* passName);
+
+NATIVEENGINE_API void RipColladaFile(const char* fileName);
+
+}

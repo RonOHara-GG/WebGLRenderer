@@ -11,7 +11,7 @@
     <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
   </renderPass>
 
- <!---->
+<!-- -->
   <renderPass name="DiffusePass" src="./diffusePass.xml">
     <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
      <renderObject name="ground" src="./groundRO.xml"/>

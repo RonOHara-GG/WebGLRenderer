@@ -54,19 +54,19 @@ function UnbindOverrideShader(gl)
 	gl.overrideShader = null;
 }
 
-function AddLight(light)
+function AddLight(light, scene)
 {
 	if( this.lightCount < this.maxLights )
 	{	
-		this.scene.gl.uniform3fv(this.lightDirs[this.lightCount], light.dir);
-		this.scene.gl.uniform3fv(this.lightCols[this.lightCount], light.color);
+		scene.gl.uniform3fv(this.lightDirs[this.lightCount], light.dir);
+		scene.gl.uniform3fv(this.lightCols[this.lightCount], light.color);
 		this.lightCount++;
 	}
 }
 
 function Shader(scene, name, src)
 {
-	this.scene = scene;
+	//this.scene = scene;
 	this.name = name;
 	this.src = src;
 
