@@ -34,14 +34,46 @@ namespace WebGLEditor
         }
 
         [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr GetUpdatePassData(string passName);
-        public static string GetUpdatePass(string passName)
+        public static extern void SaveScene(string path);
+
+        [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr ImportFileData(string fileName);
+        public static string ImportFile(string fileName)
         {
-            IntPtr ptr = GetUpdatePassData(passName);
+            IntPtr ptr = ImportFileData(fileName);
             return PtrToStringUtf8(ptr);
         }
 
         [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void RipColladaFile(string fileName);
+
+        [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern bool SetObjectAssignment(string objectName, string objectType, string propertyName, string propertyObject);
+
+        [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern bool AddObjectToPass(string passType, string passName, string objectType, string objectName);
+
+        [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern bool SelectObject(string objectName, string objectType);
+
+
+        
+        [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        private static extern IntPtr FetchData(string fetchFunction, string objectName);
+        public static string GetUpdatePass(string passName)
+        {
+            IntPtr ptr = FetchData("getUpdatePass", passName);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetRenderPass(string passName)
+        {
+            IntPtr ptr = FetchData("getRenderPass", passName);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetRenderObject(string name)
+        {
+            IntPtr ptr = FetchData("getRenderObject", name);
+            return PtrToStringUtf8(ptr);
+        }
     }
 }

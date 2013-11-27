@@ -53,6 +53,7 @@ function Camera(scene, name, src)
 	this.update = UpdateCamera;
 	this.resize = ResizeCamera;
 	this.buildProj = BuildProjectionMatrix;
+	this.save = SaveCamera;
 
 	this.pos = vec3.create();
 	this.target = vec3.create();
@@ -171,4 +172,21 @@ function Camera(scene, name, src)
 
 	if( this.static )
 		this.buildProj(1);
+}
+
+function SaveCamera(path)
+{
+	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
+
+	xml += "<camera name=\"" + this.name + "\" ortho=\"" + this.ortho + "\" fov=\"" + this.fov + "\" near=\"" + this.near + "\" far=\"" + this.far + "\" static=\"" + this.static + "\" left=\"" + this.left + "\" right=\"" + this.right + "\" top=\"" + this.top + "\" bottom=\"" + this.bottom + "\" identityView=\"" + this.identityView + "\" shadowDistance=\"" + this.shadowDistance + "\">\n";
+
+	xml += "\t<position x=\"" + this.pos[0] + "\" y=\"" + this.pos[1] + "\" z=\"" + this.pos[2] + "\"/>\n";
+	xml += "\t<lookAt x=\"" + this.target[0] + "\" y=\"" + this.target[1] + "\" z=\"" + this.target[2] + "\"/>\n";
+	xml += "\t<up x=\"" + this.up[0] + "\" y=\"" + this.up[1] + "\" z=\"" + this.up[2] + "\"/>\n";
+
+	if (this.shadowLight)
+		xml += "\t<shadowLight name=\"" + this.shadowLight.name + "\" src=\"" + this.shadowLight.src + "\"/>\n";
+
+	xml += "</camera>";
+	SaveFile(path + this.src, xml);
 }

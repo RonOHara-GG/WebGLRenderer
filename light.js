@@ -3,6 +3,8 @@ function Light(scene, name, src)
 	//this.scene = scene;
 	this.name = name;
 	this.src = src;
+
+	this.save = SaveLight;
 	
 	this.type = "dir";
 	this.color = vec3.fromValues(1.0, 1.0, 1.0);
@@ -35,5 +37,17 @@ function Light(scene, name, src)
 					break;
 			}
 		}
-	}	
+	}
+}
+
+function SaveLight(path)
+{
+	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
+
+	var lightColor = Math.round(this.color[0] * 255) + "," + Math.round(this.color[1] * 255) + "," + Math.round(this.color[2] * 255);
+	var lightDir = this.dir[0] + "," + this.dir[1] + "," + this.dir[2];
+
+	xml += "<light name=\"" + this.name + "\" type=\"" + this.type + "\" color=\"" + lightColor + "\" dir=\"" + lightDir + "\"/>";
+
+	SaveFile(path + this.src, xml);
 }

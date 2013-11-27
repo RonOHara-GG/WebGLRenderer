@@ -10,6 +10,7 @@ function FrameBuffer(scene, name, src)
 	this.src = src;
 
 	this.bind = BindFrameBuffer
+	this.save = SaveFrameBuffer;
 
 	this.width = 0;
 	this.height = 0;
@@ -27,36 +28,13 @@ function FrameBuffer(scene, name, src)
 
 
 		var gl = scene.gl;
-		/*
-		this.colorTexture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, this.colorTexture);	
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, this.width, this.height, 0, gl.RGBA, gl.UNSIGNED_BYTE, null);
-
-		this.depthTexture = gl.createTexture();
-		gl.bindTexture(gl.TEXTURE_2D, this.depthTexture);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-		gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-		gl.texImage2D(gl.TEXTURE_2D, 0, gl.DEPTH_COMPONENT, this.width, this.height, 0, gl.DEPTH_COMPONENT, gl.UNSIGNED_SHORT, null);
-
-	
-		this.frameBuffer = gl.createFramebuffer();
-		gl.bindFramebuffer(gl.FRAMEBUFFER, this.frameBuffer);
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, this.colorTexture, 0);
-		gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, this.depthTexture, 0);
-		*/
 		
-		this.colorTexture = scene.getTexture(this.name + "_color", null);
+		this.colorTexture = scene.getTexture(this.name + "_color", "frameBuffer");
 		this.colorTexture.width = this.width;
 		this.colorTexture.height = this.height;
 		this.colorTexture.create(gl.RGBA, gl.UNSIGNED_BYTE, null);
 
-		this.depthTexture = scene.getTexture(this.name + "_depth", null);
+		this.depthTexture = scene.getTexture(this.name + "_depth", "frameBuffer");
 		this.depthTexture.width = this.width;
 		this.depthTexture.height = this.height;
 		this.depthTexture.format = gl.DEPTH_COMPONENT;
@@ -70,4 +48,13 @@ function FrameBuffer(scene, name, src)
 
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 	}
+}
+
+function SaveFrameBuffer(path)
+{
+	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
+
+	xml += "<frameBuffer name=\"" + this.name + "\" width=\"" + this.width + "\" height=\"" + this.height + "\" colorFormat=\"" + this.colorFormat + "\" depthFormat=\"" + this.depthFormat + "\"/>";
+
+	SaveFile(path + this.src, xml);
 }

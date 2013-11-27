@@ -76,6 +76,7 @@ function Shader(scene, name, src)
 	this.addLight = AddLight;
 	this.createShader = CreateShader;
 	this.createShaderProgram = CreateShaderProgram;
+	this.save = SaveShader;
 
 	this.shaderProgram = null;
 
@@ -89,12 +90,19 @@ function Shader(scene, name, src)
 	this.lightDirs = [];
 	this.lightCols = [];
 
+	this.vsName = null;
+	this.fsName = null;
+	this.vsSrc = null;
+	this.fsSrc = null;
+	this.vertShaderSrc = null;
+	this.fragShaderSrc = null;
+
 	this.lightCount = 0;
 	this.maxLights = 0;
 	this.lightUpdateToken = 0;
 
 	this.textureCount = 0;
-
+	
 	shaderXML = LoadXML(src);
 	if (shaderXML)
 	{
@@ -113,10 +121,6 @@ function Shader(scene, name, src)
 			}
 		}
 
-
-		var vertShaderSrc = null;
-		var fragShaderSrc = null;
-
 		var children = shaderXML.documentElement.childNodes;
 		for (var i = 0; i < children.length; i++)
 		{
@@ -127,17 +131,27 @@ function Shader(scene, name, src)
 				switch (children[i].nodeName)
 				{
 					case "vertshader":
-						vertShaderSrc = LoadFile(childSrc);
+						this.vsName = childName;
+						this.vsSrc = childSrc;
+						this.vertShaderSrc = LoadFile(childSrc);
 						break;
 					case "fragshader":
-						fragShaderSrc = LoadFile(childSrc);
+						this.fsName = childName;
+						this.fsSrc = childSrc;
+						this.fragShaderSrc = LoadFile(childSrc);
 						break;
 				}
 			}
 		}
 
-		var vs = this.createShader(scene.gl, scene.gl.VERTEX_SHADER, vertShaderSrc);
-		var fs = this.createShader(scene.gl, scene.gl.FRAGMENT_SHADER, fragShaderSrc);
+		var vs = this.createShader(scene.gl, scene.gl.VERTEX_SHADER, this.vertShaderSrc);
+		var fs = this.createShader(scene.gl, scene.gl.FRAGMENT_SHADER, this.fragShaderSrc);
+
+		if (!EditorName)
+		{
+			this.vertShaderSrc = null;
+			this.fragShaderSrc = null;
+		}
 
 		if (vs && fs)
 		{
@@ -169,5 +183,24 @@ function Shader(scene, name, src)
 			this.lightDirs.push(lightDir);
 			this.lightCols.push(lightCol);
 		}
+	}
+}
+
+function SaveShader(path)
+{
+	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
+
+	xml += "<shader name=\"" + this.name + "\" maxLights=\"" + this.maxLights + "\" textureCount=\"" + this.textureCount + "\">\n";
+	xml += "\t<vertshader name=\"" + this.vsName + "\" src=\"" + this.vsSrc + "\"/>\n";
+	xml += "\t<fragshader name=\"" + this.fsName + "\" src=\"" + this.fsSrc + "\"/>\n";
+	xml += "</shader>";
+
+	SaveFile(path + this.src, xml);
+
+	// Save the shader files too
+	if (EditorName)
+	{
+		SaveFile(path + this.vsSrc, this.vertShaderSrc);
+		SaveFile(path + this.fsSrc, this.fragShaderSrc);
 	}
 }

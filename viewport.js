@@ -21,6 +21,7 @@ function Viewport(scene, name, src)
 	this.src = src;
 
 	this.bind = BindViewport
+	this.save = SaveViewport
 
 	this.left = 0;
 	this.top = 0;
@@ -38,4 +39,12 @@ function Viewport(scene, name, src)
 		this.height = parseFloat(viewportXML.documentElement.attributes.getNamedItem("height").value);
 		this.percentageMode = viewportXML.documentElement.attributes.getNamedItem("percentageMode").value === "true";
 	}
+}
+
+function SaveViewport(path)
+{
+	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
+
+	xml += "<viewport name=\"" + this.name + "\" left=\"" + this.left + "\" top=\"" + this.top + "\" width=\"" + this.width + "\" height=\"" + this.height + "\" percentageMode=\"" + this.percentageMode + "\"/>\n";
+	SaveFile(path + this.src, xml);
 }

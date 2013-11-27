@@ -64,6 +64,11 @@ function DrawRenderPass(gl, scene)
 	for (var i = 0; i < this.renderObjects.length; i++)
 	{
 		this.renderObjects[i].draw(gl);
+
+		if (this.debugDraw && this.renderObjects[i].selected)
+		{
+			this.renderObjects[i].drawSelected(gl);
+		}
 	}
 
 	if( this.overrideShader )
@@ -81,25 +86,30 @@ function RenderPass(scene, name, src)
 
 	// Set defaults
 	this.sortMode = "none";
+	this.clearMode = "none";
+	this.clearColorValue = "";
 	this.clearColor = false;
 	this.clearDepth = false;
 	this.clearStencil = false;
 	this.clearColorRed = 0;
 	this.clearColorGreen = 0;
 	this.clearColorBlue = 0;
-	this.clearDepth = 1;
-	this.clearStencil = 0;
+	this.clearDepthVal = 1;
+	this.clearStencilVal = 0;
 
 	this.viewport = null;
 	this.camera = null;
 	this.frameBuffer = null;
 
 	this.lightsDirty = false;
+	this.overrideShader = null;
+	this.debugDraw = false;
 
 	this.draw = DrawRenderPass
 	this.clear = DoClear
 	this.updateLights = UpdateLights;
-	this.overrideShader = null;
+	this.toString = RenderPassToString;
+	this.save = SaveRenderPass
 
 	// Load the source
 	rpXML = LoadXML(src);
@@ -115,22 +125,26 @@ function RenderPass(scene, name, src)
 					this.sortMode = attrib.value;
 					break;
 				case "clearMode":
-					var clearMode = attrib.value;
-					this.clearColor = (clearMode.indexOf("color") >= 0);
-					this.clearDepth = (clearMode.indexOf("depth") >= 0);
-					this.clearStencil = (clearMode.indexOf("stencil") >= 0);
+					this.clearMode = attrib.value;
+					this.clearColor = (this.clearMode.indexOf("color") >= 0);
+					this.clearDepth = (this.clearMode.indexOf("depth") >= 0);
+					this.clearStencil = (this.clearMode.indexOf("stencil") >= 0);
 					break;
 				case "clearDepth":
-					this.clearDepth = attrib.value;
+					this.clearDepthVal = attrib.value;
 					break;
 				case "clearStencil":
-					this.clearStencil = attrib.value;
+					this.clearStencilVal = attrib.value;
 					break;
 				case "clearColor":
-					var clearColors = attrib.value.csvToArray();
+					this.clearColorValue = attrib.value;
+					var clearColors = this.clearColorValue.csvToArray();
 					this.clearColorRed = parseInt(clearColors[0][0]) / 255.0;
 					this.clearColorGreen = parseInt(clearColors[0][1]) / 255.0;
 					this.clearColorBlue = parseInt(clearColors[0][2]) / 255.0;
+					break;
+				case "debugDraw":
+					this.debugDraw = (attrib.value == "true");
 					break;
 				default:
 					break;
@@ -163,4 +177,63 @@ function RenderPass(scene, name, src)
 			}
 		}
 	}
+}
+
+function SaveRenderPass(path)
+{
+	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
+
+	xml += "<renderPass name=\"" + this.name + "\" sortMode=\"" + this.sortMode + "\" clearMode=\"" + this.clearMode + "\" clearColor=\"" + this.clearColorValue + "\" clearDepth=\"" + this.clearDepthVal + "\" clearStencil=\"" + this.clearStencilVal + "\" debugDraw=\"" + this.debugDraw + "\">\n";
+
+	if (this.viewport)
+	{
+		xml += "\t<viewport name=\"" + this.viewport.name + "\" src=\"" + this.viewport.src + "\"/>\n";
+	}
+	if (this.camera)
+	{
+		xml += "\t<camera name=\"" + this.camera.name + "\" src=\"" + this.camera.src + "\"/>\n";
+	}
+	if (this.frameBuffer)
+	{
+		xml += "\t<frameBuffer name=\"" + this.frameBuffer.name + "\" src=\"" + this.frameBuffer.src + "\"/>\n";
+	}
+	if (this.overrideShader)
+	{
+		xml += "\t<overrideShader name=\"" + this.overrideShader.name + "\" src=\"" + this.overrideShader.src + "\"/>\n";
+	}
+
+	xml += "</renderPass>";
+	SaveFile(path + this.src, xml);
+}
+
+function RenderPassToString()
+{
+	var str = this.name + ";";
+	str += this.src + ";";
+	str += this.sortMode + ";";	
+	str += this.clearMode + ";";
+	str += this.clearColorValue + ";";
+	str += this.clearDepthVal + ";";
+	str += this.clearStencilVal + ";";
+	str += (this.viewport ? this.viewport.name : "none")  + ";"; ;
+	str += (this.camera ? this.camera.name : "none") + ";"; ;
+	str += (this.frameBuffer ? this.frameBuffer.name : "none") + ";"; ;
+	str += (this.overrideShader ? this.overrideShader.name : "none") + ";"; ;
+
+	for (var i = 0; i < this.renderObjects.length; i++)
+	{
+		str += this.renderObjects[i].name;
+		if (i < (this.renderObjects.length - 1))
+			str += ",";
+	}
+	str += ";";
+
+	for (var i = 0; i < this.lights.length; i++)
+	{
+		str += this.lights[i].name;
+		if (i < (this.lights.length - 1))
+			str += ",";
+	}
+	
+	return str;
 }

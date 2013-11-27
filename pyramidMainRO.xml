@@ -4,6 +4,5 @@
   <shader name="defaultShader" src="./defaultShader.xml"></shader>
   <mesh name="pyrmaid" src="./pyramid.xml"></mesh>
   <texture name="ShadowMap" src="frameBuffer" depthTexture="true" texIndex="0"/>
-  <!--<texture name="BluePlus" src="./blueplus.jpg" texIndex="0"/>-->
   <shadowCamera name="ShadowCamera" src="./shadowCamera.xml"/>
 </renderobject>

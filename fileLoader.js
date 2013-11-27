@@ -25,3 +25,12 @@ function SaveFile(fileName, fileData)
 {
 	console.log("SaveFile: " + fileName + "\n" + fileData);
 }
+
+function SetCurrentDirectory(path)
+{
+}
+
+function GetFullPath(relPath)
+{
+	return relPath;
+}

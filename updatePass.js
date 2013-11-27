@@ -33,6 +33,18 @@ function UpdatePass(scene, name, src)
 
 	this.update = DoUpdatePass;
 	this.toString = UpdatePassToString;
+	this.save = SaveUpdatePass;
+}
+
+function SaveUpdatePass(path)
+{
+	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
+
+	xml += "<updatePass name=\"" + this.name + "\">\n";
+
+	xml += "</updatePass>";
+
+	SaveFile(path + this.src, xml);
 }
 
 function UpdatePassToString()

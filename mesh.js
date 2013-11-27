@@ -3,35 +3,41 @@ function DrawMesh(gl)
 	if (this.vb)
 	{
 		gl.bindBuffer(gl.ARRAY_BUFFER, this.vb);
-		switch (this.vertFormat)
+		
+		var format = this.vertFormat;
+		var elements = format.length / 2;
+		var offset = 0;
+		for (var k = 0; k < elements; k++)
 		{
-			case "P3":
-				gl.enableVertexAttribArray(gl.shaderPositionLocation);
-				gl.vertexAttribPointer(gl.shaderPositionLocation, 3, gl.FLOAT, false, 0, 0);
-				break;
-			case "P3N3":
-				gl.enableVertexAttribArray(gl.shaderPositionLocation);
-				gl.vertexAttribPointer(gl.shaderPositionLocation, 3, gl.FLOAT, false, 24, 0);
-
-				if( gl.shaderNormalLocation >= 0 )
-				{
-					gl.enableVertexAttribArray(gl.shaderNormalLocation);
-					gl.vertexAttribPointer(gl.shaderNormalLocation, 3, gl.FLOAT, false, 24, 12);
-				}
-				break;
-			case "P3T2":
-				gl.enableVertexAttribArray(gl.shaderPositionLocation);
-				gl.vertexAttribPointer(gl.shaderPositionLocation, 3, gl.FLOAT, false, 20, 0);
-
-				if( gl.shaderUVLocattion >= 0 )
-				{
-					gl.enableVertexAttribArray(gl.shaderUVLocattion);
-					gl.vertexAttribPointer(gl.shaderUVLocattion, 2, gl.FLOAT, false, 20, 12);
-				}
-				break;
-			default:
-				alert("unsupported vertex format: " + this.vertFormat);
-				break; 
+			var idx = k * 2;
+			var fmtelement = format.substring(idx, idx + 2);
+			switch (fmtelement)
+			{
+				case "P3":
+					gl.enableVertexAttribArray(gl.shaderPositionLocation);
+					gl.vertexAttribPointer(gl.shaderPositionLocation, 3, gl.FLOAT, false, this.vertexStride, offset);
+					offset += 12;
+					break;
+				case "N3": 
+					if (gl.shaderNormalLocation >= 0)
+					{
+						gl.enableVertexAttribArray(gl.shaderNormalLocation);
+						gl.vertexAttribPointer(gl.shaderNormalLocation, 3, gl.FLOAT, false, this.vertexStride, offset);
+					}
+					offset += 12;
+					break;
+				case "T2":
+					if (gl.shaderUVLocattion >= 0)
+					{
+						gl.enableVertexAttribArray(gl.shaderUVLocattion);
+						gl.vertexAttribPointer(gl.shaderUVLocattion, 2, gl.FLOAT, false, this.vertexStride, offset);
+					}
+					offset += 8;
+					break;
+				default:
+					alert("unsupported vertex format: " + fmtelement);
+					break;
+			}
 		}
 
 		if (this.ib)
@@ -48,6 +54,17 @@ function DrawMesh(gl)
 	}
 }
 
+function MeshToString()
+{
+	var str;
+
+	str = "mesh:" + this.name;
+	str += ";";
+	str += "src:" + this.src;
+
+	return str;
+}
+
 function Mesh(scene, name, src)
 {
 	//this.scene = scene;
@@ -55,10 +72,18 @@ function Mesh(scene, name, src)
 	this.src = src;
 
 	this.draw = DrawMesh;
+	this.toString = MeshToString;
+	this.save = SaveMesh;
 
 	this.vb = null;
 	this.ib = null;
 	this.triangleCount = 0;
+	this.vertexStride = 0;
+	this.boxMin = vec3.create();
+	this.boxMax = vec3.create();
+
+	if (EditorName)
+		this.fullPath = GetFullPath(src);
 
 	meshXML = LoadXML(src);
 	if( meshXML )
@@ -97,6 +122,9 @@ function Mesh(scene, name, src)
 											var posVals = positions[k].textContent.csvToArray();
 											var pos = vec3.fromValues(posVals[0][0], posVals[0][1], posVals[0][2]);
 											posArray.push(pos);
+
+											vec3.max(this.boxMax, this.boxMax, pos);
+											vec3.min(this.boxMin, this.boxMin, pos);
 										}
 									}
 								}
@@ -137,40 +165,40 @@ function Mesh(scene, name, src)
 					}
 
 					var interleaved = [];
-					switch (this.vertFormat)
+
+					for (var j = 0; j < this.vertCount; j++)
 					{
-						case "P3":
-							for (var j = 0; j < this.vertCount; j++)
+						var format = this.vertFormat;
+						var elements = format.length / 2;
+						this.vertexStride = 0;
+						for (var k = 0; k < elements; k++)
+						{
+							var idx = k * 2;
+							var fmtelement = format.substring(idx, idx + 2);
+							switch (fmtelement)
 							{
-								interleaved.push(posArray[j][0]);
-								interleaved.push(posArray[j][1]);
-								interleaved.push(posArray[j][2]);
+								case "P3":
+									interleaved.push(posArray[j][0]);
+									interleaved.push(posArray[j][1]);
+									interleaved.push(posArray[j][2]);
+									this.vertexStride += 12;
+									break;
+								case "N3":
+									interleaved.push(nrmArray[j][0]);
+									interleaved.push(nrmArray[j][1]);
+									interleaved.push(nrmArray[j][2]);
+									this.vertexStride += 12;
+									break;
+								case "T2":
+									interleaved.push(uvArray[j][0]);
+									interleaved.push(uvArray[j][1]);
+									this.vertexStride += 8;
+									break;
+								default:
+									alert("unsupported vertex format: " + fmtelement);
+									break;
 							}
-							break;
-						case "P3N3":
-							for (var j = 0; j < this.vertCount; j++)
-							{
-								interleaved.push(posArray[j][0]);
-								interleaved.push(posArray[j][1]);
-								interleaved.push(posArray[j][2]);
-								interleaved.push(nrmArray[j][0]);
-								interleaved.push(nrmArray[j][1]);
-								interleaved.push(nrmArray[j][2]);
-							}
-							break;
-						case "P3T2":
-							for (var j = 0; j < this.vertCount; j++)
-							{
-								interleaved.push(posArray[j][0]);
-								interleaved.push(posArray[j][1]);
-								interleaved.push(posArray[j][2]);
-								interleaved.push(uvArray[j][0]);
-								interleaved.push(uvArray[j][1]);
-							}
-							break;
-						default:
-							alert("unsupported vertex format: " + this.vertFormat);
-							break;
+						}
 					}
 
 					this.vb = scene.gl.createBuffer();
@@ -187,5 +215,15 @@ function Mesh(scene, name, src)
 				}
 			}
 		}
+	}
+}
+
+function SaveMesh(path)
+{
+	if (EditorName)
+	{
+		// Load the original mesh file and save it in the new directory
+		var file = LoadFile(this.fullPath);
+		SaveFile(path + this.src, file);
 	}
 }

@@ -24,6 +24,8 @@ Renderer::Renderer(void)
     m_DataFetchFunction = 0;
     m_FunctionParamString = 0;
     m_GlobalFunction = 0;
+    m_ObjectAssignment_Object = 0;
+    m_SceneFunc = 0;
     m_JSONData = 0;
 }
 
@@ -52,17 +54,27 @@ static void LoadXMLCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
     
     HandleScope scope(args.GetIsolate());
     Handle<Value> arg = args[0];
-    String::Utf8Value value(arg);
-
-    jsxml* xml = new jsxml();
-    if( !xml->Load(*value, args.GetIsolate()) )
+    if( !arg->IsNull() )
     {
-        delete xml;
+        String::Utf8Value value(arg);
+
+        jsxml* xml = new jsxml();
+        if( !xml->Load(*value, args.GetIsolate()) )
+        {
+            DumpJSStack();
+            delete xml;
+            args.GetReturnValue().Set(v8::Null());
+        }
+        else
+        {    
+            Handle<Object> obj = xml->Create(args.GetIsolate());
+            args.GetReturnValue().Set(obj);
+        }
+    }
+    else
+    {
         args.GetReturnValue().Set(v8::Null());
     }
-    
-    Handle<Object> obj = xml->Create(args.GetIsolate());
-    args.GetReturnValue().Set(obj);
 }
 
 static void LoadFileCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
@@ -114,6 +126,32 @@ static void SaveFileCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
     }
 }
 
+static void SetCurrentDirectoryCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 1) 
+        return;
+    
+    HandleScope scope(args.GetIsolate());
+    String::Utf8Value path(args[0]);
+
+    BOOL success = SetCurrentDirectoryA(*path);
+}
+
+static void GetFullPathCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 1) 
+        return;
+    
+    HandleScope scope(args.GetIsolate());
+    String::Utf8Value path(args[0]);
+
+    char fullPath[8 * 1024];
+    GetFullPathNameA(*path, sizeof(fullPath), fullPath, NULL);
+
+    Handle<String> str = Handle<String>::New(args.GetIsolate(), String::New(fullPath));
+    args.GetReturnValue().Set(str);
+}
+
 void Renderer::InitJSEngine(HANDLE hWnd)
 {
     V8::SetArrayBufferAllocator(new MallocArrayBufferAllocator());
@@ -131,6 +169,8 @@ void Renderer::InitJSEngine(HANDLE hWnd)
     global->Set(String::New("LoadXML"), FunctionTemplate::New(LoadXMLCallback));
     global->Set(String::New("LoadFile"), FunctionTemplate::New(LoadFileCallback));
     global->Set(String::New("SaveFile"), FunctionTemplate::New(SaveFileCallback));
+    global->Set(String::New("SetCurrentDirectory"), FunctionTemplate::New(SetCurrentDirectoryCallback));
+    global->Set(String::New("GetFullPath"), FunctionTemplate::New(GetFullPathCallback));
 
     // Create the context
     Handle<Context> ctx = Context::New(m_Isolate, 0, global);
@@ -208,6 +248,7 @@ void Renderer::LoadJSFile(const char* jsFile)
                 sprintf_s(output, "\ns(%d,%d): %s\n", *scriptName, tryCatch.Message()->GetLineNumber(), tryCatch.Message()->GetStartColumn(), *error);
         
                 OutputDebugStringA(output);
+                DumpJSStack();
                 context->Exit();
             }
 
@@ -324,6 +365,7 @@ Handle<Value> Renderer::CallJSFunction(const v8::Persistent<v8::Function>& pfunc
         sprintf_s(output, "\n%s(%d,%d): %s\n", *scriptName, tryCatch.Message()->GetLineNumber(), tryCatch.Message()->GetStartColumn(), *error);
         
         OutputDebugStringA(output);
+        DumpJSStack();
         context->Exit();
         retVal = v8::Null();
     }
@@ -347,11 +389,30 @@ Handle<Value> Renderer::GetJSON(Handle<Value> object)
     return scope.Close(jsonString);
 }
 
+void Renderer::ErrorLog(TryCatch* tryCatch, Handle<Context>& context)
+{  
+    if( tryCatch->HasCaught() )
+    {
+        context->Enter();
+        char output[8 * 1024];
+
+        String::Utf8Value error(tryCatch->Exception());
+		String::Utf8Value scriptName(tryCatch->Message()->GetScriptResourceName());
+        sprintf_s(output, "\n%s(%d,%d): %s\n", *scriptName, tryCatch->Message()->GetLineNumber(), tryCatch->Message()->GetStartColumn(), *error);
+        
+        OutputDebugStringA(output);
+        DumpJSStack();
+        context->Exit();
+    }
+}
+
 void Renderer::FetchData()
 {
     HandleScope scope(m_Isolate);
     v8::Local<v8::Context> context = v8::Local<v8::Context>::New(m_Isolate, m_V8Context);
     context->Enter();
+
+    TryCatch tryCatch;
 
     // Get the scene object
     Handle<Object> sceneObj = Handle<Object>::Cast(context->Global()->Get(String::New("TheScene")));
@@ -365,14 +426,26 @@ void Renderer::FetchData()
     args[1] = v8::Null();
     Handle<Object> retVal = Handle<Object>::Cast(fetchFunc->Call(sceneObj, 2, args));
 
-    // Get the data from the object
-    Handle<Function> stringFunc = Handle<Function>::Cast(retVal->Get(String::New("toString")));
-    Handle<String> objData = Handle<String>::Cast(stringFunc->Call(retVal, 0, 0));
+    Handle<String> objData;
+    if( *retVal )
+    {
+        // Get the data from the object
+        Handle<Function> stringFunc = Handle<Function>::Cast(retVal->Get(String::New("toString")));
+        objData = Handle<String>::Cast(stringFunc->Call(retVal, 0, 0));
 
-    // Store the data
-    String::Utf8Value val(objData);
-    m_JSONData = _strdup(*val);    
+        // Store the data
+        String::Utf8Value val(objData);
+        m_JSONData = _strdup(*val);    
+    }
+    else
+    {
+        m_JSONData = _strdup("null");
+    }
+
+    ErrorLog(&tryCatch, context);
     
+    
+    m_DataFetchFunction = 0;
     context->Exit();
 }
 
@@ -396,21 +469,69 @@ void Renderer::CallGlobal()
     Handle<Object> retVal = Handle<Object>::Cast(fetchFunc->Call(global, 1, args));
     context->Exit();
 
-    if( tryCatch.HasCaught() )
-    {
-        context->Enter();
-        char output[8 * 1024];
-
-        String::Utf8Value error(tryCatch.Exception());
-		String::Utf8Value scriptName(tryCatch.Message()->GetScriptResourceName());
-        sprintf_s(output, "\n%s(%d,%d): %s\n", *scriptName, tryCatch.Message()->GetLineNumber(), tryCatch.Message()->GetStartColumn(), *error);
-        
-        OutputDebugStringA(output);
-        context->Exit();
-    }
+    ErrorLog(&tryCatch, context);
 
     m_GlobalFunction = 0;
 }
+
+void Renderer::DoObjectAssignment()
+{
+    HandleScope scope(m_Isolate);
+    v8::Local<v8::Context> context = v8::Local<v8::Context>::New(m_Isolate, m_V8Context);
+    context->Enter();
+
+    TryCatch tryCatch;
+
+    // Get the scene object
+    Handle<Object> sceneObj = Handle<Object>::Cast(context->Global()->Get(String::New("TheScene")));
+
+    // Find the function
+    Handle<Function> func = Handle<Function>::Cast(sceneObj->Get(String::New("doObjectAssignment")));
+
+    // Do the assignment
+    Handle<Value> args[4];
+    args[0] = String::New(m_ObjectAssignment_Object);
+    args[1] = String::New(m_ObjectAssignment_ObjectType);
+    args[2] = String::New(m_ObjectAssignment_Property);
+    args[3] = String::New(m_ObjectAssignment_PropertyValue);
+    Local<Value> retVal = Local<Value>::Cast(func->Call(sceneObj, 4, args));
+
+    ErrorLog(&tryCatch, context);
+
+    m_ObjectAssignment_Result = retVal->ToBoolean()->Value();   
+    m_ObjectAssignment_Object = 0;
+    context->Exit();
+}
+
+void Renderer::CallSceneFunc()
+{
+    HandleScope scope(m_Isolate);
+    v8::Local<v8::Context> context = v8::Local<v8::Context>::New(m_Isolate, m_V8Context);
+    context->Enter();
+
+    TryCatch tryCatch;
+
+    // Get the scene object
+    Handle<Object> sceneObj = Handle<Object>::Cast(context->Global()->Get(String::New("TheScene")));
+
+    // Find the function
+    Handle<Function> func = Handle<Function>::Cast(sceneObj->Get(String::New(m_SceneFunc)));
+
+    // Call the function
+    Handle<Value> args[4];
+    args[0] = String::New(m_SceneFuncArgs[0]);
+    args[1] = String::New(m_SceneFuncArgs[1]);
+    args[2] = String::New(m_SceneFuncArgs[2]);
+    args[3] = String::New(m_SceneFuncArgs[3]);
+    Local<Value> retVal = Local<Value>::Cast(func->Call(sceneObj, m_SceneFuncArgCount, args));
+
+    ErrorLog(&tryCatch, context);
+
+    m_SceneFunc_Result = retVal->ToBoolean()->Value();   
+    m_SceneFunc = 0;
+    context->Exit();
+}
+
 
 DWORD WINAPI RenderThreadLoop(LPVOID lpThreadParameter)
 {
@@ -442,7 +563,7 @@ void Renderer::RunFrame()
     HandleScope scope(m_Isolate);
     if( m_SceneLoadRequest && !m_jsFunc_setupScene.IsEmpty() )
     {
-        Handle<Value> sceneJson = CallJSFunction(m_jsFunc_setupScene, 1, m_SceneLoadRequest);
+        Handle<Value> sceneJson = CallJSFunction(m_jsFunc_setupScene, 2, m_SceneLoadRequest, "NativeEngine");
         m_SceneLoadRequest = 0;
      
         
@@ -461,6 +582,16 @@ void Renderer::RunFrame()
     if( m_GlobalFunction )
     {
         CallGlobal();
+    }
+
+    if( m_ObjectAssignment_Object )
+    {
+        DoObjectAssignment();
+    }
+
+    if( m_SceneFunc )
+    {
+        CallSceneFunc();
     }
 
     if( !m_jsFunc_frameFunc.IsEmpty() )
@@ -502,7 +633,18 @@ const char* Renderer::LoadScene(const char* sceneFile)
     return m_JSONData;
 }
 
-const char* Renderer::GetUpdatePassData(const char* passName)
+void Renderer::SaveScene(const char* path)
+{
+    m_GlobalFunction = "saveScene";
+    m_FunctionParamString = path;
+
+    while( m_GlobalFunction )
+    {
+        Sleep(200);
+    }
+}
+
+const char* Renderer::ImportFileData(const char* fileName)
 {
     if( m_JSONData )
     {
@@ -510,8 +652,27 @@ const char* Renderer::GetUpdatePassData(const char* passName)
         m_JSONData = 0;
     }
 
-    m_DataFetchFunction = "getUpdatePass";
-    m_FunctionParamString = passName;
+    m_DataFetchFunction = "importFile";
+    m_FunctionParamString = fileName;
+
+    while( !m_JSONData )
+    {
+        Sleep(200);
+    }
+
+    return m_JSONData;
+}
+
+const char* Renderer::FetchData(const char* dataFunc, const char* objName)
+{
+    if( m_JSONData )
+    {
+        free(m_JSONData);
+        m_JSONData = 0;
+    }
+
+    m_DataFetchFunction = dataFunc;
+    m_FunctionParamString = objName;
 
     while( !m_JSONData )
     {
@@ -530,4 +691,50 @@ void Renderer::RipColladaFile(const char* colladaFile)
     {
         Sleep(200);
     }
+}
+
+bool Renderer::SetObjectAssignment(const char* objectName, const char* objectType, const char* propertyName, const char* propertyObject)
+{
+    m_SceneFunc = "doObjectAssignment";
+    m_SceneFuncArgs[0] = objectName;
+    m_SceneFuncArgs[1] = objectType;
+    m_SceneFuncArgs[2] = propertyName;
+    m_SceneFuncArgs[3] = propertyObject;
+    m_SceneFuncArgCount = 4;
+
+    while( m_SceneFunc )
+    {
+        Sleep(200);
+    }
+    return m_SceneFunc_Result;
+}
+
+bool Renderer::AddObjectToPass(const char* passType, const char* passName, const char* objectType, const char* objectName)
+{
+    m_SceneFunc = "addToPass";
+    m_SceneFuncArgs[0] = passType;
+    m_SceneFuncArgs[1] = passName;
+    m_SceneFuncArgs[2] = objectType;
+    m_SceneFuncArgs[3] = objectName;
+    m_SceneFuncArgCount = 4;
+
+    while( m_SceneFunc )
+    {
+        Sleep(200);
+    }
+    return m_SceneFunc_Result;
+}
+
+bool Renderer::SelectObject(const char* objectName, const char* objectType)
+{
+    m_SceneFunc = "selectObject";
+    m_SceneFuncArgs[0] = objectName;
+    m_SceneFuncArgs[1] = objectType;
+    m_SceneFuncArgCount = 2;
+
+    while( m_SceneFunc )
+    {
+        Sleep(200);
+    }
+    return m_SceneFunc_Result;
 }

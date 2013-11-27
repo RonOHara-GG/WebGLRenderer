@@ -36,6 +36,7 @@ function Texture(scene, name, src)
 
 	this.bind = BindTexture
 	this.create = CreateTexture
+	this.save = SaveTexture
 
 	this.width = 0;
 	this.height = 0;
@@ -46,7 +47,7 @@ function Texture(scene, name, src)
 	this.wrapT = scene.gl.CLAMP_TO_EDGE;
 	this.glTexture = null;
 
-	if( src )
+	if (src && src != "frameBuffer")
 	{
 		this.image = new Image();
 		this.image.onload = function() { 
@@ -54,4 +55,9 @@ function Texture(scene, name, src)
 		};
 		this.image.src = src;
 	}
+}
+
+function SaveTexture(path)
+{
+	// For now, I am not saving textures.  This will need to get implemented
 }

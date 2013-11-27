@@ -642,6 +642,17 @@ void glUniform3fvCB(const v8::FunctionCallbackInfo<v8::Value>& args)
     glUniform3fv(location, 1, (float*)values->Buffer()->BaseAddress());
 }
 
+void glUniform1iCB(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 2) 
+        return;
+
+    HandleScope scope(args.GetIsolate());
+    int location = args[0]->ToInt32()->Value() - 1;
+    int val = args[1]->ToInt32()->Value();
+
+    glUniform1i(location, val);
+}
 
 void glEnableVertexAttribArrayCB(const v8::FunctionCallbackInfo<v8::Value>& args)
 {
@@ -764,6 +775,7 @@ void jsgl::SetupTemplate(Handle<ObjectTemplate> templ)
     templ->Set(String::New("uniformMatrix4fv"), FunctionTemplate::New(glUniformMatrix4fvCB));
     templ->Set(String::New("uniformMatrix3fv"), FunctionTemplate::New(glUniformMatrix3fvCB));
     templ->Set(String::New("uniform3fv"), FunctionTemplate::New(glUniform3fvCB));
+    templ->Set(String::New("uniform1i"), FunctionTemplate::New(glUniform1iCB));
     templ->Set(String::New("enableVertexAttribArray"), FunctionTemplate::New(glEnableVertexAttribArrayCB));
     templ->Set(String::New("vertexAttribPointer"), FunctionTemplate::New(glVertexAttribPointerCB));
     templ->Set(String::New("drawArrays"), FunctionTemplate::New(glDrawArraysCB));

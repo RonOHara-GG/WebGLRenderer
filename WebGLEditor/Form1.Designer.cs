@@ -33,9 +33,12 @@
             this.menuStrip1 = new System.Windows.Forms.MenuStrip();
             this.sceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.openSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            this.nativeControl1 = new WebGLEditor.NativeControl();
             this.colladaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ripColladaFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            this.importFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.nativeControl1 = new WebGLEditor.NativeControl();
+            this.saveSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
             // 
@@ -48,10 +51,12 @@
             // 
             // treeView1
             // 
+            this.treeView1.AllowDrop = true;
             this.treeView1.Location = new System.Drawing.Point(1042, 12);
             this.treeView1.Name = "treeView1";
             this.treeView1.Size = new System.Drawing.Size(311, 301);
             this.treeView1.TabIndex = 2;
+            this.treeView1.AfterSelect += new System.Windows.Forms.TreeViewEventHandler(this.treeView1_AfterSelect);
             // 
             // menuStrip1
             // 
@@ -67,7 +72,10 @@
             // sceneToolStripMenuItem
             // 
             this.sceneToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
-            this.openSceneToolStripMenuItem});
+            this.openSceneToolStripMenuItem,
+            this.saveSceneToolStripMenuItem,
+            this.toolStripSeparator1,
+            this.importFileToolStripMenuItem});
             this.sceneToolStripMenuItem.Name = "sceneToolStripMenuItem";
             this.sceneToolStripMenuItem.Size = new System.Drawing.Size(50, 20);
             this.sceneToolStripMenuItem.Text = "Scene";
@@ -78,14 +86,6 @@
             this.openSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.openSceneToolStripMenuItem.Text = "Open Scene";
             this.openSceneToolStripMenuItem.Click += new System.EventHandler(this.openSceneToolStripMenuItem_Click);
-            // 
-            // nativeControl1
-            // 
-            this.nativeControl1.BackColor = System.Drawing.SystemColors.ActiveCaption;
-            this.nativeControl1.Location = new System.Drawing.Point(12, 27);
-            this.nativeControl1.Name = "nativeControl1";
-            this.nativeControl1.Size = new System.Drawing.Size(1024, 768);
-            this.nativeControl1.TabIndex = 0;
             // 
             // colladaToolStripMenuItem
             // 
@@ -101,6 +101,33 @@
             this.ripColladaFileToolStripMenuItem.Size = new System.Drawing.Size(155, 22);
             this.ripColladaFileToolStripMenuItem.Text = "Rip Collada File";
             this.ripColladaFileToolStripMenuItem.Click += new System.EventHandler(this.ripColladaFileToolStripMenuItem_Click);
+            // 
+            // toolStripSeparator1
+            // 
+            this.toolStripSeparator1.Name = "toolStripSeparator1";
+            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
+            // 
+            // importFileToolStripMenuItem
+            // 
+            this.importFileToolStripMenuItem.Name = "importFileToolStripMenuItem";
+            this.importFileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.importFileToolStripMenuItem.Text = "Import File";
+            this.importFileToolStripMenuItem.Click += new System.EventHandler(this.importFileToolStripMenuItem_Click);
+            // 
+            // nativeControl1
+            // 
+            this.nativeControl1.BackColor = System.Drawing.SystemColors.ActiveCaption;
+            this.nativeControl1.Location = new System.Drawing.Point(12, 27);
+            this.nativeControl1.Name = "nativeControl1";
+            this.nativeControl1.Size = new System.Drawing.Size(1024, 768);
+            this.nativeControl1.TabIndex = 0;
+            // 
+            // saveSceneToolStripMenuItem
+            // 
+            this.saveSceneToolStripMenuItem.Name = "saveSceneToolStripMenuItem";
+            this.saveSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.saveSceneToolStripMenuItem.Text = "Save Scene";
+            this.saveSceneToolStripMenuItem.Click += new System.EventHandler(this.saveSceneToolStripMenuItem_Click);
             // 
             // Form1
             // 
@@ -132,6 +159,9 @@
         private System.Windows.Forms.ToolStripMenuItem openSceneToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem colladaToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem ripColladaFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem importFileToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem saveSceneToolStripMenuItem;
 
     }
 }

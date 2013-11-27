@@ -1,6 +1,7 @@
 var gl;
 var TheScene;
 var TheCanvas;
+var EditorName = null;
 
 var lastFrameTime = 0;
 
@@ -44,13 +45,19 @@ function webGLCanvasSetup()
 	ripColladaFile("./Soldier/cube.dae");
 	
 	webGLStart();
-	setupScene("./scene.xml");
+	setupScene("./scene.xml", null);
 }
 
-function setupScene(SceneFile)
+function setupScene(SceneFile, editor)
 {
-	var sceneXML = LoadXML(SceneFile);
-	TheScene = new Scene(sceneXML, gl);
+	EditorName = editor;
+
+	var idx = SceneFile.lastIndexOf("\\");
+	if (idx < 0)
+		idx = SceneFile.lastIndexOf("/");
+	SetCurrentDirectory(SceneFile.substring(0, idx));
+
+	TheScene = new Scene(SceneFile, gl);
 	TheScene.resize(gl.canvasWidth, gl.canvasHeight);
 
 	var sceneJson = TheScene.toString();
@@ -66,4 +73,10 @@ function webGLStart()
 
 	lastFrameTime = new Date().getTime();
 	runFrame();
+}
+
+function saveScene(path)
+{
+	if (TheScene)
+		TheScene.save(path);
 }

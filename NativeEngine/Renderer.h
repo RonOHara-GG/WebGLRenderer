@@ -15,8 +15,13 @@ public:
 
 
     const char* LoadScene(const char* sceneFile);
-    const char* GetUpdatePassData(const char* passName);
+    void SaveScene(const char* path);
+    const char* ImportFileData(const char* fileName);
+    const char* FetchData(const char* dataFetchFunction, const char* objectName);
     void RipColladaFile(const char* fileName);
+    bool SetObjectAssignment(const char* objectName, const char* objectType, const char* propertyName, const char* propertyObject);
+    bool AddObjectToPass(const char* passType, const char* passName, const char* objectType, const char* objectName);
+    bool SelectObject(const char* objectName, const char* objectType);
 
     void ThreadSetup();
     void RunFrame();
@@ -29,8 +34,11 @@ private:
     void SetGlobalPersistentFunction(const char* name, v8::Persistent<v8::Function>& pf);
     Handle<Value> CallJSFunction(const v8::Persistent<v8::Function>& pfunc, int argCount, ...);
     Handle<Value> GetJSON(Handle<Value> object);
+    void ErrorLog(TryCatch* tryCatch, Handle<Context>& context);
     void FetchData();
     void CallGlobal();
+    void DoObjectAssignment();
+    void CallSceneFunc();
 
 
 public:
@@ -53,6 +61,17 @@ public:
     const char*                     m_FunctionParamString;
     const char*                     m_GlobalFunction;
     char*                           m_JSONData;
+
+    const char*                     m_ObjectAssignment_Object;
+    const char*                     m_ObjectAssignment_ObjectType;
+    const char*                     m_ObjectAssignment_Property;
+    const char*                     m_ObjectAssignment_PropertyValue;
+    bool                            m_ObjectAssignment_Result;
+
+    const char*                     m_SceneFunc;
+    int                             m_SceneFuncArgCount;
+    const char*                     m_SceneFuncArgs[4];
+    bool                            m_SceneFunc_Result;
 };
 
 

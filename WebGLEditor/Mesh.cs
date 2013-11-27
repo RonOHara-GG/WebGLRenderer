@@ -22,10 +22,6 @@ namespace WebGLEditor
 
             try
             {
-                int posBuffer = -1;
-                int nrmBuffer = -1;
-                int uvBuffer = -1;
-
                 List<Vector3> posArray = new List<Vector3>();
                 List<Vector3> nrmArray = new List<Vector3>();
                 List<Vector2> uvArray = new List<Vector2>();

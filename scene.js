@@ -94,9 +94,16 @@ function GetMesh(name, src)
 			return this.meshes[i];
 	}
 
-	var mesh = new Mesh(this, name, src);
-	this.meshes.push(mesh);
-	return mesh;
+	if (src)
+	{
+		var mesh = new Mesh(this, name, src);
+		this.meshes.push(mesh);
+		return mesh;
+	}
+	else
+	{
+		return null;
+	}
 }
 
 function GetShader(name, src)
@@ -138,6 +145,126 @@ function GetTexture(name, src)
 	return tex;
 }
 
+function ImportFile(filename)
+{
+	var object = null;
+	xml = LoadXML(filename);
+	if (xml)
+	{
+		switch (xml.documentElement.nodeName)
+		{
+			case "mesh":
+				var name = xml.documentElement.attributes.getNamedItem("name").value;
+				object = this.getMesh(name, filename);
+				break;
+			default:
+				console.log("Unsupported file type: " + xml.documentElement.nodeName);
+				break;
+		}
+	}
+
+	return object;
+}
+
+function FindSceneObject(objectName, objectType)
+{
+	var obj = null;
+	switch (objectType)
+	{
+		case "renderObject":
+			obj = this.getRenderObject(objectName, null);
+			break;
+		default:
+			console.log("Unsupported objectType given to FindSceneObject: " + objectType);
+			break;
+	}
+	return obj;
+}
+
+function DoObjectAssignment(objectName, objectType, property, propertyValue)
+{
+	var result = false;
+	console.log("scene.doObjectAssignment(" + objectName + ", " + objectType + ", " + property + ", " + propertyValue + ")");
+
+	// Find the object
+	var object = this.findObject(objectName, objectType);
+	if (object)
+	{
+		result = object.doObjectAssignment(this, property, propertyValue);
+	}
+
+	console.log("DoObjectAssignment(" + objectName + ", " + objectType + ", " + property + ", " + propertyValue + ") - result: " + result);
+	return result;
+}
+
+function AddToPass(passType, passName, objectType, objectName)
+{
+	var result = false;
+	var pass = null;
+	switch (passType)
+	{
+		case "updatePass":
+			pass = this.getUpdatePass(passName, null);
+			break;
+		case "renderPass":
+			pass = this.getRenderPass(passName, null);
+			break;
+		default:
+			console.log("AddToPass - unsupported pass type: " + passType);
+			break;
+	}
+
+	if (pass)
+	{
+		var object = this.findObject(objectName, objectType);
+		if (object)
+		{
+			switch (objectType)
+			{
+				case "renderObject":
+					pass.renderObjects.push(object);
+					result = true;
+					break;
+				case "camera":
+					pass.cameras.push(object);
+					result = true;
+					break;
+				case "light":
+					pass.lights.push(object);
+					thePass.lightsDirty = true;
+					result = true;
+					break;
+				default:
+					console.log("AddToPass unsupported object type: " + objectType);
+					break;
+			}
+		}
+	}
+
+	return result;
+}
+
+function SelectObject(objectName, objectType)
+{
+	var result = false;
+	if (this.selectedObject)
+	{
+		// Deselect the current object
+		this.selectedObject.setSelected(false);
+		this.selectedObject = null;
+	}
+
+	// Find the object
+	var obj = FindSceneObject(objectName, objectType);
+	if (obj)
+	{
+		this.selectedObject = obj;
+		this.selectedObject.setSelected(true);
+	}
+
+	return result;
+}
+
 function UpdateScene(deltaTimeMS)
 {
 	for (var i = 0; i < this.updatePasses.length; i++)
@@ -165,7 +292,7 @@ function ResizeScene(width, height)
 	}
 }
 
-function Scene(sceneXML, gl)
+function Scene(sceneXMLFile, gl)
 {
 
 	this.renderPasses = [];
@@ -179,7 +306,10 @@ function Scene(sceneXML, gl)
 	this.lights = [];
 	this.textures = [];
 
+	this.selectedObject = null;
+
 	this.gl = gl;
+	this.src = sceneXMLFile;
 
 	this.getRenderPass = GetRenderPass;
 	this.getUpdatePass = GetUpdatePass;
@@ -191,66 +321,170 @@ function Scene(sceneXML, gl)
 	this.getShader = GetShader;
 	this.getLight = GetLight;
 	this.getTexture = GetTexture;
+	this.importFile = ImportFile;
+	this.doObjectAssignment = DoObjectAssignment;
+	this.addToPass = AddToPass;
+	this.findObject = FindSceneObject;
 	this.draw = Draw;
 	this.update = UpdateScene;
 	this.resize = ResizeScene;
 	this.toString = SceneToString;
+	this.save = DoSaveScene;
+	this.selectObject = SelectObject;
 
-	childNodes = sceneXML.documentElement.childNodes
-	for (var i = 0; i < childNodes.length; i++)
+	var sceneXML = LoadXML(sceneXMLFile);
+	if (sceneXML)
 	{
-		if( childNodes[i].nodeType == 1 )
+		childNodes = sceneXML.documentElement.childNodes
+		for (var i = 0; i < childNodes.length; i++)
 		{
-			if (childNodes[i].nodeName == "renderPass" || childNodes[i].nodeName == "updatePass")
+			if (childNodes[i].nodeType == 1)
 			{
-				var passName = childNodes[i].attributes.getNamedItem("name").value
-				var srcFile = childNodes[i].attributes.getNamedItem("src").value
-				
-				var thePass;
-				if (childNodes[i].nodeName == "renderPass" )
-					thePass = this.getRenderPass(passName, srcFile)
-				else
-					thePass = this.getUpdatePass(passName, srcFile);
-
-				renderObjectNodes = childNodes[i].childNodes;
-				for (var j = 0; j < renderObjectNodes.length; j++)
+				if (childNodes[i].nodeName == "renderPass" || childNodes[i].nodeName == "updatePass")
 				{
-					if (renderObjectNodes[j].nodeType == 1)
+					var passName = childNodes[i].attributes.getNamedItem("name").value
+					var srcFile = childNodes[i].attributes.getNamedItem("src").value
+
+					var thePass;
+					if (childNodes[i].nodeName == "renderPass")
+						thePass = this.getRenderPass(passName, srcFile)
+					else
+						thePass = this.getUpdatePass(passName, srcFile);
+
+					renderObjectNodes = childNodes[i].childNodes;
+					for (var j = 0; j < renderObjectNodes.length; j++)
 					{
-						if (renderObjectNodes[j].nodeName == "renderObject")
+						if (renderObjectNodes[j].nodeType == 1)
 						{
-							objName = renderObjectNodes[j].attributes.getNamedItem("name").value;
-							objSrc = renderObjectNodes[j].attributes.getNamedItem("src").value;
+							if (renderObjectNodes[j].nodeName == "renderObject")
+							{
+								objName = renderObjectNodes[j].attributes.getNamedItem("name").value;
+								objSrc = renderObjectNodes[j].attributes.getNamedItem("src").value;
 
-							// Try to find this render object if its already loaded
-							var renderObj = this.getRenderObject(objName, objSrc);
+								// Try to find this render object if its already loaded
+								var renderObj = this.getRenderObject(objName, objSrc);
 
-							// Reference this object in the render pass
-							thePass.renderObjects.push(renderObj);
-						}
-						else if (renderObjectNodes[j].nodeName == "light")
-						{
-							objName = renderObjectNodes[j].attributes.getNamedItem("name").value;
-							objSrc = renderObjectNodes[j].attributes.getNamedItem("src").value;
+								// Reference this object in the render pass
+								thePass.renderObjects.push(renderObj);
+							}
+							else if (renderObjectNodes[j].nodeName == "light")
+							{
+								objName = renderObjectNodes[j].attributes.getNamedItem("name").value;
+								objSrc = renderObjectNodes[j].attributes.getNamedItem("src").value;
 
-							// Try to find this render object if its already loaded
-							var light = this.getLight(objName, objSrc);
+								// Try to find this render object if its already loaded
+								var light = this.getLight(objName, objSrc);
 
-							thePass.lights.push(light);
-							thePass.lightsDirty = true;
-						}
-						else if (renderObjectNodes[j].nodeName == "camera")
-						{
-							objName = renderObjectNodes[j].attributes.getNamedItem("name").value;
-							objSrc = renderObjectNodes[j].attributes.getNamedItem("src").value;
-							var cam = this.getCamera(objName, objSrc);
+								thePass.lights.push(light);
+								thePass.lightsDirty = true;
+							}
+							else if (renderObjectNodes[j].nodeName == "camera")
+							{
+								objName = renderObjectNodes[j].attributes.getNamedItem("name").value;
+								objSrc = renderObjectNodes[j].attributes.getNamedItem("src").value;
+								var cam = this.getCamera(objName, objSrc);
 
-							thePass.cameras.push(cam);
+								thePass.cameras.push(cam);
+							}
 						}
 					}
 				}
 			}
 		}
+	}
+}
+
+function DoSaveScene(path)
+{
+	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
+
+	xml += "<scene>\n";
+	for (var i = 0; i < this.updatePasses.length; i++)
+	{
+		var pass = this.updatePasses[i];
+		xml += "\t<updatePass name=\"" + pass.name + "\" src=\"" + pass.src + "\">\n";
+		for (var j = 0; j < pass.renderObjects.length; j++)
+		{
+			var ro = pass.renderObjects[j];
+			xml += "\t\t<renderObject name=\"" + ro.name + "\" src=\"" + ro.src + "\"/>\n";
+		}
+		for (var j = 0; j < pass.lights.length; j++)
+		{
+			var light = pass.lights[j];
+			xml += "\t\t<light name=\"" + light.name + "\" src=\"" + light.src + "\"/>\n";
+		}
+		for (var j = 0; j < pass.cameras.length; j++)
+		{
+			var cam = pass.cameras[j];
+			xml += "\t\t<camera name=\"" + cam.name + "\" src=\"" + cam.src + "\"/>\n";
+		}
+		xml += "\t</updatePass>\n";
+	}
+
+	for (var i = 0; i < this.renderPasses.length; i++)
+	{
+		var pass = this.renderPasses[i];
+		xml += "\t<renderPass name=\"" + pass.name + "\" src=\"" + pass.src + "\">\n";
+		for (var j = 0; j < pass.renderObjects.length; j++)
+		{
+			var ro = pass.renderObjects[j];
+			xml += "\t\t<renderObject name=\"" + ro.name + "\" src=\"" + ro.src + "\"/>\n";
+		}
+		for (var j = 0; j < pass.lights.length; j++)
+		{
+			var light = pass.lights[j];
+			xml += "\t\t<light name=\"" + light.name + "\" src=\"" + light.src + "\"/>\n";
+		}
+		xml += "\t</renderPass>\n";
+	}
+
+	xml += "</scene>";
+
+	var idx = this.src.lastIndexOf("\\");
+	if( idx < 0 )
+		idx = this.src.lastIndexOf("/");
+	var srcFile = this.src.substring(idx);
+	SaveFile(path + srcFile, xml);
+
+	for (var i = 0; i < this.renderPasses.length; i++)
+	{
+		this.renderPasses[i].save(path);
+	}
+	for (var i = 0; i < this.updatePasses.length; i++)
+	{
+		this.updatePasses[i].save(path);
+	}
+	for (var i = 0; i < this.renderObjects.length; i++)
+	{
+		this.renderObjects[i].save(path);
+	}
+	for (var i = 0; i < this.viewports.length; i++)
+	{
+		this.viewports[i].save(path);
+	}
+	for (var i = 0; i < this.cameras.length; i++)
+	{
+		this.cameras[i].save(path);
+	}
+	for (var i = 0; i < this.frameBuffers.length; i++)
+	{
+		this.frameBuffers[i].save(path);
+	}
+	for (var i = 0; i < this.meshes.length; i++)
+	{
+		this.meshes[i].save(path);
+	}
+	for (var i = 0; i < this.shaders.length; i++)
+	{
+		this.shaders[i].save(path);
+	}
+	for (var i = 0; i < this.lights.length; i++)
+	{
+		this.lights[i].save(path);
+	}
+	for (var i = 0; i < this.textures.length; i++)
+	{
+		this.textures[i].save(path);
 	}
 }
 
