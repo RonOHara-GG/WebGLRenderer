@@ -25,6 +25,46 @@ function CreateShaderProgram(gl, vs, fs)
 	return shaderProgram;
 }
 
+function InitShaderProgram(gl, vsCode, fsCode)
+{
+	var vs = this.createShader(gl, gl.VERTEX_SHADER, vsCode);
+	var fs = this.createShader(gl, gl.FRAGMENT_SHADER, fsCode);
+
+	if (vs && fs)
+	{
+		this.shaderProgram = this.createShaderProgram(gl, vs, fs);
+	}
+}
+
+function InitShaderParams()
+{
+	if (this.shaderProgram)
+	{
+		this.mvpUniform = scene.gl.getUniformLocation(this.shaderProgram, "uMVPMatrix");
+		this.worldUniform = scene.gl.getUniformLocation(this.shaderProgram, "uWorldMatrix");
+		this.normalUniform = scene.gl.getUniformLocation(this.shaderProgram, "uNormalMatrix");
+		this.shadowMtxUniform = scene.gl.getUniformLocation(this.shaderProgram, "uShadowMatrix");
+		this.positionAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
+		this.normalAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexNormal");
+		this.uvAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexUV");
+
+		for (var i = 0; i < this.textureCount; i++)
+		{
+			var texSampler = scene.gl.getUniformLocation(this.shaderProgram, "texture" + i);
+			gl.uniform1i(texSampler, i);
+		}
+
+		for (var i = 0; i < this.maxLights; i++)
+		{
+			var lightDir = scene.gl.getUniformLocation(this.shaderProgram, "uLightDir" + i);
+			var lightCol = scene.gl.getUniformLocation(this.shaderProgram, "uLightColor" + i);
+
+			this.lightDirs.push(lightDir);
+			this.lightCols.push(lightCol);
+		}
+	}
+}
+
 function BindShader(gl)
 {
 	if( !gl.overrideShader )
@@ -77,6 +117,8 @@ function Shader(scene, name, src)
 	this.createShader = CreateShader;
 	this.createShaderProgram = CreateShaderProgram;
 	this.save = SaveShader;
+	this.initShaderProgram = InitShaderProgram;
+	this.initShaderParams = InitShaderParams;
 
 	this.shaderProgram = null;
 
@@ -144,46 +186,16 @@ function Shader(scene, name, src)
 			}
 		}
 
-		var vs = this.createShader(scene.gl, scene.gl.VERTEX_SHADER, this.vertShaderSrc);
-		var fs = this.createShader(scene.gl, scene.gl.FRAGMENT_SHADER, this.fragShaderSrc);
+		this.initShaderProgram(scene.gl, this.vertShaderSrc, this.fragShaderSrc);
 
 		if (!EditorName)
 		{
 			this.vertShaderSrc = null;
 			this.fragShaderSrc = null;
 		}
-
-		if (vs && fs)
-		{
-			this.shaderProgram = this.createShaderProgram(scene.gl, vs, fs);
-		}
 	}
 
-	if (this.shaderProgram)
-	{
-		this.mvpUniform = scene.gl.getUniformLocation(this.shaderProgram, "uMVPMatrix");
-		this.worldUniform = scene.gl.getUniformLocation(this.shaderProgram, "uWorldMatrix");
-		this.normalUniform = scene.gl.getUniformLocation(this.shaderProgram, "uNormalMatrix");
-		this.shadowMtxUniform = scene.gl.getUniformLocation(this.shaderProgram, "uShadowMatrix");
-		this.positionAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
-		this.normalAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexNormal");
-		this.uvAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexUV");
-
-		for (var i = 0; i < this.textureCount; i++ )
-		{
-			var texSampler = scene.gl.getUniformLocation(this.shaderProgram, "texture" + i);
-			gl.uniform1i(texSampler, i);
-		}	
-
-		for (var i = 0; i < this.maxLights; i++)
-		{
-			var lightDir = scene.gl.getUniformLocation(this.shaderProgram, "uLightDir" + i);
-			var lightCol = scene.gl.getUniformLocation(this.shaderProgram, "uLightColor" + i);
-
-			this.lightDirs.push(lightDir);
-			this.lightCols.push(lightCol);
-		}
-	}
+	this.initShaderParams();
 }
 
 function SaveShader(path)

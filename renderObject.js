@@ -8,7 +8,79 @@ function UpdateRenderObject(deltaTimeMS)
 
 function DrawSelectedRenderObject(gl)
 {
-	var corners = [];
+	if (this.mesh)
+	{
+		var min = this.mesh.boxMin;
+		var max = this.mesh.boxMax;
+		var dist = ve3.distance(min, max) * 0.1;
+
+		
+		var points = [];
+
+		points.push(min);
+		points.push(vec3.fromValues(min[0] + dist, min[1], min[2]));
+		points.push(min);
+		points.push(vec3.fromValues(min[0], min[1] + dist, min[2]));
+		points.push(min);
+		points.push(vec3.fromValues(min[0], min[1], min[2] + dist));
+
+		var corner = vec3.fromValues(min[0], min[1], max[2]);
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0] + dist, corner[1], corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1] + dist, corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1], corner[2] - dist));
+
+		corner = vec3.fromValues(min[0], max[1], max[2]);
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0] + dist, corner[1], corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1] - dist, corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1], corner[2] - dist));
+
+		corner = vec3.fromValues(min[0], max[1], min[2]);
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0] + dist, corner[1], corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1] - dist, corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1], corner[2] + dist));
+
+		points.push(max);
+		points.push(vec3.fromValues(max[0] - dist, max[1], max[2]));
+		points.push(max);
+		points.push(vec3.fromValues(max[0], max[1] - dist, max[2]));
+		points.push(max);
+		points.push(vec3.fromValues(max[0], max[1], max[2] - dist));
+
+		corner = vec3.fromValues(max[0], max[1], min[2]);
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0] - dist, corner[1], corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1] - dist, corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1], corner[2] + dist));
+
+		corner = vec3.fromValues(max[0], min[1], min[2]);
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0] - dist, corner[1], corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1] + dist, corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1], corner[2] + dist));
+
+		corner = vec3.fromValues(max[0], min[1], max[2]);
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0] - dist, corner[1], corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1] + dist, corner[2]));
+		points.push(corner);
+		points.push(vec3.fromValues(corner[0], corner[1], corner[2] - dist));
+
+		DrawLines(gl, points, this.worldMatrix);
+	}
 }
 
 function DrawRenderObject(gl)
