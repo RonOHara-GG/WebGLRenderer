@@ -3,6 +3,7 @@
 class jsgl;
 class js_window;
 class js_console;
+class JavaScriptFunction;
 
 class Renderer
 {
@@ -18,6 +19,8 @@ public:
     void SaveScene(const char* path);
     const char* ImportFileData(const char* fileName);
     const char* FetchData(const char* dataFetchFunction, const char* objectName);
+    const char* PickObjects(float x, float y);
+    const char* GetDragAxes(float x, float y, bool freeMode);
     void RipColladaFile(const char* fileName);
     bool SetObjectAssignment(const char* objectName, const char* objectType, const char* propertyName, const char* propertyObject);
     bool AddObjectToPass(const char* passType, const char* passName, const char* objectType, const char* objectName);
@@ -34,7 +37,6 @@ private:
     void SetGlobalPersistentFunction(const char* name, v8::Persistent<v8::Function>& pf);
     Handle<Value> CallJSFunction(const v8::Persistent<v8::Function>& pfunc, int argCount, ...);
     Handle<Value> GetJSON(Handle<Value> object);
-    void ErrorLog(TryCatch* tryCatch, Handle<Context>& context);
     void FetchData();
     void CallGlobal();
     void DoObjectAssignment();
@@ -72,6 +74,8 @@ public:
     int                             m_SceneFuncArgCount;
     const char*                     m_SceneFuncArgs[4];
     bool                            m_SceneFunc_Result;
+
+    JavaScriptFunction*             m_JSFunc;
 };
 
 

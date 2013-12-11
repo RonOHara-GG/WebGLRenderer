@@ -117,6 +117,16 @@ void GetGLProperty(Local<String> prop, const PropertyCallbackInfo<Value>& info)
         Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_DEPTH_TEST));
         info.GetReturnValue().Set(val);
     }
+    else if( strcmp(*Property, "ALWAYS") == 0 )
+    {
+        Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_ALWAYS));
+        info.GetReturnValue().Set(val);
+    }
+    else if( strcmp(*Property, "LESS") == 0 )
+    {
+        Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_LESS));
+        info.GetReturnValue().Set(val);
+    }
     else if( strcmp(*Property, "VERTEX_SHADER") == 0 )
     {
         Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_VERTEX_SHADER));
@@ -150,6 +160,11 @@ void GetGLProperty(Local<String> prop, const PropertyCallbackInfo<Value>& info)
     else if( strcmp(*Property, "TRIANGLES") == 0 )
     {
         Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_TRIANGLES));
+        info.GetReturnValue().Set(val);
+    }
+    else if( strcmp(*Property, "LINES") == 0 )
+    {
+        Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_LINES));
         info.GetReturnValue().Set(val);
     }
     else if( strcmp(*Property, "FLOAT") == 0 )
@@ -283,6 +298,32 @@ void glEnableCB(const v8::FunctionCallbackInfo<v8::Value>& args)
 
     int val = argval->Value();
     glEnable(val);
+}
+
+void glDisableCB(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 1) 
+        return;
+    
+    HandleScope scope(args.GetIsolate());
+    Handle<Value> arg = args[0];
+    Local<Int32> argval = arg->ToInt32();
+
+    int val = argval->Value();
+    glDisable(val);
+}
+
+void glDepthFuncCB(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 1) 
+        return;
+    
+    HandleScope scope(args.GetIsolate());
+    Handle<Value> arg = args[0];
+    Local<Int32> argval = arg->ToInt32();
+
+    int val = argval->Value();
+    glDepthFunc(val);
 }
 
 void glCreateShaderCB(const v8::FunctionCallbackInfo<v8::Value>& args)
@@ -451,6 +492,17 @@ void glCreateBufferCB(const v8::FunctionCallbackInfo<v8::Value>& args)
 
     Handle<Integer> ret = Handle<Integer>::New(args.GetIsolate(), Int32::New(buffer));
     args.GetReturnValue().Set(ret);
+}
+
+void glDeleteBufferCB(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 1) 
+        return;
+
+    HandleScope scope(args.GetIsolate());
+    unsigned int buffer = args[0]->ToInt32()->Value();
+
+    glDeleteBuffers(1, &buffer);
 }
 
 void glBindBufferCB(const v8::FunctionCallbackInfo<v8::Value>& args)
@@ -748,6 +800,8 @@ void glActiveTextureCB(const v8::FunctionCallbackInfo<v8::Value>& args)
 void jsgl::SetupTemplate(Handle<ObjectTemplate> templ)
 {
     templ->Set(String::New("enable"), FunctionTemplate::New(glEnableCB));
+    templ->Set(String::New("disable"), FunctionTemplate::New(glDisableCB));
+    templ->Set(String::New("depthFunc"), FunctionTemplate::New(glDepthFuncCB));
     templ->Set(String::New("createShader"), FunctionTemplate::New(glCreateShaderCB));
     templ->Set(String::New("shaderSource"), FunctionTemplate::New(glShaderSourceCB));
     templ->Set(String::New("compileShader"), FunctionTemplate::New(glCompileShaderCB));
@@ -760,6 +814,7 @@ void jsgl::SetupTemplate(Handle<ObjectTemplate> templ)
     templ->Set(String::New("getUniformLocation"), FunctionTemplate::New(glGetUniformLocationCB));
     templ->Set(String::New("getAttribLocation"), FunctionTemplate::New(glGetAttribLocationCB));
     templ->Set(String::New("createBuffer"), FunctionTemplate::New(glCreateBufferCB));
+    templ->Set(String::New("deleteBuffer"), FunctionTemplate::New(glDeleteBufferCB));
     templ->Set(String::New("bindBuffer"), FunctionTemplate::New(glBindBufferCB));
     templ->Set(String::New("bufferData"), FunctionTemplate::New(glBufferDataCB));
     templ->Set(String::New("createTexture"), FunctionTemplate::New(glCreateTextureCB));

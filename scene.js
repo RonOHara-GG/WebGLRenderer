@@ -255,7 +255,7 @@ function SelectObject(objectName, objectType)
 	}
 
 	// Find the object
-	var obj = FindSceneObject(objectName, objectType);
+	var obj = this.findObject(objectName, objectType);
 	if (obj)
 	{
 		this.selectedObject = obj;
@@ -263,6 +263,326 @@ function SelectObject(objectName, objectType)
 	}
 
 	return result;
+}
+
+function UnprojPoint(point, iproj, iview)
+{
+	var pt = vec4.create();
+	vec4.transformMat4(pt, point, iproj);
+	vec4.transformMat4(pt, pt, iview);
+
+	var world = vec3.fromValues(pt[0] / pt[3], pt[1] / pt[3], pt[2] / pt[3]);
+
+	return world;
+}
+
+function DistSortRenderObjects(dists, objs)
+{
+	var sorted = [];
+
+	while( 1 )
+	{
+		var nearest = objs.length;
+		var nearestval = 1.1;
+
+		for (var j = 0; j < objs.length; j++)
+		{
+			if (dists[j] < nearestval)
+			{
+				nearestval = dists[j];
+				nearest = j;
+			}
+		}
+
+		if (nearest != objs.length)
+		{
+			sorted.push(objs[nearest]);
+			dists[nearest] = 2;
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	return sorted;
+}
+
+function PickSceneObjects(x, y)
+{
+	var ret = "";
+
+	var invProj = mat4.create();
+	var invView = mat4.create();
+	var hitObjects = [];
+	var hitDistances = [];
+
+	for( var i = 0; i < this.renderPasses.length; i++ )
+	{
+		var rp = this.renderPasses[i];
+		if (!rp.frameBuffer)
+		{
+			rp.viewport.bind(this.gl);
+			rp.camera.bind(this.gl);
+			mat4.invert(invProj, this.gl.proj);
+			mat4.invert(invView, this.gl.view);
+
+			var rect = rp.viewport.rect;
+			var projX = (x - rect[0]) / rect[2];
+			var projY = 1.0 - ((y - rect[1]) / rect[3]);
+
+			projX = (projX * 2) - 1;
+			projY = (projY * 2) - 1;
+
+			var worldPointA = UnprojPoint(vec4.fromValues(projX, projY, -1, 1), invProj, invView);
+			var worldPointB = UnprojPoint(vec4.fromValues(projX, projY, 1, 1), invProj, invView);
+
+			for (var j = 0; j < rp.renderObjects.length; j++)
+			{
+				var dist = rp.renderObjects[j].lineTest(worldPointA, worldPointB);
+				if (dist > 0 && dist < 1)
+				{
+					hitObjects.push(rp.renderObjects[j]);
+					hitDistances.push(dist);
+				}
+			}
+		}
+	}
+
+	if (hitObjects.length > 0)
+	{
+		var sorted = DistSortRenderObjects(hitDistances, hitObjects);
+		for (var i = 0; i < sorted.length; i++)
+		{
+			ret += sorted[i].name;
+			if ((i + 1) < sorted.length)
+				ret += ",";
+		}
+	}
+	else
+	{
+		ret = "none";
+	}
+
+	return ret;
+}
+
+function GetDragAxes(x, y, freeMode)
+{
+	var ret = "";
+
+	// Get all the selected objects
+	var selected = [];
+	for (var i = 0; i < this.renderObjects.length; i++)
+	{
+		if (this.renderObjects[i].selected)
+			selected.push(this.renderObjects[i]);
+	}
+
+	if (selected.length > 0)
+	{
+		for (var i = 0; i < selected.length; i++)
+		{
+			ret += selected[i].name;
+			if (i < (selected.length - 1))
+				ret += ",";
+		}
+		ret += ";";
+
+		// Get pick axes
+		if (freeMode)
+		{
+			for (var i = 0; i < this.renderPasses.length; i++)
+			{
+				var rp = this.renderPasses[i];
+				if (!rp.frameBuffer)
+				{
+					var u = vec3.fromValues(rp.camera.view[1], rp.camera.view[5], rp.camera.view[9]);
+					var r = vec3.fromValues(rp.camera.view[0], rp.camera.view[4], rp.camera.view[8]);
+					ret += r[0] + "," + r[1] + "," + r[2] + "," + -u[0] + "," + -u[1] + "," + -u[2];
+					break;
+				}
+			}
+		}
+		else
+		{
+			var pickAxes = null;
+			var invProj = mat4.create();
+			var invView = mat4.create();
+			for (var i = 0; i < this.renderPasses.length; i++)
+			{
+				var rp = this.renderPasses[i];
+				if (!rp.frameBuffer)
+				{
+					rp.viewport.bind(this.gl);
+					rp.camera.bind(this.gl);
+					mat4.invert(invProj, this.gl.proj);
+					mat4.invert(invView, this.gl.view);
+
+					var rect = rp.viewport.rect;
+					var projX = (x - rect[0]) / rect[2];
+					var projY = 1.0 - ((y - rect[1]) / rect[3]);
+
+					projX = (projX * 2) - 1;
+					projY = (projY * 2) - 1;
+
+					var worldPointA = UnprojPoint(vec4.fromValues(projX, projY, -1, 1), invProj, invView);
+					var worldPointB = UnprojPoint(vec4.fromValues(projX, projY, 1, 1), invProj, invView);
+					var dir = vec3.create();
+					vec3.sub(dir, worldPointB, worldPointA);
+					vec3.normalize(dir, dir);
+
+					for (var j = 0; j < rp.renderObjects.length; j++)
+					{
+						var ro = rp.renderObjects[j];
+						if (ro.selected)
+						{
+							pickAxes = ro.getDragAxis(worldPointA, dir);
+							break;
+						}
+					}
+					if (pickAxes)
+					{
+						console.log("pickAxes: " + pickAxes);
+						var cup = vec3.fromValues(rp.camera.view[1], rp.camera.view[5], rp.camera.view[9]);
+						var cright = vec3.fromValues(rp.camera.view[0], rp.camera.view[4], rp.camera.view[8]);
+						var view = mat3.create();
+						mat3.fromMat4(view, rp.camera.view);
+						switch (pickAxes)
+						{
+							case "xy":
+								var vx = vec3.fromValues(1, 0, 0);
+								var vy = vec3.fromValues(0, 1, 0);
+								vec3.transformMat3(vx, vx, view);
+								vec3.transformMat3(vy, vy, view);
+								var rdot = vec3.dot(vx, cright);
+								var udot = vec3.dot(vx, cup);
+								var yudot = vec3.dot(vy, cup);
+								var xval;
+								var yval;
+								if (Math.abs(rdot) > Math.abs(udot))
+								{
+									// x = left/right
+									if (rdot < 0)
+										xval = vec3.fromValues(1, 0, 0);
+									else
+										xval = vec3.fromValues(-1, 0, 0);
+
+									if (yudot < 0)
+										yval = vec3.fromValues(0, -1, 0);
+									else
+										yval = vec3.fromValues(0, 1, 0);
+								}
+								else
+								{
+									// x = up/down
+									if (udot < 0)
+										xval = vec3.fromValues(0, -1, 0);
+									else
+										xval = vec3.fromValues(0, 1, 0);
+
+									if (yudot < 0)
+										yval = vec3.fromValues(-1, 0, 0);
+									else
+										yval = vec3.fromValues(1, 0, 0);
+								}
+								ret += xval[0] + "," + xval[1] + "," + xval[2] + "," + yval[0] + "," + yval[1] + "," + yval[2];
+								break;
+							case "xz":
+								var vx = vec3.fromValues(1, 0, 0);
+								var vz = vec3.fromValues(0, 0, 1);
+								vec3.transformMat3(vx, vx, view);
+								vec3.transformMat3(vz, vz, view);
+								var rdot = vec3.dot(vx, cright);
+								var udot = vec3.dot(vx, cup);
+								var zudot = vec3.dot(vz, cup);
+								var xval;
+								var yval;
+								if (Math.abs(rdot) > Math.abs(udot))
+								{
+									// x = left/right
+									if (rdot < 0)
+										xval = vec3.fromValues(1, 0, 0);
+									else
+										xval = vec3.fromValues(-1, 0, 0);
+
+									if (zudot < 0)
+										yval = vec3.fromValues(0, 0, 1);
+									else
+										yval = vec3.fromValues(0, 0, -1);
+								}
+								else
+								{
+									// x = up/down
+									if (udot < 0)
+										xval = vec3.fromValues(0, -1, 0);
+									else
+										xval = vec3.fromValues(0, 1, 0);
+
+									if (zudot < 0)
+										yval = vec3.fromValues(-1, 0, 0);
+									else
+										yval = vec3.fromValues(1, 0, 0);
+								}
+								ret += xval[0] + "," + xval[1] + "," + xval[2] + "," + yval[0] + "," + yval[1] + "," + yval[2];
+								break;
+							case "yz":
+								var vy = vec3.fromValues(0, 1, 0);
+								var vz = vec3.fromValues(0, 0, 1);
+								vec3.transformMat3(vy, vy, view);
+								vec3.transformMat3(vz, vz, view);
+								var rdot = vec3.dot(vy, cright);
+								var udot = vec3.dot(vy, cup);
+								var zudot = vec3.dot(vz, cup);
+								var xval;
+								var yval;
+								if (Math.abs(rdot) > Math.abs(udot))
+								{
+									// y = left/right
+									if (rdot < 0)
+										xval = vec3.fromValues(0, 1, 0);
+									else
+										xval = vec3.fromValues(0, -1, 0);
+
+									if (zudot < 0)
+										yval = vec3.fromValues(0, 0, 1);
+									else
+										yval = vec3.fromValues(0, 0, -1);
+								}
+								else
+								{
+									// y = up/down
+									if (udot < 0)
+										xval = vec3.fromValues(0, -1, 0);
+									else
+										xval = vec3.fromValues(0, 1, 0);
+
+									if (zudot < 0)
+										yval = vec3.fromValues(-1, 0, 0);
+									else
+										yval = vec3.fromValues(1, 0, 0);
+								}
+								ret += xval[0] + "," + xval[1] + "," + xval[2] + "," + yval[0] + "," + yval[1] + "," + yval[2];
+								break;
+							case "none":
+							default:
+								ret = "none";
+								break;
+						}
+						break;
+					}
+				}
+			}
+		}
+
+		//ret += "-1,0,0,0,1,0";
+	}
+	else
+	{
+		ret = "none";
+	}
+
+	return ret;
 }
 
 function UpdateScene(deltaTimeMS)
@@ -331,6 +651,8 @@ function Scene(sceneXMLFile, gl)
 	this.toString = SceneToString;
 	this.save = DoSaveScene;
 	this.selectObject = SelectObject;
+	this.pickObjects = PickSceneObjects;
+	this.getDragAxes = GetDragAxes;
 
 	var sceneXML = LoadXML(sceneXMLFile);
 	if (sceneXML)

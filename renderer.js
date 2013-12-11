@@ -21,6 +21,40 @@ function runFrame()
 	}
 }
 
+var selected = null;
+function canvasClick(e)
+{
+	var x;
+	var y;
+	if (e.pageX || e.pageY)
+	{
+		x = e.pageX;
+		y = e.pageY;
+	}
+	else
+	{
+		x = e.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+		y = e.clientY + document.body.scrollTop + document.documentElement.scrollTop;
+	}
+	x -= TheCanvas.offsetLeft;
+	y -= TheCanvas.offsetTop;
+
+	if (!selected)
+	{
+		var hit = TheScene.pickObjects(x, y);
+		if (hit != "none")
+		{
+			var objs = hit.split(",");
+			TheScene.selectObject(objs[0], "renderObject");
+			selected = objs[0];
+		}
+	}
+	else
+	{
+		TheScene.getDragAxes(x, y);
+	}
+}
+
 function webGLCanvasSetup()
 {
 	window.requestAnimFrame = (function (callback) { return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function (callback) { window.setTimeout(callback, 1000 / 60); }; })();
@@ -42,8 +76,8 @@ function webGLCanvasSetup()
 		alert("Could not initialise WebGL, sorry :-(");
 	}
 
-	ripColladaFile("./Soldier/cube.dae");
-	
+	TheCanvas.addEventListener("click", canvasClick, false);
+		
 	webGLStart();
 	setupScene("./scene.xml", null);
 }
@@ -70,6 +104,8 @@ function webGLStart()
 	gl.lightUpdateToken = 0;
 
 	gl.enable(gl.DEPTH_TEST);
+
+	InitImmediate(gl);
 
 	lastFrameTime = new Date().getTime();
 	runFrame();

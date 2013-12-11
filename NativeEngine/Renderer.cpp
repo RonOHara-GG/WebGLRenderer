@@ -6,6 +6,7 @@
 #include "js_console.h"
 #include "jsgl.h"
 #include "jsxml.h"
+#include "JavaScriptFunction.h"
 
 using namespace v8;
 
@@ -27,6 +28,8 @@ Renderer::Renderer(void)
     m_ObjectAssignment_Object = 0;
     m_SceneFunc = 0;
     m_JSONData = 0;
+
+    m_JSFunc = 0;
 }
 
 Renderer::~Renderer(void)
@@ -198,6 +201,7 @@ void Renderer::InitJSEngine(HANDLE hWnd)
     LoadJSFile("./texture.js");
     LoadJSFile("./collada.js");
     LoadJSFile("./colladaRipper.js");
+    LoadJSFile("./immediate.js");
     
     SetGlobalPersistentFunction("webGLStart", m_jsFunc_webGLStart);
     SetGlobalPersistentFunction("setupScene", m_jsFunc_setupScene);
@@ -389,7 +393,7 @@ Handle<Value> Renderer::GetJSON(Handle<Value> object)
     return scope.Close(jsonString);
 }
 
-void Renderer::ErrorLog(TryCatch* tryCatch, Handle<Context>& context)
+void ErrorLog(TryCatch* tryCatch, Handle<Context>& context)
 {  
     if( tryCatch->HasCaught() )
     {
@@ -519,10 +523,8 @@ void Renderer::CallSceneFunc()
 
     // Call the function
     Handle<Value> args[4];
-    args[0] = String::New(m_SceneFuncArgs[0]);
-    args[1] = String::New(m_SceneFuncArgs[1]);
-    args[2] = String::New(m_SceneFuncArgs[2]);
-    args[3] = String::New(m_SceneFuncArgs[3]);
+    for( int i = 0; i < m_SceneFuncArgCount; i++ )
+        args[i] = String::New(m_SceneFuncArgs[i]);
     Local<Value> retVal = Local<Value>::Cast(func->Call(sceneObj, m_SceneFuncArgCount, args));
 
     ErrorLog(&tryCatch, context);
@@ -592,6 +594,11 @@ void Renderer::RunFrame()
     if( m_SceneFunc )
     {
         CallSceneFunc();
+    }
+
+    if( m_JSFunc )
+    {
+        m_JSFunc->Execute(m_Isolate, &m_V8Context);
     }
 
     if( !m_jsFunc_frameFunc.IsEmpty() )
@@ -680,6 +687,35 @@ const char* Renderer::FetchData(const char* dataFunc, const char* objName)
     }
 
     return m_JSONData;
+}
+
+const char* Renderer::PickObjects(float x, float y)
+{
+    if( m_JSFunc )
+        delete m_JSFunc;
+
+    m_JSFunc = new JavaScriptFunction("pickObjects", true, JavaScriptFunction::JST_STRING);
+    m_JSFunc->AddParam(x);
+    m_JSFunc->AddParam(y);
+
+    m_JSFunc->Call();
+
+    return m_JSFunc->m_ReturnValue.val.s;
+}
+
+const char* Renderer::GetDragAxes(float x, float y, bool freeMode)
+{
+    if( m_JSFunc )
+        delete m_JSFunc;
+
+    m_JSFunc = new JavaScriptFunction("getDragAxes", true, JavaScriptFunction::JST_STRING);
+    m_JSFunc->AddParam(x);
+    m_JSFunc->AddParam(y);
+    m_JSFunc->AddParam(freeMode);
+
+    m_JSFunc->Call();
+
+    return m_JSFunc->m_ReturnValue.val.s;
 }
 
 void Renderer::RipColladaFile(const char* colladaFile)

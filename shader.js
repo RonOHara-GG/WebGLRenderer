@@ -36,28 +36,29 @@ function InitShaderProgram(gl, vsCode, fsCode)
 	}
 }
 
-function InitShaderParams()
+function InitShaderParams(gl)
 {
 	if (this.shaderProgram)
 	{
-		this.mvpUniform = scene.gl.getUniformLocation(this.shaderProgram, "uMVPMatrix");
-		this.worldUniform = scene.gl.getUniformLocation(this.shaderProgram, "uWorldMatrix");
-		this.normalUniform = scene.gl.getUniformLocation(this.shaderProgram, "uNormalMatrix");
-		this.shadowMtxUniform = scene.gl.getUniformLocation(this.shaderProgram, "uShadowMatrix");
-		this.positionAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
-		this.normalAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexNormal");
-		this.uvAttribute = scene.gl.getAttribLocation(this.shaderProgram, "aVertexUV");
+		this.mvpUniform = gl.getUniformLocation(this.shaderProgram, "uMVPMatrix");
+		this.worldUniform = gl.getUniformLocation(this.shaderProgram, "uWorldMatrix");
+		this.normalUniform = gl.getUniformLocation(this.shaderProgram, "uNormalMatrix");
+		this.shadowMtxUniform = gl.getUniformLocation(this.shaderProgram, "uShadowMatrix");
+		this.positionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
+		this.normalAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexNormal");
+		this.uvAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexUV");
 
+		this.bind(gl);
 		for (var i = 0; i < this.textureCount; i++)
 		{
-			var texSampler = scene.gl.getUniformLocation(this.shaderProgram, "texture" + i);
+			var texSampler = gl.getUniformLocation(this.shaderProgram, "texture" + i);
 			gl.uniform1i(texSampler, i);
 		}
 
 		for (var i = 0; i < this.maxLights; i++)
 		{
-			var lightDir = scene.gl.getUniformLocation(this.shaderProgram, "uLightDir" + i);
-			var lightCol = scene.gl.getUniformLocation(this.shaderProgram, "uLightColor" + i);
+			var lightDir = gl.getUniformLocation(this.shaderProgram, "uLightDir" + i);
+			var lightCol = gl.getUniformLocation(this.shaderProgram, "uLightColor" + i);
 
 			this.lightDirs.push(lightDir);
 			this.lightCols.push(lightCol);
@@ -195,7 +196,8 @@ function Shader(scene, name, src)
 		}
 	}
 
-	this.initShaderParams();
+	if( scene )
+		this.initShaderParams(scene.gl);
 }
 
 function SaveShader(path)

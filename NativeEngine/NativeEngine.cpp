@@ -54,6 +54,22 @@ NATIVEENGINE_API const char* FetchData(const char* fetchFunctionName, const char
     return data;
 }
 
+NATIVEENGINE_API const char* PickObjects(float x, float y)
+{
+    const char* data = 0;
+    if( gRenderer )
+        data = gRenderer->PickObjects(x, y);
+    return data;
+}
+
+NATIVEENGINE_API const char* GetDragAxes(float x, float y, bool freeMode)
+{
+    const char* data = 0;
+    if( gRenderer )
+        data = gRenderer->GetDragAxes(x, y, freeMode);
+    return data;
+}
+
 NATIVEENGINE_API void RipColladaFile(const char* fileName)
 {
     if( gRenderer )
@@ -76,7 +92,7 @@ NATIVEENGINE_API bool AddObjectToPass(const char* passType, const char* passName
     return success;
 }
 
-NATIVEENGINE_API bool SelectObject(const char* objectName, const char* objectType)
+NATIVEENGINE_API bool SelectSceneObject(const char* objectName, const char* objectType)
 {
     bool success = false;
     if( gRenderer )

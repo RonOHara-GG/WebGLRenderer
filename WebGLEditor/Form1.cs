@@ -15,8 +15,14 @@ namespace WebGLEditor
 {
     public partial class Form1 : Form
     {
+        string mDragObjects;
+        float[] mDragAxes;
+        float mDragX;
+        float mDragY;
+
         public Form1()
         {
+            mDragAxes = new float[6];
             InitializeComponent();
         }
 
@@ -105,6 +111,103 @@ namespace WebGLEditor
                         ro.Select();
                     }
                 }
+            }
+        }
+
+        private void nativeControl1_MouseClick(object sender, MouseEventArgs e)
+        {
+            if (treeView1.Nodes.Count > 0)
+            {
+                SceneJS scene = (SceneJS)treeView1.Nodes[0].Tag;
+                if (scene != null)
+                {
+                    string hitObjects = NativeWrapper.Pick(e.X, e.Y);
+                    if (hitObjects != "none")
+                    {
+                        string[] objs = hitObjects.Split(',');
+                        RenderObjectJS ro = scene.FindRenderObject(objs[0]);
+                        if (ro != null)
+                        {
+                            ro.Select();
+                        }
+                    }
+                }
+            }
+        }
+
+        private void nativeControl1_MouseDown(object sender, MouseEventArgs e)
+        {
+            // Get the drag axis from the javascript
+            string dragAxes = NativeWrapper.GetDragAxis(e.X, e.Y, true);
+            if (dragAxes != "none")
+            {
+                string[] pieces = dragAxes.Split(';');
+                string[] axes = pieces[1].Split(',');
+
+                if (axes.Length >= 6)
+                {
+                    mDragObjects = pieces[0];
+                    for (int i = 0; i < 6; i++)
+                    {
+                        mDragAxes[i] = Convert.ToSingle(axes[i]);
+                    }
+
+                    mDragX = e.X;
+                    mDragY = e.Y;
+                }
+            }
+            else
+            {
+                // Nothing to drag
+            }
+        }
+
+        private void nativeControl1_MouseUp(object sender, MouseEventArgs e)
+        {
+            mDragObjects = null;
+        }
+
+        private void nativeControl1_MouseMove(object sender, MouseEventArgs e)
+        {
+            if (mDragObjects != null)
+            {
+                if (treeView1.Nodes.Count > 0)
+                {
+                    SceneJS scene = (SceneJS)treeView1.Nodes[0].Tag;
+                    if (scene != null)
+                    {
+                        float deltaX = e.X - mDragX;
+                        float deltaY = e.Y - mDragY;
+                        mDragX = e.X;
+                        mDragY = e.Y;
+
+                        float dragSpeed = 0.01f;
+                        float[] axesDelta = new float[6];
+                        for (int i = 0; i < 3; i++)
+                            axesDelta[i] = mDragAxes[i] * deltaX * dragSpeed;
+                        for (int i = 3; i < 6; i++)
+                            axesDelta[i] = mDragAxes[i] * deltaY * dragSpeed;
+
+                        string[] objs = mDragObjects.Split(',');
+                        foreach (string obj in objs)
+                        {
+                            RenderObjectJS ro = scene.FindRenderObject(obj);
+                            if (ro != null)
+                            {
+                                string[] spos = ro.Position.Split(',');
+                                string newPos = "";
+                                for (int i = 0; i < 3; i++)
+                                {
+                                    float pos = Convert.ToSingle(spos[i]) + axesDelta[i] + axesDelta[i + 3];
+                                    newPos += pos.ToString();
+                                    if (i < 2)
+                                        newPos += ",";
+                                }
+                                ro.Position = newPos;
+                            }
+                        }
+                    }
+                }                
             }
         }
     }

@@ -68,7 +68,7 @@ namespace WebGLEditor
 
         public void Select()
         {
-            NativeWrapper.SelectObject(mName, "renderObject");
+            NativeWrapper.SelectSceneObject(mName, "renderObject");
         }
 
         public string Name

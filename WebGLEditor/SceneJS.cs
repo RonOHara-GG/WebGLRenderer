@@ -176,6 +176,17 @@ namespace WebGLEditor
             mRenderObjects.Add(obj);
             node.Tag = obj;
         }
+
+        public RenderObjectJS FindRenderObject(string name)
+        {
+            foreach (RenderObjectJS ro in mRenderObjects)
+            {
+                if (ro.Name == name)
+                    return ro;
+            }
+
+            return null;
+        }
         
     }
 }
