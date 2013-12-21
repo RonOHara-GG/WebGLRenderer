@@ -73,20 +73,50 @@ namespace WebGLEditor
         }
         
         [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
-        private static extern IntPtr FetchData(string fetchFunction, string objectName);
-        public static string GetUpdatePass(string passName)
+        private static extern IntPtr FetchData(string fetchFunction, string objectName, bool create);
+        public static string GetUpdatePass(string passName, bool create = true)
         {
-            IntPtr ptr = FetchData("getUpdatePass", passName);
+            IntPtr ptr = FetchData("getUpdatePass", passName, create);
             return PtrToStringUtf8(ptr);
         }
-        public static string GetRenderPass(string passName)
+        public static string GetRenderPass(string passName, bool create = true)
         {
-            IntPtr ptr = FetchData("getRenderPass", passName);
+            IntPtr ptr = FetchData("getRenderPass", passName, create);
             return PtrToStringUtf8(ptr);
         }
-        public static string GetRenderObject(string name)
+        public static string GetRenderObject(string name, bool create = true)
         {
-            IntPtr ptr = FetchData("getRenderObject", name);
+            IntPtr ptr = FetchData("getRenderObject", name, create);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetViewport(string name, bool create = true)
+        {
+            IntPtr ptr = FetchData("getViewport", name, create);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetCamera(string name, bool create = true)
+        {
+            IntPtr ptr = FetchData("getCamera", name, create);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetFrameBuffer(string name, bool create = true)
+        {
+            IntPtr ptr = FetchData("getFrameBuffer", name, create);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetShader(string name, bool create = true)
+        {
+            IntPtr ptr = FetchData("getShader", name, create);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetLight(string name, bool create = true)
+        {
+            IntPtr ptr = FetchData("getLight", name, create);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetTexture(string name, bool create = true)
+        {
+            IntPtr ptr = FetchData("getTexture", name, create);
             return PtrToStringUtf8(ptr);
         }
     }

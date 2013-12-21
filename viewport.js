@@ -17,6 +17,46 @@ function BindViewport(gl)
 	gl.viewport(this.rect[0], this.rect[1], this.rect[2], this.rect[3]);
 }
 
+function VPDoAssignment(scene, property, propertyValue)
+{
+	var result = false;
+
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			result = true;
+			break;
+		case "src":
+			this.src = propertyValue;
+			result = true;
+			break;
+		case "left":
+			this.left = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "top":
+			this.top = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "width":
+			this.width = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "height":
+			this.height = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "percentageMode":
+			this.percentageMode = (propertyValue == "true");
+			result = true;
+			break;
+		default:
+			console.log("Viewport::doObjectAssignment - unsupported property: " + property);
+			break;
+	}
+}
+
 function Viewport(scene, name, src)
 {
 	//this.scene = scene;
@@ -25,6 +65,9 @@ function Viewport(scene, name, src)
 
 	this.bind = BindViewport
 	this.save = SaveViewport
+	this.toString = VPToString;
+	this.doObjectAssignment = VPDoAssignment;
+
 	this.rect = [];
 
 	this.left = 0;
@@ -43,6 +86,19 @@ function Viewport(scene, name, src)
 		this.height = parseFloat(viewportXML.documentElement.attributes.getNamedItem("height").value);
 		this.percentageMode = viewportXML.documentElement.attributes.getNamedItem("percentageMode").value === "true";
 	}
+}
+
+function VPToString()
+{
+	var str = this.name + ";";
+	str += this.src + ";";
+	str += this.left + ";";
+	str += this.top + ";";
+	str += this.width + ";";
+	str += this.height + ";";
+	str += this.percentageMode ? "true" : "false";
+
+	return str;
 }
 
 function SaveViewport(path)

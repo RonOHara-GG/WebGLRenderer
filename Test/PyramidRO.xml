@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<renderobject name="PyramidRO" pos="0,0,1.5" rot="0,0,0,1" scale="1,1,1">
+	<mesh name="pyramid" src="./pyramid.xml"/>
+	<shader name="DefaultShader" src="./defaultShader.xml"/>
+</renderobject>

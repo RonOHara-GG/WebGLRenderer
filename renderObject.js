@@ -90,7 +90,8 @@ function DrawSelectedRenderObject(gl)
 function DrawRenderObject(gl)
 {
 	// Bind shader
-	this.shader.bind(gl);
+	if( this.shader )
+		this.shader.bind(gl);
 
 	// Update shader params
 	if( gl.uMVP )
@@ -143,8 +144,7 @@ function ROToString()
 {
 	var str = "";
 
-	str += "renderObject;";
-	str += this.name + ";";
+	str += "renderObject:" + this.name + ";";
 	str += this.src + ";";
 	str += this.posString() + ";";
 	str += this.rotString() + ";";
@@ -344,7 +344,7 @@ function RayPlaneIntersection(ro, rd, pp, pn)
 
 function ROGetDragAxis(ro, rd)
 {
-	console.log("getDragAxis rd: (" + rd[0] + ", " + rd[1] + ", " + rd[2] + ")");
+	//console.log("getDragAxis rd: (" + rd[0] + ", " + rd[1] + ", " + rd[2] + ")");
 
 	// Intersect with xy axis
 	var xyPt = RayPlaneIntersection(ro, rd, this.pos, vec3.fromValues(0, 0, 1));	
@@ -355,16 +355,15 @@ function ROGetDragAxis(ro, rd)
 	// Intersect with yz axis
 	var yzPt = RayPlaneIntersection(ro, rd, this.pos, vec3.fromValues(1, 0, 0));
 
-	console.log("getDragAxis - this.pos: (" + this.pos[0] + ", " + this.pos[1] + ", " + this.pos[2] + ")");
+	//console.log("getDragAxis - this.pos: (" + this.pos[0] + ", " + this.pos[1] + ", " + this.pos[2] + ")");
 	var distXY = Number.MAX_VALUE;
 	if (xyPt)
 	{
 		var delta = vec3.create();
 		vec3.sub(delta, xyPt, vec3.fromValues(this.pos[0] + 0.3, this.pos[1] + 0.3, this.pos[2]));
-		var dotXY = vec3.dot(delta, vec3.fromValues(0.70710678, 0.70710678, 0));
-		//if (dotXY > 0)
-			distXY = vec3.length(delta);
-		console.log("getDragAxis - xyPt: (" + xyPt[0] + ", " + xyPt[1] + ", " + xyPt[2] + ") " + dotXY + " : " + vec3.length(delta));
+		//var dotXY = vec3.dot(delta, vec3.fromValues(0.70710678, 0.70710678, 0));
+		distXY = vec3.length(delta);
+		//console.log("getDragAxis - xyPt: (" + xyPt[0] + ", " + xyPt[1] + ", " + xyPt[2] + ") " + dotXY + " : " + vec3.length(delta));
 	}
 
 	var distXZ = Number.MAX_VALUE;
@@ -372,10 +371,9 @@ function ROGetDragAxis(ro, rd)
 	{
 		var delta = vec3.create();
 		vec3.sub(delta, xzPt, vec3.fromValues(this.pos[0] + 0.3, this.pos[1], this.pos[2] + 0.3));
-		var dotXZ = vec3.dot(delta, vec3.fromValues(0.70710678, 0, 0.70710678));
-		//if (dotXZ > 0)
-			distXZ = vec3.length(delta);
-		console.log("getDragAxis - xzPt: (" + xzPt[0] + ", " + xzPt[1] + ", " + xzPt[2] + ") " + dotXZ + " : " + vec3.length(delta));
+		//var dotXZ = vec3.dot(delta, vec3.fromValues(0.70710678, 0, 0.70710678));
+		distXZ = vec3.length(delta);
+		//console.log("getDragAxis - xzPt: (" + xzPt[0] + ", " + xzPt[1] + ", " + xzPt[2] + ") " + dotXZ + " : " + vec3.length(delta));
 	}
 
 	var distYZ = Number.MAX_VALUE;
@@ -383,13 +381,12 @@ function ROGetDragAxis(ro, rd)
 	{
 		var delta = vec3.create();
 		vec3.sub(delta, yzPt, vec3.fromValues(this.pos[0], this.pos[1] + 0.3, this.pos[2] + 0.3));
-		var dotYZ = vec3.dot(delta, vec3.fromValues(0, 0.70710678, 0.70710678));
-		//if (distYZ > 0)
-			distYZ = vec3.length(delta);
-		console.log("getDragAxis - yzPt: (" + yzPt[0] + ", " + yzPt[1] + ", " + yzPt[2] + ") " + dotYZ);
+		//var dotYZ = vec3.dot(delta, vec3.fromValues(0, 0.70710678, 0.70710678));
+		distYZ = vec3.length(delta);
+		//console.log("getDragAxis - yzPt: (" + yzPt[0] + ", " + yzPt[1] + ", " + yzPt[2] + ") " + dotYZ);
 	}
 
-	console.log("getDragAxis - xy:" + distXY + ", xz:" + distXZ + ", yz:" + distYZ);
+	//console.log("getDragAxis - xy:" + distXY + ", xz:" + distXZ + ", yz:" + distYZ);
 	if (distXY < distXZ && distXY < distYZ)
 		return "xy";
 	else if (distXZ < distXY && distXZ < distYZ)

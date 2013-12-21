@@ -18,7 +18,7 @@ public:
     const char* LoadScene(const char* sceneFile);
     void SaveScene(const char* path);
     const char* ImportFileData(const char* fileName);
-    const char* FetchData(const char* dataFetchFunction, const char* objectName);
+    const char* FetchData(const char* dataFetchFunction, const char* objectName, bool create);
     const char* PickObjects(float x, float y);
     const char* GetDragAxes(float x, float y, bool freeMode);
     void RipColladaFile(const char* fileName);

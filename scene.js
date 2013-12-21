@@ -8,9 +8,14 @@ function GetRenderPass(passName, src)
 	}
 
 	// Doesnt exist, load it now
-	var renderPass = new RenderPass(this, passName, src);
-	this.renderPasses.push(renderPass);
-	return renderPass;
+	if (src)
+	{
+		if (src == "create") src = null;
+		var renderPass = new RenderPass(this, passName, src);
+		this.renderPasses.push(renderPass);
+		return renderPass;
+	}
+	return null;
 }
 
 function GetUpdatePass(passName, src)
@@ -22,9 +27,14 @@ function GetUpdatePass(passName, src)
 	}
 
 	// Doesnt exist, load it now
-	var updatePass = new UpdatePass(this, passName, src);
-	this.updatePasses.push(updatePass);
-	return updatePass;
+	if (src)
+	{
+		if (src == "create") src = null;
+		var updatePass = new UpdatePass(this, passName, src);
+		this.updatePasses.push(updatePass);
+		return updatePass;
+	}
+	return null;
 }
 
 function GetRenderObject(objName, src)
@@ -36,9 +46,14 @@ function GetRenderObject(objName, src)
 	}	
 
 	// Doesnt exist, load it now
-	var renderObj = new RenderObject(this, objName, src);
-	this.renderObjects.push(renderObj);
-	return renderObj;
+	if (src)
+	{
+		if (src == "create") src = null;
+		var renderObj = new RenderObject(this, objName, src);
+		this.renderObjects.push(renderObj);
+		return renderObj;
+	}
+	return null;
 }
 
 function GetViewport(name, src)
@@ -50,9 +65,14 @@ function GetViewport(name, src)
 	}
 
 	// Doesnt exist, load it now
-	var viewport = new Viewport(this, name, src);
-	this.viewports.push(viewport);
-	return viewport;
+	if (src)
+	{
+		if (src == "create") src = null;
+		var viewport = new Viewport(this, name, src);
+		this.viewports.push(viewport);
+		return viewport;
+	}
+	return null;
 }
 
 function GetCamera(name, src)
@@ -64,9 +84,14 @@ function GetCamera(name, src)
 	}
 
 	// Doesnt exist, load it now
-	var camera = new Camera(this, name, src);
-	this.cameras.push(camera);
-	return camera;
+	if (src)
+	{
+		if (src == "create") src = null;
+		var camera = new Camera(this, name, src);
+		this.cameras.push(camera);
+		return camera;
+	}
+	return null;
 }
 
 function GetFrameBuffer(name, src)
@@ -80,10 +105,12 @@ function GetFrameBuffer(name, src)
 	if( src )
 	{
 		// Doesnt exist, load it now
+		if (src == "create") src = null;
 		var frameBuffer = new FrameBuffer(this, name, src);
 		this.frameBuffers.push(frameBuffer);
 		return frameBuffer;
 	}
+	return null;
 }
 
 function GetMesh(name, src)
@@ -96,6 +123,7 @@ function GetMesh(name, src)
 
 	if (src)
 	{
+		if (src == "create") src = null;
 		var mesh = new Mesh(this, name, src);
 		this.meshes.push(mesh);
 		return mesh;
@@ -114,9 +142,14 @@ function GetShader(name, src)
 			return this.shaders[i];
 	}
 
-	var shader = new Shader(this, name, src);
-	this.shaders.push(shader);
-	return shader;
+	if (src)
+	{
+		if (src == "create") src = null;
+		var shader = new Shader(this, name, src);
+		this.shaders.push(shader);
+		return shader;
+	}
+	return null;
 }
 
 function GetLight(name, src)
@@ -127,9 +160,14 @@ function GetLight(name, src)
 			return this.lights[i];
 	}
 
-	var light = new Light(this, name, src);
-	this.lights.push(light);
-	return light;
+	if (src)
+	{
+		if (src == "create") src = null;
+		var light = new Light(this, name, src);
+		this.lights.push(light);
+		return light;
+	}
+	return null;
 }
 
 function GetTexture(name, src)
@@ -140,9 +178,14 @@ function GetTexture(name, src)
 			return this.textures[i];
 	}
 
-	var tex = new Texture(this, name, src);
-	this.textures.push(tex);
-	return tex;
+	if (src)
+	{
+		if (src == "create") src = null;
+		var tex = new Texture(this, name, src);
+		this.textures.push(tex);
+		return tex;
+	}
+	return null;
 }
 
 function ImportFile(filename)
@@ -151,15 +194,23 @@ function ImportFile(filename)
 	xml = LoadXML(filename);
 	if (xml)
 	{
+		var name = xml.documentElement.attributes.getNamedItem("name").value;
 		switch (xml.documentElement.nodeName)
 		{
 			case "mesh":
-				var name = xml.documentElement.attributes.getNamedItem("name").value;
 				object = this.getMesh(name, filename);
+				break;
+			case "renderobject":
+				object = this.getRenderObject(name, filename);
 				break;
 			default:
 				console.log("Unsupported file type: " + xml.documentElement.nodeName);
 				break;
+		}
+		if (object)
+		{
+			var localName = "./" + filename.replace(/^.*[\\\/]/, '');
+			object.src = localName;
 		}
 	}
 
@@ -173,6 +224,30 @@ function FindSceneObject(objectName, objectType)
 	{
 		case "renderObject":
 			obj = this.getRenderObject(objectName, null);
+			break;
+		case "renderPass":
+			obj = this.getRenderPass(objectName, null);
+			break;
+		case "updatePass":
+			obj = this.getUpdatePass(objectName, null);
+			break;
+		case "viewport":
+			obj = this.getViewport(objectName, null);
+			break;
+		case "camera":
+			obj = this.getCamera(objectName, null);
+			break;
+		case "frameBuffer":
+			obj = this.getFrameBuffer(objectName, null);
+			break;
+		case "shader":
+			obj = this.getShader(objectName, null);
+			break;
+		case "light":
+			obj = this.getLight(objectName, null);
+			break;
+		case "texture":
+			obj = this.getTexture(objectName, null);
 			break;
 		default:
 			console.log("Unsupported objectType given to FindSceneObject: " + objectType);
@@ -231,7 +306,7 @@ function AddToPass(passType, passName, objectType, objectName)
 					break;
 				case "light":
 					pass.lights.push(object);
-					thePass.lightsDirty = true;
+					pass.lightsDirty = true;
 					result = true;
 					break;
 				default:
@@ -718,6 +793,10 @@ function Scene(sceneXMLFile, gl)
 
 function DoSaveScene(path)
 {
+	var lastChar = path[path.length - 1];
+	if (lastChar != '/' && lastChar != '\\')
+		path += "\\";
+
 	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
 
 	xml += "<scene>\n";
@@ -762,10 +841,16 @@ function DoSaveScene(path)
 
 	xml += "</scene>";
 
-	var idx = this.src.lastIndexOf("\\");
-	if( idx < 0 )
-		idx = this.src.lastIndexOf("/");
-	var srcFile = this.src.substring(idx);
+	var srcFile;
+	if (this.src)
+	{
+		var idx = this.src.lastIndexOf("\\");
+		if (idx < 0)
+			idx = this.src.lastIndexOf("/");
+		srcFile = this.src.substring(idx);
+	}
+	else
+		srcFile = "scene.xml";
 	SaveFile(path + srcFile, xml);
 
 	for (var i = 0; i < this.renderPasses.length; i++)

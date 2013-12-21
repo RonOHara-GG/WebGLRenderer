@@ -77,6 +77,8 @@ function webGLCanvasSetup()
 	}
 
 	TheCanvas.addEventListener("click", canvasClick, false);
+
+	ripColladaFile("./Soldier/Dragon_Test.DAE");
 		
 	webGLStart();
 	setupScene("./scene.xml", null);
@@ -86,10 +88,13 @@ function setupScene(SceneFile, editor)
 {
 	EditorName = editor;
 
-	var idx = SceneFile.lastIndexOf("\\");
-	if (idx < 0)
-		idx = SceneFile.lastIndexOf("/");
-	SetCurrentDirectory(SceneFile.substring(0, idx));
+	if (SceneFile)
+	{
+		var idx = SceneFile.lastIndexOf("\\");
+		if (idx < 0)
+			idx = SceneFile.lastIndexOf("/");
+		SetCurrentDirectory(SceneFile.substring(0, idx));
+	}
 
 	TheScene = new Scene(SceneFile, gl);
 	TheScene.resize(gl.canvasWidth, gl.canvasHeight);

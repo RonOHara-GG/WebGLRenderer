@@ -48,10 +48,12 @@ function DrawRenderPass(gl, scene)
 		gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
 	// Set viewport
-	this.viewport.bind(gl);
+	if( this.viewport )
+		this.viewport.bind(gl);
 
 	// Set camera
-	this.camera.bind(gl);
+	if (this.camera)
+		this.camera.bind(gl);
 
 	// Clear
 	this.clear(gl);
@@ -75,6 +77,97 @@ function DrawRenderPass(gl, scene)
 		this.overrideShader.unbindOverride(gl);
 }
 
+function ParseClearMode()
+{
+	this.clearColor = (this.clearMode.indexOf("color") >= 0);
+	this.clearDepth = (this.clearMode.indexOf("depth") >= 0);
+	this.clearStencil = (this.clearMode.indexOf("stencil") >= 0);
+}
+
+function ParseClearColor()
+{
+	var clearColors = this.clearColorValue.csvToArray();
+	this.clearColorRed = parseInt(clearColors[0][0]) / 255.0;
+	this.clearColorGreen = parseInt(clearColors[0][1]) / 255.0;
+	this.clearColorBlue = parseInt(clearColors[0][2]) / 255.0;
+}
+
+function RenderPassDoAssignment(scene, property, propertyValue)
+{
+	var result = false;
+
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			result = true;
+			break;
+		case "src":
+			this.src = propertyValue;
+			result = true;
+			break;
+		case "sortMode":
+			this.sortMode = propertyValue;
+			result = true;
+			break;
+		case "clearMode":
+			this.clearMode = propertyValue;
+			this.parseClearMode();
+			result = true;
+			break;
+		case "clearColor":
+			this.clearColorValue = propertyValue;
+			this.parseClearColor();
+			result = true;
+			break;
+		case "clearDepth":
+			this.clearDepthVal = propertyValue;
+			result = true;
+			break;
+		case "clearStencil":
+			this.clearStencilVal = propertyValue;
+			result = true;
+			break;
+		case "viewport":
+			var vp = scene.getViewport(propertyValue, null);
+			if (vp)
+			{
+				this.viewport = vp;
+				result = true;
+			}
+			break;
+		case "camera":
+			var cam = scene.getCamera(propertyValue, null);
+			if (cam)
+			{
+				this.camera = cam;
+				result = true;
+			}
+			break;
+		case "frameBuffer":
+			var fb = scene.getFrameBuffer(propertyValue, null);
+			if (fb)
+			{
+				this.frameBuffer = fb;
+				result = true;
+			}
+			break;
+		case "overrideShader":
+			var s = scene.getShader(propertyValue, null);
+			if (s)
+			{
+				this.overrideShader = s;
+				result = true;
+			}
+			break;
+		default:
+			console.log("RenderPass::doObjectAssignment - unsupported property: " + property);
+			break;
+	}
+
+	return result;
+}
+
 function RenderPass(scene, name, src)
 {
 	this.renderObjects = [];
@@ -87,7 +180,7 @@ function RenderPass(scene, name, src)
 	// Set defaults
 	this.sortMode = "none";
 	this.clearMode = "none";
-	this.clearColorValue = "";
+	this.clearColorValue = "0,0,0";
 	this.clearColor = false;
 	this.clearDepth = false;
 	this.clearStencil = false;
@@ -105,11 +198,14 @@ function RenderPass(scene, name, src)
 	this.overrideShader = null;
 	this.debugDraw = false;
 
-	this.draw = DrawRenderPass
-	this.clear = DoClear
+	this.draw = DrawRenderPass;
+	this.clear = DoClear;
 	this.updateLights = UpdateLights;
 	this.toString = RenderPassToString;
-	this.save = SaveRenderPass
+	this.save = SaveRenderPass;
+	this.parseClearMode = ParseClearMode;
+	this.parseClearColor = ParseClearColor;
+	this.doObjectAssignment = RenderPassDoAssignment;
 
 	// Load the source
 	rpXML = LoadXML(src);
@@ -126,9 +222,7 @@ function RenderPass(scene, name, src)
 					break;
 				case "clearMode":
 					this.clearMode = attrib.value;
-					this.clearColor = (this.clearMode.indexOf("color") >= 0);
-					this.clearDepth = (this.clearMode.indexOf("depth") >= 0);
-					this.clearStencil = (this.clearMode.indexOf("stencil") >= 0);
+					this.parseClearMode();
 					break;
 				case "clearDepth":
 					this.clearDepthVal = attrib.value;
@@ -138,10 +232,7 @@ function RenderPass(scene, name, src)
 					break;
 				case "clearColor":
 					this.clearColorValue = attrib.value;
-					var clearColors = this.clearColorValue.csvToArray();
-					this.clearColorRed = parseInt(clearColors[0][0]) / 255.0;
-					this.clearColorGreen = parseInt(clearColors[0][1]) / 255.0;
-					this.clearColorBlue = parseInt(clearColors[0][2]) / 255.0;
+					this.parseClearColor();
 					break;
 				case "debugDraw":
 					this.debugDraw = (attrib.value == "true");

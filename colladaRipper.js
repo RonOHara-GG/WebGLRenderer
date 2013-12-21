@@ -39,36 +39,31 @@ function getMesh(geom)
 			}
 
 
+			// Build array of vertex data using triangle indices
 			var pindex = 0;
 			for (var i = 0; i < triangleCount; i++)
 			{
 				for (var j = 0; j < 3; j++)
 				{
-					var vertIndex = 0;
-					var values = [];
 					for (var k = 0; k < mesh.triangles.inputs.length; k++)
 					{
 						var index = mesh.triangles.p[pindex++];
-						var source = mesh.triangles.inputs[k].source;
-						var valIndex = index * 3;
-						var value = vec3.fromValues(source.float_array.floats[valIndex], source.float_array.floats[valIndex + 1], source.float_array.floats[valIndex + 2]);
-						values.push(value);
-						vertIndex = Math.max(index, vertIndex);
-					}
-
-					for (var k = 0; k < mesh.triangles.inputs.length; k++)
-					{
 						var input = mesh.triangles.inputs[k];
+						var source = input.source;
+
+						var valIndex = index * source.technique_common.accessor.stride;
+						var value = vec3.fromValues(source.float_array.floats[valIndex], source.float_array.floats[valIndex + 1], source.float_array.floats[valIndex + 2]);
+
 						switch (input.semantic)
 						{
 							case "VERTEX":
-								positions[vertIndex] = values[k];
+								positions.push(value);
 								break;
 							case "NORMAL":
-								normals[vertIndex] = values[k];
+								normals.push(value);
 								break;
 							case "TEXCOORD":
-								uvs[vertIndex] = values[k];
+								uvs.push(value);
 								break;
 							case "TEXTANGENT":
 								break;
@@ -78,13 +73,87 @@ function getMesh(geom)
 								break;
 						}
 					}
+				}
+			}
+				
+			indices[0] = 0;
+			var pointCount = triangleCount * 3;
+			for( var i = 1; i < pointCount; i++ )
+			{
+				// check this point vs all previous points to see if its a duplicate
+				var dupIdx;
+				for( dupIdx = 0; dupIdx < i; dupIdx++ )
+				{
+					if( positions.length > 0 )
+					{
+						if( positions[dupIdx][0] != positions[i][0] || positions[dupIdx][1] != positions[i][1] || positions[dupIdx][2] != positions[i][2] )
+						{
+							dup = false;
+							break;
+						}
+					}
+
+					if( normals.length > 0 )
+					{
+						if( normals[dupIdx][0] != normals[i][0] || normals[dupIdx][1] != normals[i][1] || normals[dupIdx][2] != normals[i][2] )
+						{
+							dup = false;
+							break;
+						}
+					}
+
+					if( uvs.length > 0 )
+					{
+						if( normals[dupIdx][0] != normals[i][0] || normals[dupIdx][1] != normals[i][1] )
+						{
+							dup = false;
+							break;
+						}
+					}
+				}
+			}
+
+
+
+					for (var k = 0; k < mesh.triangles.inputs.length; k++)
+					{
+						
+						
+					}
 					indices.push(vertIndex);
 					minVertIndex = Math.min(minVertIndex, vertIndex);
 				}
 			}
 		}
 	}
-	var vertCount = positions.length - minVertIndex;
+
+	// Strip unused verts
+	var ridx = minVertIndex;
+	var widx = 0;
+	var vertCount = 0;
+	while (ridx < positions.length)
+	{
+		if (positions[ridx])
+		{
+			vertCount++;
+			positions[widx] = positions[ridx];
+			if (normals[ridx])
+				normals[widx] = normals[ridx];
+			if (uvs[ridx])
+				uvs[widx] = uvs[ridx];
+			for (var i = 0; i < indices.length; i++)
+			{
+				if (indices[i] == ridx)
+					indices[i] = widx;
+			}
+
+			widx++;
+		}
+		ridx++;
+	}
+
+	minVertIndex = 0;
+	//var vertCount = positions.length - minVertIndex;
 
 	var mesh = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n<mesh name=\"";
 
@@ -104,8 +173,8 @@ function getMesh(geom)
 	{
 		mesh += "\t\t\t<v3>";
 
-		mesh += positions[i + minVertIndex][0] + ", ";
-		mesh += positions[i + minVertIndex][1] + ", ";
+		mesh += positions[i + minVertIndex][0] + ",";
+		mesh += positions[i + minVertIndex][1] + ",";
 		mesh += positions[i + minVertIndex][2];
 
 		mesh += "</v3>\n";
@@ -118,8 +187,8 @@ function getMesh(geom)
 		{
 			mesh += "\t\t\t<v3>";
 
-			mesh += normals[i + minVertIndex][0] + ", ";
-			mesh += normals[i + minVertIndex][1] + ", ";
+			mesh += normals[i + minVertIndex][0] + ",";
+			mesh += normals[i + minVertIndex][1] + ",";
 			mesh += normals[i + minVertIndex][2];
 
 			mesh += "</v3>\n";
@@ -133,8 +202,8 @@ function getMesh(geom)
 		{
 			mesh += "\t\t\t<v2>";
 
-			mesh += uvs[i + minVertIndex][0] + ", ";
-			mesh += uvs[i + minVertIndex][1] + ", ";
+			mesh += uvs[i + minVertIndex][0] + ",";
+			mesh += uvs[i + minVertIndex][1] + ",";
 
 			mesh += "</v2>\n";
 		}
@@ -146,7 +215,7 @@ function getMesh(geom)
 	{
 		mesh += indices[i] - minVertIndex;
 		if (i < (indices.length - 1))
-			mesh += ", ";
+			mesh += ",";
 	}
 	mesh += "</indices>\n</mesh>";
 	return mesh;

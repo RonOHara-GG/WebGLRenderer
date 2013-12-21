@@ -59,6 +59,14 @@ void JavaScriptFunction::AddParam(bool param)
     m_Params[oldCount].val.i = param ? 1 : 0;
 }
 
+void JavaScriptFunction::AddParam(const char* param)
+{
+    int oldCount = AllocParam();
+
+    m_Params[oldCount].type = JST_STRING;
+    m_Params[oldCount].val.s = param;
+}
+
 void JavaScriptFunction::Call()
 {
      m_Call = true;
@@ -94,7 +102,10 @@ void JavaScriptFunction::Execute(Isolate* isoalte, Persistent<Context>* pctx )
             switch( m_Params[i].type )
             {
                 case JST_STRING:
-                    args[i] = String::New(m_Params[i].val.s);
+                    if( m_Params[i].val.s )
+                        args[i] = String::New(m_Params[i].val.s);
+                    else
+                        args[i] = v8::Null();
                     break;
                 case JST_FLOAT:
                     args[i] = Number::New(m_Params[i].val.f);

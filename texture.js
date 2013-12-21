@@ -34,9 +34,11 @@ function Texture(scene, name, src)
 	this.name = name;
 	this.src = src;
 
-	this.bind = BindTexture
-	this.create = CreateTexture
-	this.save = SaveTexture
+	this.bind = BindTexture;
+	this.create = CreateTexture;
+	this.save = SaveTexture;
+	this.toString = TextureToString;
+	this.doObjectAssignment = TextureDoAssignment;
 
 	this.width = 0;
 	this.height = 0;
@@ -55,6 +57,35 @@ function Texture(scene, name, src)
 		};
 		this.image.src = src;
 	}
+}
+
+function TextureDoAssignment(scene, property, propertyValue)
+{
+	var result = true;
+
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			break;
+		case "src":
+			this.src = propertyValue;
+			break;
+		default:
+			console.log("Texture::doObjectAssignment - unsupported property: " + property);
+			result = false;
+			break;
+	}
+
+	return result;
+}
+
+function TextureToString()
+{
+	var str = this.name + ";";
+	str += this.src + ";";
+
+	return str;
 }
 
 function SaveTexture(path)

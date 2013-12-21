@@ -38,6 +38,7 @@
             this.importFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.colladaToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.ripColladaFileToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.newSceneToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             this.nativeControl1 = new WebGLEditor.NativeControl();
             this.menuStrip1.SuspendLayout();
             this.SuspendLayout();
@@ -72,6 +73,7 @@
             // sceneToolStripMenuItem
             // 
             this.sceneToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.newSceneToolStripMenuItem,
             this.openSceneToolStripMenuItem,
             this.saveSceneToolStripMenuItem,
             this.toolStripSeparator1,
@@ -83,26 +85,26 @@
             // openSceneToolStripMenuItem
             // 
             this.openSceneToolStripMenuItem.Name = "openSceneToolStripMenuItem";
-            this.openSceneToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.openSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.openSceneToolStripMenuItem.Text = "Open Scene";
             this.openSceneToolStripMenuItem.Click += new System.EventHandler(this.openSceneToolStripMenuItem_Click);
             // 
             // saveSceneToolStripMenuItem
             // 
             this.saveSceneToolStripMenuItem.Name = "saveSceneToolStripMenuItem";
-            this.saveSceneToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.saveSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.saveSceneToolStripMenuItem.Text = "Save Scene";
             this.saveSceneToolStripMenuItem.Click += new System.EventHandler(this.saveSceneToolStripMenuItem_Click);
             // 
             // toolStripSeparator1
             // 
             this.toolStripSeparator1.Name = "toolStripSeparator1";
-            this.toolStripSeparator1.Size = new System.Drawing.Size(134, 6);
+            this.toolStripSeparator1.Size = new System.Drawing.Size(149, 6);
             // 
             // importFileToolStripMenuItem
             // 
             this.importFileToolStripMenuItem.Name = "importFileToolStripMenuItem";
-            this.importFileToolStripMenuItem.Size = new System.Drawing.Size(137, 22);
+            this.importFileToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
             this.importFileToolStripMenuItem.Text = "Import File";
             this.importFileToolStripMenuItem.Click += new System.EventHandler(this.importFileToolStripMenuItem_Click);
             // 
@@ -121,6 +123,13 @@
             this.ripColladaFileToolStripMenuItem.Text = "Rip Collada File";
             this.ripColladaFileToolStripMenuItem.Click += new System.EventHandler(this.ripColladaFileToolStripMenuItem_Click);
             // 
+            // newSceneToolStripMenuItem
+            // 
+            this.newSceneToolStripMenuItem.Name = "newSceneToolStripMenuItem";
+            this.newSceneToolStripMenuItem.Size = new System.Drawing.Size(152, 22);
+            this.newSceneToolStripMenuItem.Text = "New Scene";
+            this.newSceneToolStripMenuItem.Click += new System.EventHandler(this.newSceneToolStripMenuItem_Click);
+            // 
             // nativeControl1
             // 
             this.nativeControl1.BackColor = System.Drawing.SystemColors.ActiveCaption;
@@ -128,6 +137,7 @@
             this.nativeControl1.Name = "nativeControl1";
             this.nativeControl1.Size = new System.Drawing.Size(1024, 768);
             this.nativeControl1.TabIndex = 0;
+            this.nativeControl1.Load += new System.EventHandler(this.nativeControl1_Load);
             this.nativeControl1.MouseClick += new System.Windows.Forms.MouseEventHandler(this.nativeControl1_MouseClick);
             this.nativeControl1.MouseDown += new System.Windows.Forms.MouseEventHandler(this.nativeControl1_MouseDown);
             this.nativeControl1.MouseMove += new System.Windows.Forms.MouseEventHandler(this.nativeControl1_MouseMove);
@@ -166,6 +176,7 @@
         private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
         private System.Windows.Forms.ToolStripMenuItem importFileToolStripMenuItem;
         private System.Windows.Forms.ToolStripMenuItem saveSceneToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem newSceneToolStripMenuItem;
 
     }
 }

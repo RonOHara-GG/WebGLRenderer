@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Windows.Forms;
 using System.IO;
+using System.Drawing;
 
 namespace WebGLEditor
 {
@@ -39,6 +40,14 @@ namespace WebGLEditor
             }
 
             return fileData;
+        }
+        
+
+        public static Color ParseColor(string color)
+        {
+            string[] colorVals = color.Split(',');
+            Color theColor = Color.FromArgb(Convert.ToInt32(colorVals[0]), Convert.ToInt32(colorVals[1]), Convert.ToInt32(colorVals[2]));
+            return theColor;
         }
     }
 }

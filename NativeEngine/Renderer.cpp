@@ -119,6 +119,11 @@ static void SaveFileCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
     HandleScope scope(args.GetIsolate());
     String::Utf8Value fileName(args[0]);
     String::Utf8Value fileData(args[1]);
+        
+    char* str = (char*)malloc(fileData.length() + fileName.length() + 64);
+    sprintf(str, "SaveFile: %s\n%s\n", *fileName, *fileData);
+    OutputDebugStringA(str);
+    free(str);
 
     HANDLE hFile = CreateFileA(*fileName, GENERIC_READ | GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
     if( hFile != INVALID_HANDLE_VALUE )
@@ -155,6 +160,138 @@ static void GetFullPathCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
     args.GetReturnValue().Set(str);
 }
 
+int BreakDirs(char* dirs)
+{
+    int count = 0;
+    bool endSlash = false;
+
+    size_t totalSize = strlen(dirs);
+    for( int i = 0; i < totalSize; i++ )
+    {
+        if( dirs[i] == '\\' || dirs[i] == '/' )
+        {
+            if( i == totalSize - 1 )
+                endSlash = true;
+
+            dirs[i] = 0;
+            count++;
+        }
+    }
+    if( !endSlash )
+        count++;
+
+    return count;
+}
+
+static void GetRelativePathCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 1) 
+        return;
+    
+    HandleScope scope(args.GetIsolate());
+    String::Utf8Value path(args[0]);
+
+    char currentDir[2 * 1024];
+    char cdrive[32];
+    char cdir[2 * 1024];
+    GetCurrentDirectoryA(sizeof(currentDir), currentDir);
+    char* endC = &currentDir[strlen(currentDir) - 1];
+    if( *endC != '\\' && *endC != '/' )
+    {
+        endC[1] = '/';
+        endC[2] = 0;
+    }
+    _splitpath_s(currentDir, cdrive, sizeof(cdrive), cdir, sizeof(cdir), NULL, NULL, NULL, NULL);    
+
+    char idrive[32];
+    char idir[2 * 1024];
+    char ifile[256];
+    char iext[32];
+    _splitpath_s(*path, idrive, sizeof(idrive), idir, sizeof(idir), ifile, sizeof(ifile), iext, sizeof(iext));
+    
+    if( strcmp(cdrive, idrive) == 0 )
+    {
+        char* cptr = &cdir[1];
+        char* iptr = &idir[1];
+        int ccount = BreakDirs(cptr);
+        int icount = BreakDirs(iptr);
+
+        // Find matches
+        while( ccount > 0 && icount > 0 )
+        {
+            size_t clen = strlen(cptr);
+            size_t ilen = strlen(iptr);
+            if( clen != ilen )
+                break;  // Len doesnt match, this is obviously not a match
+
+            if( stricmp(cptr, iptr) != 0 )
+                break;  // No match
+
+            // Still here, they match
+            // Move to the next dirs
+            cptr += clen + 1;
+            iptr += ilen + 1;
+            ccount--;
+            icount--;
+        }
+
+        // Now we are at a common root path
+        char relative[4 * 1024];
+        char* prel = relative;
+        if( ccount )
+        {
+            // put one double dot for each dir remaining in current path to get to the common path
+            for( int i = 0; i < ccount; i++ )
+            {
+                prel[0] = '.';
+                prel[1] = '.';
+                prel[2] = '/';
+                prel += 3;
+                prel[0] = 0;
+            }
+        }
+        else
+        {
+            // Put a ./ for the current directory
+            prel[0] = '.';
+            prel[1] = '/';
+            prel[2] = 0;
+            prel += 2;
+        }
+        // put each remaining dir of the input path
+        for( int i = 0; i < icount; i++ )
+        {
+            size_t len = strlen(iptr);
+            memcpy(prel, iptr, len);
+            prel += len;
+            iptr += len + 1;
+                        
+            prel[0] = '/';
+            prel[1] = 0;
+            prel++;
+        }
+        // now add file/ext
+        {
+            size_t len = strlen(ifile);
+            memcpy(prel, ifile, len);
+            prel += len;
+
+            len = strlen(iext);
+            memcpy(prel, iext, len);
+            prel += len;
+            prel[0] = 0;
+        }
+
+        Handle<String> str = Handle<String>::New(args.GetIsolate(), String::New(relative));
+        args.GetReturnValue().Set(str);
+    }
+    else
+    {
+        // Drives dont match, no way to create a relative
+        args.GetReturnValue().Set(v8::Null());
+    }
+}
+
 void Renderer::InitJSEngine(HANDLE hWnd)
 {
     V8::SetArrayBufferAllocator(new MallocArrayBufferAllocator());
@@ -174,6 +311,7 @@ void Renderer::InitJSEngine(HANDLE hWnd)
     global->Set(String::New("SaveFile"), FunctionTemplate::New(SaveFileCallback));
     global->Set(String::New("SetCurrentDirectory"), FunctionTemplate::New(SetCurrentDirectoryCallback));
     global->Set(String::New("GetFullPath"), FunctionTemplate::New(GetFullPathCallback));
+    global->Set(String::New("GetRelativePath"), FunctionTemplate::New(GetRelativePathCallback));
 
     // Create the context
     Handle<Context> ctx = Context::New(m_Isolate, 0, global);
@@ -624,20 +762,16 @@ void Renderer::ResizeWindow(HANDLE hWnd)
 
 const char* Renderer::LoadScene(const char* sceneFile)
 {
-    if( m_JSONData )
-    {
-        free(m_JSONData);
-        m_JSONData = 0;
-    }
+    if( m_JSFunc )
+        delete m_JSFunc;
 
-    m_SceneLoadRequest = sceneFile;
+    m_JSFunc = new JavaScriptFunction("setupScene", false, JavaScriptFunction::JST_STRING);
+    m_JSFunc->AddParam(sceneFile);
+    m_JSFunc->AddParam("NativeEngine");
 
-    while( !m_JSONData )
-    {
-        Sleep(200);
-    }
+    m_JSFunc->Call();
 
-    return m_JSONData;
+    return m_JSFunc->m_ReturnValue.val.s;
 }
 
 void Renderer::SaveScene(const char* path)
@@ -670,23 +804,18 @@ const char* Renderer::ImportFileData(const char* fileName)
     return m_JSONData;
 }
 
-const char* Renderer::FetchData(const char* dataFunc, const char* objName)
+const char* Renderer::FetchData(const char* dataFunc, const char* objName, bool create)
 {
-    if( m_JSONData )
-    {
-        free(m_JSONData);
-        m_JSONData = 0;
-    }
+    if( m_JSFunc )
+        delete m_JSFunc;
 
-    m_DataFetchFunction = dataFunc;
-    m_FunctionParamString = objName;
+    m_JSFunc = new JavaScriptFunction(dataFunc, true, JavaScriptFunction::JST_STRING);
+    m_JSFunc->AddParam(objName);
+    m_JSFunc->AddParam(create? "create" : (const char*)0);
 
-    while( !m_JSONData )
-    {
-        Sleep(200);
-    }
+    m_JSFunc->Call();
 
-    return m_JSONData;
+    return m_JSFunc->m_ReturnValue.val.s;
 }
 
 const char* Renderer::PickObjects(float x, float y)

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<camera name="MainCamera" ortho="false" fov="45" near="0.1" far="100" static="false" left="0" right="0" top="0" bottom="0" identityView="false" shadowDistance="100">
+	<position x="-2" y="10" z="7"/>
+	<lookAt x="0" y="0" z="0"/>
+	<up x="0" y="0" z="1"/>
+</camera>

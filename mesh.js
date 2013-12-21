@@ -56,11 +56,8 @@ function DrawMesh(gl)
 
 function MeshToString()
 {
-	var str;
-
-	str = "mesh:" + this.name;
-	str += ";";
-	str += "src:" + this.src;
+	var str = "mesh:" + this.name + ";";
+	str += this.src + ";";
 
 	return str;
 }

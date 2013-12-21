@@ -29,10 +29,11 @@ namespace WebGLEditor
         private void Form1_Load(object sender, EventArgs e)
         {
         }
-        
-        public RenderObject.UpdateCallback FindUpdateFunction(string functionName)
-        {    
-            return null;
+
+        private void WaitCursor(bool enable)
+        {
+            UseWaitCursor = enable;
+            Application.DoEvents();
         }
 
         private void openSceneToolStripMenuItem_Click(object sender, EventArgs e)
@@ -44,12 +45,7 @@ namespace WebGLEditor
             dlg.FileName = "scene.xml";
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
-                UseWaitCursor = true;
-                string sceneJson = NativeWrapper.LoadSceneFromFile(dlg.FileName);
-                treeView1.Nodes.Clear();
-                TreeNode node = treeView1.Nodes.Add(dlg.FileName);
-                node.Tag = new SceneJS(sceneJson, node);
-                UseWaitCursor = false;
+                NewScene(dlg.FileName);
             }
         }
 
@@ -60,9 +56,9 @@ namespace WebGLEditor
             dlg.SelectedPath = Directory.GetCurrentDirectory();
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
-                UseWaitCursor = true;
+                WaitCursor(true);
                 NativeWrapper.SaveScene(dlg.SelectedPath);
-                UseWaitCursor = false;
+                WaitCursor(false);
             }
         }
 
@@ -74,9 +70,9 @@ namespace WebGLEditor
             dlg.InitialDirectory = Directory.GetCurrentDirectory();
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
-                UseWaitCursor = true;
+                WaitCursor(true);
                 NativeWrapper.RipColladaFile(dlg.FileName);
-                UseWaitCursor = false;
+                WaitCursor(false);
             }
         }
 
@@ -88,11 +84,11 @@ namespace WebGLEditor
             dlg.InitialDirectory = Directory.GetCurrentDirectory();
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
-                UseWaitCursor = true;
+                WaitCursor(true);
                 string data = NativeWrapper.ImportFile(dlg.FileName);
                 SceneJS scene = (SceneJS)treeView1.Nodes[0].Tag;
                 scene.Import(data);
-                UseWaitCursor = false;
+                WaitCursor(false);
             }
         }
 
@@ -158,7 +154,7 @@ namespace WebGLEditor
             }
             else
             {
-                // Nothing to drag
+                // Drag the camera
             }
         }
 
@@ -209,6 +205,31 @@ namespace WebGLEditor
                     }
                 }                
             }
+        }
+
+        private void newSceneToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            NewScene(null);
+        }
+
+        private void NewScene(string filename)
+        {
+            // Save if dirty
+
+            // Close existing scene
+
+            // Make a new one
+            WaitCursor(true);
+            string sceneJson = NativeWrapper.LoadSceneFromFile(filename);
+            treeView1.Nodes.Clear();
+            TreeNode node = treeView1.Nodes.Add((filename != null) ? filename : "untitled");
+            node.Tag = new SceneJS(sceneJson, node);
+            WaitCursor(false);
+        }
+
+        private void nativeControl1_Load(object sender, EventArgs e)
+        {
+            NewScene(null);
         }
     }
 }

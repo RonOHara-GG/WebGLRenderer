@@ -28,6 +28,7 @@ public:
 
     void AddParam(float param);
     void AddParam(bool param);
+    void AddParam(const char* param);
     void Call();
 
     void Execute(Isolate* isoalte, Persistent<Context>* pctx);

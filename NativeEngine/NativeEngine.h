@@ -18,7 +18,7 @@ NATIVEENGINE_API void ResizeRenderWindow(HANDLE hWnd);
 NATIVEENGINE_API const char* LoadScene(const char* sceneFile);
 NATIVEENGINE_API void SaveScene(const char* path);
 NATIVEENGINE_API const char* ImportFileData(const char* fileName);
-NATIVEENGINE_API const char* FetchData(const char* fetchFunctionName, const char* objectName);
+NATIVEENGINE_API const char* FetchData(const char* fetchFunctionName, const char* objectName, bool create);
 NATIVEENGINE_API const char* PickObjects(float x, float y);
 NATIVEENGINE_API const char* GetDragAxes(float x, float y, bool freeMode);
 

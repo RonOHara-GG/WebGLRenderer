@@ -5,6 +5,8 @@ function Light(scene, name, src)
 	this.src = src;
 
 	this.save = SaveLight;
+	this.toString = LightToString;
+	this.doObjectAssignment = LightDoAssignment;
 	
 	this.type = "dir";
 	this.color = vec3.fromValues(1.0, 1.0, 1.0);
@@ -38,6 +40,52 @@ function Light(scene, name, src)
 			}
 		}
 	}
+}
+
+function LightDoAssignment(scene, property, propertyValue)
+{
+	var result = true;
+
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			break;
+		case "src":
+			this.src = propertyValue;
+			break;
+		case "type":
+			this.type = propertyValue;
+			break;
+		case "color":
+			var values = propertyValue.csvToArray();
+			this.color = vec3.fromValues(values[0][0] / 255.0, values[0][1] / 255.0, values[0][2] / 255.0);
+			break;
+		case "dir":
+			var values = propertyValue.csvToArray();
+			var temp = vec3.fromValues(values[0][0], values[0][1], values[0][2]);
+			vec3.normalize(this.dir, temp);
+			break;
+		default:
+			console.log("Light::doObjectAssignment - unsupported property: " + property);
+			result = false;
+			break;
+	}
+
+	return result;
+}
+
+function LightToString()
+{
+	var lightColor = Math.round(this.color[0] * 255) + "," + Math.round(this.color[1] * 255) + "," + Math.round(this.color[2] * 255);
+
+	var str = this.name + ";";
+	str += this.src + ";";
+	str += this.type + ";";
+	str += lightColor + ";";
+	str += this.dir[0] + "," + this.dir[1] + "," + this.dir[2] + ";";
+
+	return str;
 }
 
 function SaveLight(path)

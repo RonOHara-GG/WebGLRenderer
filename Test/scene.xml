@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<scene>
+	<updatePass name="UpdatePass_0" src="./UpdatePass_0.xml">
+		<camera name="MainCamera" src="./mainCamera.xml"/>
+	</updatePass>
+	<renderPass name="DiffusePass" src="./diffusePass.xml">
+		<renderObject name="PyramidRO" src="./PyramidRO.xml"/>
+		<light name="Sun" src="./sun.xml"/>
+	</renderPass>
+</scene>

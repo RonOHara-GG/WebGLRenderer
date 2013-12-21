@@ -46,11 +46,11 @@ NATIVEENGINE_API const char* ImportFileData(const char* fileName)
     return data;
 }
 
-NATIVEENGINE_API const char* FetchData(const char* fetchFunctionName, const char* objectName)
+NATIVEENGINE_API const char* FetchData(const char* fetchFunctionName, const char* objectName, bool create)
 {
     const char* data = 0;
     if( gRenderer )
-        data = gRenderer->FetchData(fetchFunctionName, objectName);
+        data = gRenderer->FetchData(fetchFunctionName, objectName, create);
     return data;
 }
 

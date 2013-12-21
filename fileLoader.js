@@ -40,3 +40,8 @@ function GetFullPath(relPath)
 {
 	return relPath;
 }
+
+function GetRelativePath(fullPath)
+{
+	return fullPath;
+}

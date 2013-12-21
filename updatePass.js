@@ -20,6 +20,28 @@ function DoUpdatePass(deltaTimeMS)
 	}
 }
 
+function UpdatePassDoAssignment(scene, property, propertyValue)
+{
+	var result = false;
+
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			result = true;
+			break;
+		case "src":
+			this.src = propertyValue;
+			result = true;
+			break;
+		default:
+			console.log("UpdatePass::doObjectAssignment - unsupported property: " + property);
+			break;
+	}
+
+	return result;
+}
+
 function UpdatePass(scene, name, src)
 {
 	this.renderObjects = [];
@@ -34,6 +56,7 @@ function UpdatePass(scene, name, src)
 	this.update = DoUpdatePass;
 	this.toString = UpdatePassToString;
 	this.save = SaveUpdatePass;
+	this.doObjectAssignment = UpdatePassDoAssignment;
 }
 
 function SaveUpdatePass(path)

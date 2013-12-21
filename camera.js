@@ -43,6 +43,95 @@ function ResizeCamera(aspectRatio)
 	}
 }
 
+function CamDoAssignment(scene, property, propertyValue)
+{
+	var result = false;
+
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			result = true;
+			break;
+		case "src":
+			this.src = propertyValue;
+			result = true;
+			break;
+		case "pos":
+			var split = propertyValue.csvToArray();
+			this.pos = vec3.fromValues(parseFloat(split[0][0]), parseFloat(split[0][1]), parseFloat(split[0][2]));
+			result = true;
+			break;
+		case "target":
+			var split = propertyValue.csvToArray();
+			this.target = vec3.fromValues(parseFloat(split[0][0]), parseFloat(split[0][1]), parseFloat(split[0][2]));
+			result = true;
+			break;
+		case "up":
+			var split = propertyValue.csvToArray();
+			this.up = vec3.fromValues(parseFloat(split[0][0]), parseFloat(split[0][1]), parseFloat(split[0][2]));
+			result = true;
+			break;
+		case "ortho":
+			this.ortho = (propertyValue == "true");
+			result = true;
+			break;
+		case "static":
+			this.static = (propertyValue == "true");
+			result = true;
+			break;
+		case "identityView":
+			this.identityView = (propertyValue == "true");
+			result = true;
+			break;
+		case "fov":
+			this.fov = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "near":
+			this.near = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "far":
+			this.far = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "left":
+			this.left = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "right":
+			this.right = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "top":
+			this.top = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "bottom":
+			this.bottom = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "shadowDistance":
+			this.shadowDistance = parseFloat(propertyValue);
+			result = true;
+			break;
+		case "shadowLight":
+			var light = scene.getLight(propertyValue);
+			if (light)
+			{
+				this.shadowLight = light;
+				result = true;
+			}
+			break;
+		default:
+			console.log("Camera::doObjectAssignment - unsupported property: " + property);
+			break;
+	}
+
+	return result;
+}
+
 function Camera(scene, name, src)
 {
 	//this.scene = scene;
@@ -54,6 +143,8 @@ function Camera(scene, name, src)
 	this.resize = ResizeCamera;
 	this.buildProj = BuildProjectionMatrix;
 	this.save = SaveCamera;
+	this.toString = CamToString;
+	this.doObjectAssignment = CamDoAssignment;
 
 	this.pos = vec3.create();
 	this.target = vec3.create();
@@ -172,6 +263,29 @@ function Camera(scene, name, src)
 
 	if( this.static )
 		this.buildProj(1);
+}
+
+function CamToString()
+{
+	var str = this.name + ";";
+	str += this.src + ";";
+	str += this.ortho ? "true;" : "false;";
+	str += this.fov + ";";
+	str += this.near + ";";
+	str += this.far + ";";
+	str += this.static ? "true;" : "false;";
+	str += this.left + ";";
+	str += this.right + ";";
+	str += this.top + ";";
+	str += this.bottom + ";";
+	str += this.identityView ? "true;" : "false;";
+	str += this.shadowDistance + ";";
+	str += this.pos[0] + "," + this.pos[1] + "," + this.pos[2] + ";";
+	str += this.target[0] + "," + this.target[1] + "," + this.target[2] + ";";
+	str += this.up[0] + "," + this.up[1] + "," + this.up[2] + ";";
+	str += (this.shadowLight ? this.shadowLight.name : "none") + ";";
+
+	return str;
 }
 
 function SaveCamera(path)

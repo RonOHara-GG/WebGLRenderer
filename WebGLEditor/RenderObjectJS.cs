@@ -8,6 +8,8 @@ namespace WebGLEditor
 {
     public class RenderObjectJS
     {
+        TreeNode mNode;
+
         string mName;
         string mSrc;
         string mPos;
@@ -19,8 +21,10 @@ namespace WebGLEditor
         List<string> mTextures;
         string mShadowCamera;
         
-        public RenderObjectJS(string renderObjName)
+        public RenderObjectJS(string renderObjName, TreeNode node)
         {
+            mNode = node;
+
             mName = renderObjName;
             mSrc = "./" + renderObjName + ".xml";
             mTextures = new List<string>();
@@ -29,37 +33,36 @@ namespace WebGLEditor
             {
                 string[] rodata = data.Split(';');
 
-                // type
-                // name
+                // type:name
 
                 // src
-                mSrc = rodata[2];
+                mSrc = rodata[1];
 
                 // pos
-                mPos = rodata[3];
+                mPos = rodata[2];
 
                 // rot
-                mRot = rodata[4];
+                mRot = rodata[3];
 
                 // scale
-                mScale = rodata[5];
+                mScale = rodata[4];
 
                 // updateFunction
-                mUpdateFunction = rodata[6];
+                mUpdateFunction = rodata[5];
 
                 // shader
-                mShader = rodata[7];
+                mShader = rodata[6];
 
                 // mesh
-                mMesh = rodata[8];
+                mMesh = rodata[7];
 
                 // textures
-                string[] textures = rodata[9].Split(',');
+                string[] textures = rodata[8].Split(',');
                 foreach (string tex in textures)
                     mTextures.Add(tex);
 
                 // shadowCamera
-                mShadowCamera = rodata[10];
+                mShadowCamera = rodata[9];
             }
             else
             {
@@ -77,7 +80,10 @@ namespace WebGLEditor
             set 
             {
                 if (NativeWrapper.SetObjectAssignment(mName, "renderObject", "name", value))
+                {
                     mName = value;
+                    mNode.Text = mName;
+                }
             }
         }
 

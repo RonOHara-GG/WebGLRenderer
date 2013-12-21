@@ -105,6 +105,66 @@ function AddLight(light, scene)
 	}
 }
 
+function ShaderDoAssignment(scene, property, propertyValue)
+{
+	var result = false;
+
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			result = true;
+			break;
+		case "src":
+			this.src = propertyValue;
+			result = true;
+			break;
+		case "vs":
+			var source = LoadFile(propertyValue);
+			if (source)
+			{
+				this.vsSrc = propertyValue;
+				this.vertShaderSrc = source;
+				result = true;
+
+				if (this.vertShaderSrc && this.fragShaderSrc)
+				{
+					this.initShaderProgram(scene.gl, this.vertShaderSrc, this.fragShaderSrc);
+					this.initShaderParams(scene.gl);
+				}
+			}
+			break;
+		case "fs":
+			var source = LoadFile(propertyValue);
+			if (source)
+			{
+				this.fsSrc = propertyValue;
+				this.fragShaderSrc = source;
+				result = true;
+
+				if (this.vertShaderSrc && this.fragShaderSrc)
+				{
+					this.initShaderProgram(scene.gl, this.vertShaderSrc, this.fragShaderSrc);
+					this.initShaderParams(scene.gl);
+				}
+			}
+			break;
+		case "maxLights":
+			this.maxLights = parseInt(propertyValue);
+			result = true;
+			break;
+		case "textureCount":
+			this.textureCount = parseInt(propertyValue);
+			result = true;
+			break;
+		default:
+			console.log("Shader::doObjectAssignment - unsupported property: " + property);
+			break;
+	}
+
+	return result;
+}
+
 function Shader(scene, name, src)
 {
 	//this.scene = scene;
@@ -120,6 +180,8 @@ function Shader(scene, name, src)
 	this.save = SaveShader;
 	this.initShaderProgram = InitShaderProgram;
 	this.initShaderParams = InitShaderParams;
+	this.toString = ShaderToString;
+	this.doObjectAssignment = ShaderDoAssignment;
 
 	this.shaderProgram = null;
 
@@ -187,7 +249,8 @@ function Shader(scene, name, src)
 			}
 		}
 
-		this.initShaderProgram(scene.gl, this.vertShaderSrc, this.fragShaderSrc);
+		if (this.vertShaderSrc && this.fragShaderSrc)
+			this.initShaderProgram(scene.gl, this.vertShaderSrc, this.fragShaderSrc);
 
 		if (!EditorName)
 		{
@@ -198,6 +261,18 @@ function Shader(scene, name, src)
 
 	if( scene )
 		this.initShaderParams(scene.gl);
+}
+
+function ShaderToString()
+{
+	var str = this.name + ";";
+	str += this.src + ";";
+	str += this.maxLights + ";";
+	str += this.textureCount + ";";
+	str += this.vsSrc + ";";
+	str += this.fsSrc + ";";
+
+	return str;
 }
 
 function SaveShader(path)
@@ -214,7 +289,9 @@ function SaveShader(path)
 	// Save the shader files too
 	if (EditorName)
 	{
-		SaveFile(path + this.vsSrc, this.vertShaderSrc);
-		SaveFile(path + this.fsSrc, this.fragShaderSrc);
+		if (this.vertShaderSrc )
+			SaveFile(path + this.vsSrc, this.vertShaderSrc);
+		if (this.fragShaderSrc)
+			SaveFile(path + this.fsSrc, this.fragShaderSrc);
 	}
 }
