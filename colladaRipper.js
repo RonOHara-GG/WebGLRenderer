@@ -76,6 +76,8 @@ function getMesh(geom)
 				}
 			}
 				
+			// index without duplicates
+			var duplicates = [];
 			indices[0] = 0;
 			var pointCount = triangleCount * 3;
 			for( var i = 1; i < pointCount; i++ )
@@ -84,12 +86,12 @@ function getMesh(geom)
 				var dupIdx;
 				for( dupIdx = 0; dupIdx < i; dupIdx++ )
 				{
+					var dup = true;
 					if( positions.length > 0 )
 					{
 						if( positions[dupIdx][0] != positions[i][0] || positions[dupIdx][1] != positions[i][1] || positions[dupIdx][2] != positions[i][2] )
 						{
 							dup = false;
-							break;
 						}
 					}
 
@@ -98,62 +100,62 @@ function getMesh(geom)
 						if( normals[dupIdx][0] != normals[i][0] || normals[dupIdx][1] != normals[i][1] || normals[dupIdx][2] != normals[i][2] )
 						{
 							dup = false;
-							break;
 						}
 					}
 
 					if( uvs.length > 0 )
 					{
-						if( normals[dupIdx][0] != normals[i][0] || normals[dupIdx][1] != normals[i][1] )
+						if( uvs[dupIdx][0] != uvs[i][0] || uvs[dupIdx][1] != uvs[i][1] )
 						{
 							dup = false;
-							break;
 						}
 					}
-				}
-			}
 
-
-
-					for (var k = 0; k < mesh.triangles.inputs.length; k++)
+					if( dup )
 					{
-						
-						
+						// break so that the dup index is valid
+						duplicates.push(i);
+						break;
 					}
-					indices.push(vertIndex);
-					minVertIndex = Math.min(minVertIndex, vertIndex);
+				}
+
+				if( dupIdx < i )
+					indices[i] = dupIdx;
+				else
+					indices[i] = i;
+			}
+
+			// strip all verts that are unused and re-index
+			for( var i = 0; i < duplicates.length; i++ )
+			{
+				var dupIdx = duplicates[i];
+				
+				// strip this vertex data from the arrays
+				if( positions.length > 0 )
+					positions.splice(dupIdx, 1);
+				if( normals.length > 0 )
+					normals.splice(dupIdx, 1);
+				if( uvs.length > 0 )
+					uvs.splice(dupIdx, 1);
+
+				// adjust indices
+				for( var j = 0; j < indices.length; j++ )
+				{
+					if( indices[j] > dupIdx )
+						indices[j]--;
+				}
+
+				// adjust dupilcates
+				for( var j = i + 1; j < duplicates.length; j++ )
+				{
+					if( duplicates[j] > dupIdx )
+						duplicates[j]--;
 				}
 			}
 		}
 	}
-
-	// Strip unused verts
-	var ridx = minVertIndex;
-	var widx = 0;
-	var vertCount = 0;
-	while (ridx < positions.length)
-	{
-		if (positions[ridx])
-		{
-			vertCount++;
-			positions[widx] = positions[ridx];
-			if (normals[ridx])
-				normals[widx] = normals[ridx];
-			if (uvs[ridx])
-				uvs[widx] = uvs[ridx];
-			for (var i = 0; i < indices.length; i++)
-			{
-				if (indices[i] == ridx)
-					indices[i] = widx;
-			}
-
-			widx++;
-		}
-		ridx++;
-	}
-
-	minVertIndex = 0;
-	//var vertCount = positions.length - minVertIndex;
+	
+	var vertCount = positions.length;
 
 	var mesh = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n<mesh name=\"";
 
@@ -173,9 +175,9 @@ function getMesh(geom)
 	{
 		mesh += "\t\t\t<v3>";
 
-		mesh += positions[i + minVertIndex][0] + ",";
-		mesh += positions[i + minVertIndex][1] + ",";
-		mesh += positions[i + minVertIndex][2];
+		mesh += positions[i][0] + ",";
+		mesh += positions[i][1] + ",";
+		mesh += positions[i][2];
 
 		mesh += "</v3>\n";
 	}
@@ -187,9 +189,9 @@ function getMesh(geom)
 		{
 			mesh += "\t\t\t<v3>";
 
-			mesh += normals[i + minVertIndex][0] + ",";
-			mesh += normals[i + minVertIndex][1] + ",";
-			mesh += normals[i + minVertIndex][2];
+			mesh += normals[i][0] + ",";
+			mesh += normals[i][1] + ",";
+			mesh += normals[i][2];
 
 			mesh += "</v3>\n";
 		}
@@ -202,8 +204,8 @@ function getMesh(geom)
 		{
 			mesh += "\t\t\t<v2>";
 
-			mesh += uvs[i + minVertIndex][0] + ",";
-			mesh += uvs[i + minVertIndex][1] + ",";
+			mesh += uvs[i][0] + ",";
+			mesh += uvs[i][1];
 
 			mesh += "</v2>\n";
 		}
@@ -213,7 +215,7 @@ function getMesh(geom)
 	mesh += "\t<indices>";
 	for (var i = 0; i < indices.length; i++)
 	{
-		mesh += indices[i] - minVertIndex;
+		mesh += indices[i];
 		if (i < (indices.length - 1))
 			mesh += ",";
 	}

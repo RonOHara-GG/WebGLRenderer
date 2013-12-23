@@ -78,7 +78,7 @@ function webGLCanvasSetup()
 
 	TheCanvas.addEventListener("click", canvasClick, false);
 
-	ripColladaFile("./Soldier/Dragon_Test.DAE");
+	ripColladaFile("./Soldier/cube.dae");
 		
 	webGLStart();
 	setupScene("./scene.xml", null);

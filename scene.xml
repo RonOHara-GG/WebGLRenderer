@@ -3,6 +3,7 @@
 <scene>
   <updatePass name="WorldUpdate" src="./worldUpdatePass.xml">
     <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
+    <renderObject name="cubeRO" src="./cubeRO.xml"/>
     <camera name="MainCamera" src="./mainCamera.xml"/>
     <camera name="ShadowCamera" src="./shadowCamera.xml"/>
   </updatePass>
@@ -15,6 +16,7 @@
   <renderPass name="DiffusePass" src="./diffusePass.xml">
     <renderObject name="pyramidMainRO" src="./pyramidMainRO.xml"></renderObject>
      <renderObject name="ground" src="./groundRO.xml"/>
+    <renderObject name="cubeRO" src="./cubeRO.xml"/>
 
     <light name="sun" src="./sunlight.xml"></light>
   </renderPass>

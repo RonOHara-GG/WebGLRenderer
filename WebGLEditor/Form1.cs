@@ -7,8 +7,6 @@ using System.Drawing;
 using System.Linq;
 using System.Text;
 using System.Windows.Forms;
-using OpenTK;
-using OpenTK.Graphics.OpenGL;
 using System.IO;
 
 namespace WebGLEditor

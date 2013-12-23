@@ -54,11 +54,11 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>v8/Debug/lib;GL/Win32</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>v8/Release/lib;GL/Win32</AdditionalLibraryDirectories>
       <AdditionalDependencies>v8_base.ia32.lib;v8_snapshot.lib;winmm.lib;icuuc.lib;icui18n.lib;OpenGL32.lib;wsock32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy $(TargetPath) $(SolutionDir)bin\$(Configuration)\$(TargetFileName) /Y</Command>
+      <Command>copy /Y $(TargetPath) $(ProjectDir)..\WebGLEditor\bin\$(Configuration)\$(TargetFileName)</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
