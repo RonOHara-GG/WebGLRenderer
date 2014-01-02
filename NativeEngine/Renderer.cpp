@@ -683,7 +683,7 @@ DWORD WINAPI RenderThreadLoop(LPVOID lpThreadParameter)
     {
         renderer->RunFrame();
 
-        Sleep(0);
+        Sleep(1);
     }
 
     return 0;

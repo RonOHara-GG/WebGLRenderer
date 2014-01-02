@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<scene>
+	<updatePass name="UpdatePass_0" src="./UpdatePass_0.xml">
+		<camera name="MainCamera" src="./dragon/MainCamera.xml"/>
+    <renderObject name="RenderObject_0" src="./dragon/RenderObject_0.xml"/>
+	</updatePass>
+	<renderPass name="Diffuse" src="./dragon/DiffusePass.xml">
+		<renderObject name="RenderObject_0" src="./dragon/RenderObject_0.xml"/>
+		<light name="Sun" src="./dragon/lights/Sun.xml"/>
+    <light name="RedGlobe" src="./dragon/lights/RedGlobe.xml"/>
+	</renderPass>
+</scene>

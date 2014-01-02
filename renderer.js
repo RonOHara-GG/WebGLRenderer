@@ -66,6 +66,7 @@ function webGLCanvasSetup()
 		gl = TheCanvas.getContext("experimental-webgl");
 		gl.canvasWidth = TheCanvas.width;
 		gl.canvasHeight = TheCanvas.height;
+		gl.wireframe = false;
 
 		gl.depthTextureExt = gl.getExtension("WEBGL_depth_texture");
 	} catch (e)
@@ -78,10 +79,10 @@ function webGLCanvasSetup()
 
 	TheCanvas.addEventListener("click", canvasClick, false);
 
-	ripColladaFile("./Soldier/cube.dae");
+	//ripColladaFile("./Soldier/cube.dae");
 		
 	webGLStart();
-	setupScene("./scene.xml", null);
+	setupScene("./dragon/scene.xml", null);
 }
 
 function setupScene(SceneFile, editor)

@@ -51,6 +51,7 @@ function DrawMesh(gl)
 			// Non indexed draw
 			gl.drawArrays(gl.TRIANGLES, 0, this.triangleCount * 3);
 		}
+		
 	}
 }
 

@@ -101,6 +101,13 @@ function DrawRenderObject(gl)
 		gl.uniformMatrix4fv(gl.uMVP, false, mvp);
 	}
 
+	if (gl.uMV)
+	{
+		var mv = mat4.create();
+		mat4.mul(mv, gl.view, this.worldMatrix);
+		gl.uniformMatrix4fv(gl.uMV, false, mv);
+	}
+
 	if( gl.uWorldMtx )
 	{
 		gl.uniformMatrix4fv(gl.uWorldMtx, false, this.worldMatrix);

@@ -41,12 +41,14 @@ function InitShaderParams(gl)
 	if (this.shaderProgram)
 	{
 		this.mvpUniform = gl.getUniformLocation(this.shaderProgram, "uMVPMatrix");
+		this.mvUniform = gl.getUniformLocation(this.shaderProgram, "uMVMatrix");
 		this.worldUniform = gl.getUniformLocation(this.shaderProgram, "uWorldMatrix");
 		this.normalUniform = gl.getUniformLocation(this.shaderProgram, "uNormalMatrix");
 		this.shadowMtxUniform = gl.getUniformLocation(this.shaderProgram, "uShadowMatrix");
 		this.positionAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexPosition");
 		this.normalAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexNormal");
 		this.uvAttribute = gl.getAttribLocation(this.shaderProgram, "aVertexUV");
+		this.wfAttribute = gl.getAttribLocation(this.shaderProgram, "aWFAttribute");
 
 		this.bind(gl);
 		for (var i = 0; i < this.textureCount; i++)
@@ -55,13 +57,22 @@ function InitShaderParams(gl)
 			gl.uniform1i(texSampler, i);
 		}
 
-		for (var i = 0; i < this.maxLights; i++)
+		for (var i = 0; i < this.maxDLights; i++)
 		{
-			var lightDir = gl.getUniformLocation(this.shaderProgram, "uLightDir" + i);
-			var lightCol = gl.getUniformLocation(this.shaderProgram, "uLightColor" + i);
+			var lightDir = gl.getUniformLocation(this.shaderProgram, "uDLightDir" + i);
+			var lightCol = gl.getUniformLocation(this.shaderProgram, "uDLightColor" + i);
 
-			this.lightDirs.push(lightDir);
-			this.lightCols.push(lightCol);
+			this.dLightDirs.push(lightDir);
+			this.dLightCols.push(lightCol);
+		}
+
+		for (var i = 0; i < this.maxPLights; i++)
+		{
+			var lightPos = gl.getUniformLocation(this.shaderProgram, "uPLightPos" + i);
+			var lightCol = gl.getUniformLocation(this.shaderProgram, "uPLightColor" + i);
+
+			this.pLightPoss.push(lightPos);
+			this.pLightCols.push(lightCol);
 		}
 	}
 }
@@ -75,8 +86,10 @@ function BindShader(gl)
 		gl.shaderPositionLocation = this.positionAttribute;
 		gl.shaderNormalLocation = this.normalAttribute;
 		gl.shaderUVLocattion = this.uvAttribute;
+		gl.shaderWFLocation = this.wfAttribute;
 
 		gl.uMVP = this.mvpUniform;
+		gl.uMV = this.mvUniform;
 		gl.uNrmMtx = this.normalUniform;
 		gl.uWorldMtx = this.worldUniform;
 		gl.uShadowMtx = this.shadowMtxUniform;
@@ -97,11 +110,28 @@ function UnbindOverrideShader(gl)
 
 function AddLight(light, scene)
 {
-	if( this.lightCount < this.maxLights )
-	{	
-		scene.gl.uniform3fv(this.lightDirs[this.lightCount], light.dir);
-		scene.gl.uniform3fv(this.lightCols[this.lightCount], light.color);
-		this.lightCount++;
+	if (light.type == "dir")
+	{
+		if (this.dLightCount < this.maxDLights)
+		{
+			scene.gl.uniform3fv(this.dLightDirs[this.dLightCount], light.dir);
+			scene.gl.uniform3fv(this.dLightCols[this.dLightCount], light.color);
+			this.dLightCount++;
+		}
+	}
+	else if (light.type == "point")
+	{
+		if (this.pLightCount < this.maxPLights)
+		{
+			scene.gl.uniform3fv(this.pLightPoss[this.pLightCount], light.pos);
+			scene.gl.uniform3fv(this.pLightCols[this.pLightCount], light.color);
+			scene.gl.uniform3fv(this.pLightAtts[this.pLightCount], light.attenuation);
+			this.pLightCount++;
+		}
+	}
+	else
+	{
+		console.log("Unsupported light type - " + light.type);
 	}
 }
 
@@ -149,8 +179,12 @@ function ShaderDoAssignment(scene, property, propertyValue)
 				}
 			}
 			break;
-		case "maxLights":
-			this.maxLights = parseInt(propertyValue);
+		case "maxDLights":
+			this.maxDLights = parseInt(propertyValue);
+			result = true;
+			break;
+		case "maxPLights":
+			this.maxPLights = parseInt(propertyValue);
 			result = true;
 			break;
 		case "textureCount":
@@ -186,14 +220,19 @@ function Shader(scene, name, src)
 	this.shaderProgram = null;
 
 	this.mvpUniform = 0;
+	this.mvUniform = 0;
 	this.normalUniform = 0;
 	this.worldUniform = 0;
 	this.shadowMtxUniform = 0;
 	this.positionAttribute = 0;
 	this.normalAttribute = 0;
 	this.uvAttribute = 0;
-	this.lightDirs = [];
-	this.lightCols = [];
+	this.wfAttribute = -1;
+	this.dLightDirs = [];
+	this.dLightCols = [];
+	this.pLightPoss = [];
+	this.pLightCols = [];
+	this.pLightAtts = [];
 
 	this.vsName = null;
 	this.fsName = null;
@@ -202,8 +241,10 @@ function Shader(scene, name, src)
 	this.vertShaderSrc = null;
 	this.fragShaderSrc = null;
 
-	this.lightCount = 0;
-	this.maxLights = 0;
+	this.dLightCount = 0;
+	this.pLightCount = 0;
+	this.maxDLights = 0;
+	this.maxPLights = 0;
 	this.lightUpdateToken = 0;
 
 	this.textureCount = 0;
@@ -216,8 +257,11 @@ function Shader(scene, name, src)
 			var attrib = shaderXML.documentElement.attributes[i];
 			switch (attrib.name)
 			{
-				case "maxLights":
-					this.maxLights = parseInt(attrib.value);
+				case "maxDLights":
+					this.maxDLights = parseInt(attrib.value);
+					break;
+				case "maxPLights":
+					this.maxPLights = parseInt(attrib.value);
 					break;
 				case "textureCount":
 					this.textureCount = parseInt(attrib.value);
@@ -267,7 +311,8 @@ function ShaderToString()
 {
 	var str = this.name + ";";
 	str += this.src + ";";
-	str += this.maxLights + ";";
+	str += this.maxDLights + ";";
+	str += this.maxPLights + ";";
 	str += this.textureCount + ";";
 	str += this.vsSrc + ";";
 	str += this.fsSrc + ";";
@@ -279,7 +324,7 @@ function SaveShader(path)
 {
 	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
 
-	xml += "<shader name=\"" + this.name + "\" maxLights=\"" + this.maxLights + "\" textureCount=\"" + this.textureCount + "\">\n";
+	xml += "<shader name=\"" + this.name + "\" maxDLights=\"" + this.maxDLights + "\" maxPLights=\"" + this.maxPLights + "\" textureCount=\"" + this.textureCount + "\">\n";
 	xml += "\t<vertshader name=\"" + this.vsName + "\" src=\"" + this.vsSrc + "\"/>\n";
 	xml += "\t<fragshader name=\"" + this.fsName + "\" src=\"" + this.fsSrc + "\"/>\n";
 	xml += "</shader>";

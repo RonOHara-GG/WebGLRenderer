@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<renderPass name="Diffuse" sortMode="none" clearMode="color_depth_stencil" clearColor="192,255,255" clearDepth="1" clearStencil="0" debugDraw="false">
+	<viewport name="MainViewport" src="./dragon/MainViewport.xml"/>
+	<camera name="MainCamera" src="./dragon/MainCamera.xml"/>
+</renderPass>
