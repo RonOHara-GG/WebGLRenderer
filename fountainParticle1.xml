@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<particle name="fountainParticle1" cameraFacing="true" minSize="1" maxSize="4">
+  <color>255,0,0</color>
+  <color>0,255,0</color>
+  <color>0,0,255</color>
+</particle>

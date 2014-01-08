@@ -69,6 +69,7 @@ function webGLCanvasSetup()
 		gl.wireframe = false;
 
 		gl.depthTextureExt = gl.getExtension("WEBGL_depth_texture");
+		gl.angleInstArraysExt = gl.getExtension("ANGLE_instanced_arrays");
 	} catch (e)
 	{
 	}
@@ -94,7 +95,7 @@ function setupScene(SceneFile, editor)
 		var idx = SceneFile.lastIndexOf("\\");
 		if (idx < 0)
 			idx = SceneFile.lastIndexOf("/");
-		SetCurrentDirectory(SceneFile.substring(0, idx));
+		//SetCurrentDirectory(SceneFile.substring(0, idx));
 	}
 
 	TheScene = new Scene(SceneFile, gl);

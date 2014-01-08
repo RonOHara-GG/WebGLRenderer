@@ -11,7 +11,8 @@ namespace WebGLEditor
         TreeNode mNode;
         string mName;
         string mSrc;
-        int mMaxLights;
+        int mMaxDLights;
+        int mMaxPLights;
         int mTextureCount;
         string mVSSrc;
         string mFSSrc;
@@ -23,23 +24,26 @@ namespace WebGLEditor
             string data = NativeWrapper.GetShader(name);
             string[] props = data.Split(';');
 
-            // 0:name
+            // name
             mName = name;
 
-            // 1:src
+            // src
             mSrc = props[1];
 
-            // 2:maxLights
-            mMaxLights = Convert.ToInt32(props[2]);
+            // maxDLights
+            mMaxDLights = Convert.ToInt32(props[2]);
 
-            // 3:textureCount
-            mTextureCount = Convert.ToInt32(props[3]);
+            // maxPLights
+            mMaxPLights = Convert.ToInt32(props[3]);
 
-            // 4:vsSrc
-            mVSSrc = props[4];
+            // textureCount
+            mTextureCount = Convert.ToInt32(props[4]);
 
-            // 5:fsSrc
-            mFSSrc = props[5];
+            // vsSrc
+            mVSSrc = props[5];
+
+            // fsSrc
+            mFSSrc = props[6];
         }
 
         public string Name
@@ -87,13 +91,23 @@ namespace WebGLEditor
             }
         }
 
-        public int MaxLights
+        public int MaxDirLights
         {
-            get { return mMaxLights; }
+            get { return mMaxDLights; }
             set
             {
-                if (NativeWrapper.SetObjectAssignment(mName, "shader", "maxLights", value.ToString()))
-                    mMaxLights = value;
+                if (NativeWrapper.SetObjectAssignment(mName, "shader", "maxDLights", value.ToString()))
+                    mMaxDLights = value;
+            }
+        }
+
+        public int MaxPointLights
+        {
+            get { return mMaxPLights; }
+            set
+            {
+                if (NativeWrapper.SetObjectAssignment(mName, "shader", "maxPLights", value.ToString()))
+                    mMaxPLights = value;
             }
         }
 

@@ -4,6 +4,11 @@ function UpdateRenderObject(deltaTimeMS)
 	{
 		this.updateCallback(deltaTimeMS);
 	}
+
+	for (var i = 0; i < this.particleSystems.length; i++)
+	{
+		this.particleSystems[i].update(deltaTimeMS);
+	}
 }
 
 function DrawSelectedRenderObject(gl)
@@ -89,55 +94,59 @@ function DrawSelectedRenderObject(gl)
 
 function DrawRenderObject(gl)
 {
-	// Bind shader
-	if( this.shader )
-		this.shader.bind(gl);
-
-	// Update shader params
-	if( gl.uMVP )
-	{
-		var mvp = mat4.create();
-		mat4.mul(mvp, gl.viewProj, this.worldMatrix);
-		gl.uniformMatrix4fv(gl.uMVP, false, mvp);
-	}
-
-	if (gl.uMV)
-	{
-		var mv = mat4.create();
-		mat4.mul(mv, gl.view, this.worldMatrix);
-		gl.uniformMatrix4fv(gl.uMV, false, mv);
-	}
-
-	if( gl.uWorldMtx )
-	{
-		gl.uniformMatrix4fv(gl.uWorldMtx, false, this.worldMatrix);
-	}
-	
-	if( gl.uNrmMtx )
-	{
-		var nrm = mat3.create();
-		mat3.fromMat4(nrm, this.worldMatrix);
-		gl.uniformMatrix3fv(gl.uNrmMtx, false, nrm);
-	}
-
-	if( this.shadowCamera && gl.uShadowMtx )
-	{
-		gl.uniformMatrix4fv(gl.uShadowMtx, false, this.shadowCamera.shadowMatrix);
-	}
-
-	// Bind Textures
-	for( var i = 0; i < this.textures.length; i++ )
-	{
-		if( this.textures[i] )
-		{
-			this.textures[i].bind(gl, i);
-		}
-	}
-
 	// Draw mesh
 	if (this.mesh)
 	{
+		// Bind shader
+		if( this.shader )
+			this.shader.bind(gl);
+
+		// Update shader params
+		if( gl.uMVP )
+		{
+			var mvp = mat4.create();
+			mat4.mul(mvp, gl.viewProj, this.worldMatrix);
+			gl.uniformMatrix4fv(gl.uMVP, false, mvp);
+		}
+
+		if (gl.uMV)
+		{
+			var mv = mat4.create();
+			mat4.mul(mv, gl.view, this.worldMatrix);
+			gl.uniformMatrix4fv(gl.uMV, false, mv);
+		}
+
+		if( gl.uWorldMtx )
+		{
+			gl.uniformMatrix4fv(gl.uWorldMtx, false, this.worldMatrix);
+		}
+	
+		if( gl.uNrmMtx )
+		{
+			var nrm = mat3.create();
+			mat3.fromMat4(nrm, this.worldMatrix);
+			gl.uniformMatrix3fv(gl.uNrmMtx, false, nrm);
+		}
+
+		if( this.shadowCamera && gl.uShadowMtx )
+		{
+			gl.uniformMatrix4fv(gl.uShadowMtx, false, this.shadowCamera.shadowMatrix);
+		}
+
+		// Bind Textures
+		for( var i = 0; i < this.textures.length; i++ )
+		{
+			if( this.textures[i] )
+			{
+				this.textures[i].bind(gl, i);
+			}
+		}	
 		this.mesh.draw(gl);
+	}
+
+	for (var i = 0; i < this.particleSystems.length; i++)
+	{
+		this.particleSystems[i].draw(gl, this.worldMatrix);
 	}
 }
 
@@ -434,6 +443,7 @@ function RenderObject(scene, name, src)
 	this.updateCallback = null;
 	this.textures = [];
 	this.shadowCamera = null;
+	this.particleSystems = [];
 
 	this.selected = false;
 
@@ -487,17 +497,17 @@ function RenderObject(scene, name, src)
 				else if (children[i].nodeName == "texture")
 				{
 					var tex = null;
-					if( nodeSrc == "frameBuffer" )
+					if (nodeSrc == "frameBuffer")
 					{
 						var depthTexture = false;
 						var dtAttr = children[i].attributes.getNamedItem("depthTexture");
-						if( dtAttr )
+						if (dtAttr)
 							depthTexture = (dtAttr.value === "true");
 
 						var fb = scene.getFrameBuffer(nodeName, null);
-						if( fb )
+						if (fb)
 						{
-							if( depthTexture )
+							if (depthTexture)
 								tex = fb.depthTexture;
 							else
 								tex = fb.colorTexture;
@@ -508,12 +518,12 @@ function RenderObject(scene, name, src)
 						// Normal texture
 						tex = scene.getTexture(nodeName, nodeSrc);
 					}
-											
-					if( tex )
-					{						
+
+					if (tex)
+					{
 						var texIndex = 0;
 						var index = children[i].attributes.getNamedItem("texIndex");
-						if( index )
+						if (index)
 							texIndex = parseInt(index.value);
 
 						this.textures[texIndex] = tex;
@@ -522,6 +532,11 @@ function RenderObject(scene, name, src)
 				else if (children[i].nodeName == "shadowCamera")
 				{
 					this.shadowCamera = scene.getCamera(nodeName, nodeSrc);
+				}
+				else if (children[i].nodeName == "particleSystem")
+				{
+					var ps = scene.getParticleSystem(nodeName, nodeSrc);
+					this.particleSystems.push(ps);
 				}
 			}
 		}

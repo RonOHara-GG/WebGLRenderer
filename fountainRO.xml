@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<renderobject name="fountainRO" pos="0,0,2.5" rot="0,0,0,1" update="UpdatePyramid">
+  <particleSystem name="Fountain" src="./fountainPS.xml"/>
+</renderobject>

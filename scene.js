@@ -188,6 +188,60 @@ function GetTexture(name, src)
 	return null;
 }
 
+function GetParticleSystem(name, src)
+{
+	for (var i = 0; i < this.particleSystems.length; i++)
+	{
+		if (this.particleSystems[i].name == name)
+			return this.particleSystems[i];
+	}
+
+	if (src)
+	{
+		if (src == "create") src = null;
+		var ps = new ParticleSystem(this, name, src);
+		this.particleSystems.push(ps);
+		return ps;
+	}
+	return null;
+}
+
+function GetParticleEmitter(name, src)
+{
+	for (var i = 0; i < this.particleEmitters.length; i++)
+	{
+		if (this.particleEmitters[i].name == name)
+			return this.particleEmitters[i];
+	}
+
+	if (src)
+	{
+		if (src == "create") src = null;
+		var emitter = new ParticleEmitter(this, name, src);
+		this.particleEmitters.push(emitter);
+		return emitter;
+	}
+	return null;
+}
+
+function GetParticle(name, src)
+{
+	for (var i = 0; i < this.particles.length; i++)
+	{
+		if (this.particles[i].name == name)
+			return this.particles[i];
+	}
+
+	if (src)
+	{
+		if (src == "create") src = null;
+		var part = new Particle(this, name, src);
+		this.particles.push(part);
+		return part;
+	}
+	return null;
+}
+
 function ImportFile(filename)
 {
 	var object = null;
@@ -700,6 +754,9 @@ function Scene(sceneXMLFile, gl)
 	this.shaders = [];
 	this.lights = [];
 	this.textures = [];
+	this.particleSystems = [];
+	this.particleEmitters = [];
+	this.particles = [];
 
 	this.selectedObject = null;
 
@@ -716,6 +773,9 @@ function Scene(sceneXMLFile, gl)
 	this.getShader = GetShader;
 	this.getLight = GetLight;
 	this.getTexture = GetTexture;
+	this.getParticleSystem = GetParticleSystem;
+	this.getParticleEmitter = GetParticleEmitter;
+	this.getParticle = GetParticle;
 	this.importFile = ImportFile;
 	this.doObjectAssignment = DoObjectAssignment;
 	this.addToPass = AddToPass;

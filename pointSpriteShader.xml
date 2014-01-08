@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<shader name="pointSpriteShader" textureCount="0">
+  <vertshader name="pointSpriteVS" src="./pointSpriteVS.glsl"></vertshader>
+  <fragshader name="pointSpriteFS" src="./pointSpriteFS.glsl"></fragshader>
+</shader>

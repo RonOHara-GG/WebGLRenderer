@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<particleEmitter name="Fountain1" type="cone" pos="0,0,0">
+  <particle name="fountainParticle1" src="fountainParticle1.xml"/>
+</particleEmitter>

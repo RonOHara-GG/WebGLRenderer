@@ -221,7 +221,12 @@ namespace WebGLEditor
             string sceneJson = NativeWrapper.LoadSceneFromFile(filename);
             treeView1.Nodes.Clear();
             TreeNode node = treeView1.Nodes.Add((filename != null) ? filename : "untitled");
-            node.Tag = new SceneJS(sceneJson, node);
+            SceneJS scene = new SceneJS(sceneJson, node);
+
+            if( filename == null )
+                scene.CreateDefault();
+            node.Tag = scene;
+
             WaitCursor(false);
         }
 

@@ -160,6 +160,23 @@ namespace WebGLEditor
             }
         }
 
+        public void CreateDefault()
+        {
+            UpdatePassJS up = CreateUpdatePass();
+            RenderPassJS rp = CreateRenderPass();
+            ViewportJS vp = CreateViewport();
+            CameraJS cam = CreateCamera();
+
+            cam.Pos = "5, 1, 0";
+            cam.Far = 1000;
+            cam.Near = 0.1f;
+
+            rp.Viewport = vp.Name;
+            rp.Camera = cam.Name;
+            rp.ClearColor = System.Drawing.Color.LightSlateGray;
+            rp.ClearMode = RenderPassJS.eClearMode.ColorDepthStencil;
+        }
+
         private TreeNode AddChildNode(string nodeName, string newTag, EventHandler newFunc)
         {
             TreeNode node = mTreeNode.Nodes.Add(nodeName);
@@ -239,7 +256,7 @@ namespace WebGLEditor
             return (child == null);
         }
 
-        public void onNewUpdatePass(object sender, EventArgs e)
+        private UpdatePassJS CreateUpdatePass()
         {
             TreeNode upnode = FindTreeNode("Update Passes");
 
@@ -253,9 +270,11 @@ namespace WebGLEditor
             UpdatePassJS up = new UpdatePassJS(name, node);
             up.Source = "./" + name + ".xml";
             node.Tag = up;
+
+            return up;
         }
 
-        public void onNewRenderPass(object sender, EventArgs e)
+        private RenderPassJS CreateRenderPass()
         {
             TreeNode rpnode = FindTreeNode("Render Passes");
 
@@ -269,9 +288,11 @@ namespace WebGLEditor
             RenderPassJS rp = new RenderPassJS(name, node);
             rp.Source = "./" + name + ".xml";
             node.Tag = rp;
+
+            return rp;
         }
 
-        public void onNewRenderObject(object sender, EventArgs e)
+        private RenderObjectJS CreateRenderObject()
         {
             TreeNode ronode = FindTreeNode("Render Objects");
 
@@ -286,9 +307,10 @@ namespace WebGLEditor
             obj.Source = "./" + name + ".xml";
             mRenderObjects.Add(obj);
             node.Tag = obj;
+            return obj;
         }
 
-        public void onNewViewport(object sender, EventArgs e)
+        private ViewportJS CreateViewport()
         {
             TreeNode pnode = FindTreeNode("Viewports");
 
@@ -302,9 +324,10 @@ namespace WebGLEditor
             ViewportJS obj = new ViewportJS(name, node);
             obj.Source = "./" + name + ".xml";
             node.Tag = obj;
+            return obj;
         }
 
-        public void onNewCamera(object sender, EventArgs e)
+        private CameraJS CreateCamera()
         {
             TreeNode pnode = FindTreeNode("Cameras");
 
@@ -319,9 +342,11 @@ namespace WebGLEditor
             obj.Source = "./" + name + ".xml";
             node.Tag = obj;
             mCameras.Add(obj);
+
+            return obj;
         }
 
-        public void onNewFrameBuffer(object sender, EventArgs e)
+        private FrameBufferJS CreateFrameBuffer()
         {
             TreeNode pnode = FindTreeNode("Frame Buffers");
 
@@ -335,9 +360,10 @@ namespace WebGLEditor
             FrameBufferJS obj = new FrameBufferJS(name, node);
             obj.Source = "./" + name + ".xml";
             node.Tag = obj;
+            return obj;
         }
 
-        public void onNewShader(object sender, EventArgs e)
+        private ShaderJS CreateShader()
         {
             TreeNode pnode = FindTreeNode("Shaders");
 
@@ -351,9 +377,10 @@ namespace WebGLEditor
             ShaderJS obj = new ShaderJS(name, node);
             obj.Source = "./" + name + ".xml";
             node.Tag = obj;
+            return obj;
         }
 
-        public void onNewLight(object sender, EventArgs e)
+        private LightJS CreateLight()
         {
             TreeNode pnode = FindTreeNode("Lights");
 
@@ -368,9 +395,10 @@ namespace WebGLEditor
             obj.Source = "./" + name + ".xml";
             node.Tag = obj;
             mLights.Add(obj);
+            return obj;
         }
 
-        public void onNewTexture(object sender, EventArgs e)
+        private TextureJS CreateTexture()
         {
             TreeNode pnode = FindTreeNode("Textures");
 
@@ -384,6 +412,52 @@ namespace WebGLEditor
             TextureJS obj = new TextureJS(name, node);
             obj.Source = "./" + name + ".xml";
             node.Tag = obj;
+            return obj;
+        }
+
+        public void onNewUpdatePass(object sender, EventArgs e)
+        {
+            CreateUpdatePass();
+        }
+
+        public void onNewRenderPass(object sender, EventArgs e)
+        {
+            CreateRenderPass();
+        }
+
+        public void onNewRenderObject(object sender, EventArgs e)
+        {
+            CreateRenderObject();
+        }
+
+        public void onNewViewport(object sender, EventArgs e)
+        {
+            CreateViewport();
+        }
+
+        public void onNewCamera(object sender, EventArgs e)
+        {
+            CreateCamera();
+        }
+
+        public void onNewFrameBuffer(object sender, EventArgs e)
+        {
+            CreateFrameBuffer();
+        }
+
+        public void onNewShader(object sender, EventArgs e)
+        {
+            CreateShader();
+        }
+
+        public void onNewLight(object sender, EventArgs e)
+        {
+            CreateLight();
+        }
+
+        public void onNewTexture(object sender, EventArgs e)
+        {
+            CreateTexture();
         }       
 
         public RenderObjectJS FindRenderObject(string name)
