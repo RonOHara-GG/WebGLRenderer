@@ -27,26 +27,38 @@ function InitPointSprites(gl, scene)
 		gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, pointSpriteIndices);
 		gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
 
-		pointSpriteShader = scene.getShader("pointSpriteShader", "./pointSpriteShader.xml");
+		if (gl.angleInstArraysExt)
+			pointSpriteShader = scene.getShader("pointSpriteShader", "./pointSpriteShader.xml");
+		else
+			pointSpriteShader = scene.getShader("pointSpriteShaderS", "./pointSpriteShaderS.xml");
 		pointSpriteShader.uProj = gl.getUniformLocation(pointSpriteShader.shaderProgram, "uPMatrix");
 		pointSpriteShader.uViewUp = gl.getUniformLocation(pointSpriteShader.shaderProgram, "uViewUp");
 		pointSpriteShader.uViewRight = gl.getUniformLocation(pointSpriteShader.shaderProgram, "uViewRight");
 		pointSpriteShader.cornersLocation = gl.getAttribLocation(pointSpriteShader.shaderProgram, "aCornerNormal");
-		pointSpriteShader.posLocation = gl.getAttribLocation(pointSpriteShader.shaderProgram, "aSpritePosition");
-		pointSpriteShader.colorLocation = gl.getAttribLocation(pointSpriteShader.shaderProgram, "aSpriteColor");
+
+		if (gl.angleInstArraysExt)
+		{
+			pointSpriteShader.posLocation = gl.getAttribLocation(pointSpriteShader.shaderProgram, "aSpritePosition");
+			pointSpriteShader.colorLocation = gl.getAttribLocation(pointSpriteShader.shaderProgram, "aSpriteColor");
+		}
+		else
+		{
+			pointSpriteShader.posLocation = gl.getUniformLocation(pointSpriteShader.shaderProgram, "aSpritePosition");
+			pointSpriteShader.colorLocation = gl.getUniformLocation(pointSpriteShader.shaderProgram, "aSpriteColor");			
+		}
 	}
 }
 
-function PEUpdate(deltaTime)
+function PEUpdate(deltaTime, worldMtx, forces, colliders)
 {
 	// Update all particles
 	for (var i = 0; i < this.particles.length; i++)
 	{
-		this.particles[i].update(deltaTime);
+		this.particles[i].update(deltaTime, forces, colliders);
 	}
 
 	// Remove dead particles
-	for (var i = this.particles.length - 1; i > 0; i--)
+	for (var i = this.particles.length - 1; i >= 0; i--)
 	{
 		if (this.particles[i].life <= 0)
 		{
@@ -58,18 +70,20 @@ function PEUpdate(deltaTime)
 	// Spawn new particles
 	var particlesToSpawn = Math.floor(this.particlesPerSecond * deltaTime);
 	var space = this.maxParticles - this.particles.length;
-	particlesToSpawn = math.Min(particlesToSpawn, space);
+	particlesToSpawn = Math.min(particlesToSpawn, space);
 	for (var i = 0; i < particlesToSpawn; i++)
 	{
 		var def = Math.floor(Math.random() * this.particleDefs.length);
-		var particle = this.particleDefs[def].spawn(this.getSpawnPos(), this.getEmitDir());
+		var particle = this.particleDefs[def].spawn(this.getSpawnPos(worldMtx), this.getEmitDir());
 		this.particles.push(particle);
 	}
 }
 
-function PESpawnPosition()
+function PESpawnPosition(worldMtx)
 {
-	return this.pos;
+	var spawnPos = vec3.create();
+	vec3.transformMat4(spawnPos, this.pos, worldMtx);
+	return spawnPos;
 }
 
 function PEEmitDir()
@@ -80,7 +94,7 @@ function PEEmitDir()
 	{
 		case "cone":
 			var crossVec = vec3.create();
-			var randVec = vec3.fromValues(Math.random(), Math.random(), Math.Random());
+			var randVec = vec3.fromValues(Math.random(), Math.random(), Math.random());
 			vec3.normalize(randVec, randVec);
 			vec3.cross(crossVec, randVec, this.dir);
 			vec3.normalize(crossVec, crossVec);
@@ -105,6 +119,37 @@ function PEEmitDir()
 	return emitDir;
 }
 
+function PESort(gl)
+{
+	switch (this.sortMode)
+	{
+		case "backToFront":
+			// transform all particles into view space
+			for (var i = 0; i < this.particles.length; i++)
+			{
+				vec3.transformMat4(this.particles[i].vp, this.particles[i].pos, gl.view);
+			}
+
+			// sort
+			this.particles.sort(function (a, b) { return (a.vp[2] - b.vp[2]); });
+			break;
+		case "frontToBack":
+			// transform all particles into view space
+			for (var i = 0; i < this.particles.length; i++)
+			{
+				vec3.transformMat4(this.particles[i].vp, this.particles[i].pos, gl.view);
+			}
+
+			// sort
+			this.particles.sort(function (a, b) { return (b.vp[2] - a.vp[2]); });
+			break;
+		case "none":
+			break;
+		default:
+			break;
+	}
+}
+
 function PEDraw(gl, worldMtx)
 {
 	// Bind the shader
@@ -112,12 +157,9 @@ function PEDraw(gl, worldMtx)
 
 	// Set shader variables
 	gl.uniformMatrix4fv(pointSpriteShader.uProj, false, gl.proj);
+	gl.uniformMatrix4fv(gl.uMV, false, gl.view);
 	gl.uniform3f(pointSpriteShader.uViewUp, gl.view[1], gl.view[5], gl.view[9]);
 	gl.uniform3f(pointSpriteShader.uViewRight, gl.view[0], gl.view[4], gl.view[8]);
-
-	var mv = mat4.create();
-	mat4.mul(mv, gl.view, worldMtx);
-	gl.uniformMatrix4fv(gl.uMV, false, mv);
 
 
 
@@ -127,38 +169,61 @@ function PEDraw(gl, worldMtx)
 	gl.enableVertexAttribArray(pointSpriteShader.cornersLocation);
 	gl.vertexAttribPointer(pointSpriteShader.cornersLocation, 2, gl.FLOAT, false, 8, 0);
 
-	// Build vertex buffer
-	var particleData = [];
-	for (var i = 0; i < this.particles.length; i++)
-	{
-		var particle = this.particles[i];
-		particleData.push(particle.pos[0]);
-		particleData.push(particle.pos[1]);
-		particleData.push(particle.pos[2]);
-		particleData.push(particle.size);
-		particleData.push(particle.color[0]);
-		particleData.push(particle.color[1]);
-		particleData.push(particle.color[2]);
-		particleData.push(particle.color[3]);
-	}
+	// Sort particles
+	this.sort(gl);
 
-	var particleBuffer = gl.createBuffer();
-	gl.bindBuffer(gl.ARRAY_BUFFER, particleBuffer);
-	gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(particleData), gl.STATIC_DRAW);
-
-	gl.enableVertexAttribArray(pointSpriteShader.posLocation);
-	gl.vertexAttribPointer(pointSpriteShader.posLocation, 4, gl.FLOAT, false, 32, 0);
-	gl.angleInstArraysExt.vertexAttribDivisorANGLE(pointSpriteShader.posLocation, 1);
-
-	gl.enableVertexAttribArray(pointSpriteShader.colorLocation);
-	gl.vertexAttribPointer(pointSpriteShader.colorLocation, 4, gl.FLOAT, false, 32, 16);
-	gl.angleInstArraysExt.vertexAttribDivisorANGLE(pointSpriteShader.colorLocation, 1);
+	
 
 	// Draw instances
-	gl.angleInstArraysExt.drawElementsInstancedANGLE(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, this.particles.length);
+	if (gl.angleInstArraysExt)
+	{
+		// Build vertex buffer
+		var particleData = [];
+		for (var i = 0; i < this.particles.length; i++)
+		{
+			var particle = this.particles[i];
+			particleData.push(particle.pos[0]);
+			particleData.push(particle.pos[1]);
+			particleData.push(particle.pos[2]);
+			particleData.push(particle.size);
+			particleData.push(particle.color[0]);
+			particleData.push(particle.color[1]);
+			particleData.push(particle.color[2]);
+			particleData.push(particle.color[3]);
+		}
+
+		var particleBuffer = gl.createBuffer();
+		gl.bindBuffer(gl.ARRAY_BUFFER, particleBuffer);
+		gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(particleData), gl.STATIC_DRAW);
+
+		gl.enableVertexAttribArray(pointSpriteShader.posLocation);
+		gl.vertexAttribPointer(pointSpriteShader.posLocation, 4, gl.FLOAT, false, 32, 0);
+		gl.angleInstArraysExt.vertexAttribDivisorANGLE(pointSpriteShader.posLocation, 1);
+
+		gl.enableVertexAttribArray(pointSpriteShader.colorLocation);
+		gl.vertexAttribPointer(pointSpriteShader.colorLocation, 4, gl.FLOAT, false, 32, 16);
+		gl.angleInstArraysExt.vertexAttribDivisorANGLE(pointSpriteShader.colorLocation, 1);
+
+		gl.angleInstArraysExt.drawElementsInstancedANGLE(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0, this.particles.length);
+	}
+	else
+	{
+		// Software instancing
+		for (var i = 0; i < this.particles.length; i++)
+		{
+			var particle = this.particles[i];
+			gl.uniform4f(pointSpriteShader.posLocation, particle.pos[0], particle.pos[1], particle.pos[2], particle.size);
+			gl.uniform4fv(pointSpriteShader.colorLocation, particle.color);
+
+			particle.texture.bind(gl, 0);
+
+			gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+		}
+	}
 
 	// Cleanup
 	gl.bindBuffer(gl.ARRAY_BUFFER, null);
+	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
 
 function ParticleEmitter(scene, name, src)
@@ -170,10 +235,15 @@ function ParticleEmitter(scene, name, src)
 	this.draw = PEDraw;
 	this.getSpawnPos = PESpawnPosition;
 	this.getEmitDir = PEEmitDir;
+	this.sort = PESort;
 
 	this.type = "cone";
 	this.pos = vec3.create();
 	this.dir = vec3.create();
+	this.angle = Math.PI / 4;
+	this.particlesPerSecond = 100;
+	this.maxParticles = 1000;
+	this.sortMode = "none";
 	this.particleDefs = [];
 
 	this.particles = [];
@@ -193,7 +263,25 @@ function ParticleEmitter(scene, name, src)
 						break;
 					case "pos":
 						var values = attrib.value.split(",");
-						this.pos = vec3.fromValues(values[0], values[1], values[2]);
+						this.pos = vec3.fromValues(parseFloat(values[0]), parseFloat(values[1]), parseFloat(values[2]));
+						break;
+					case "dir":
+						var values = attrib.value.split(",");
+						this.dir = vec3.fromValues(parseFloat(values[0]), parseFloat(values[1]), parseFloat(values[2]));
+						vec3.normalize(this.dir, this.dir);
+						break;
+					case "particlesPerSecond":
+						this.particlesPerSecond = parseInt(attrib.value);
+						break;
+					case "maxParticles":
+						this.maxParticles = parseInt(attrib.value);
+						break;
+					case "angle":
+						var deg = parseFloat(attrib.value);
+						this.angle = deg * 0.0174532925;
+						break;
+					case "sortMode":
+						this.sortMode = attrib.value;
 						break;
 					default:
 						break;

@@ -7,7 +7,7 @@ function UpdateRenderObject(deltaTimeMS)
 
 	for (var i = 0; i < this.particleSystems.length; i++)
 	{
-		this.particleSystems[i].update(deltaTimeMS);
+		this.particleSystems[i].update(deltaTimeMS, this.worldMatrix);
 	}
 }
 

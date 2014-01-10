@@ -22,7 +22,7 @@ function UpdateLights(scene)
 	gl.lightUpdateToken++;
 	for (var i = 0; i < this.renderObjects.length; i++)
 	{
-		if (this.renderObjects[i].shader.lightUpdateToken != gl.lightUpdateToken)
+		if ( this.renderObjects[i].shader && this.renderObjects[i].shader.lightUpdateToken != gl.lightUpdateToken)
 		{
 			this.renderObjects[i].shader.lightUpdateToken = gl.lightUpdateToken;
 			this.renderObjects[i].shader.lightCount = 0;

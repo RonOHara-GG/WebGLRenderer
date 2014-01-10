@@ -2,4 +2,7 @@
 
 <particleSystem name="Fountain">
   <particleEmitter name="Fountain1" src="fountain1.xml"/>
+  <force>0,0,-3</force>
+  <force>0.125,0,0</force>
+  <triangleCollider>0,0,0,-1,-1,-1,-1,1,-1</triangleCollider>
 </particleSystem>

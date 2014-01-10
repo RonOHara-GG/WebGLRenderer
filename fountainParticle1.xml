@@ -1,7 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<particle name="fountainParticle1" cameraFacing="true" minSize="1" maxSize="4">
+<particle name="fountainParticle1" cameraFacing="true" minSize="0.05" maxSize="0.3" minLife="5" maxLife="10" minSpeed="3.4" maxSpeed="4.0">
   <color>255,0,0</color>
   <color>0,255,0</color>
   <color>0,0,255</color>
+  <texture name="AlienBug" src="./Images/AlienBug.jpg"/>
+  <texture name="FlowerBurst" src="./Images/FlowerBurst.jpg"/>
+  <texture name="StarBurst" src="./Images/StarBurst.jpg"/>
 </particle>

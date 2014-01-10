@@ -5,7 +5,7 @@ function CreateShader(gl, type, src)
 	gl.compileShader(shader);
 	if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS))
 	{
-		alert("shader compile error(" + this.name + "): " + gl.getShaderInfoLog(shader));
+		console.log("shader compile error(" + this.name + "): " + gl.getShaderInfoLog(shader) + "\n\n" + src);
 		return null;
 	}
 	return shader;
@@ -19,7 +19,7 @@ function CreateShaderProgram(gl, vs, fs)
 	gl.linkProgram(shaderProgram);
 	if (!gl.getProgramParameter(shaderProgram, gl.LINK_STATUS))
 	{
-		alert("Failed to create shader program: " + this.name);
+		console.log("Failed to create shader program: " + this.name);
 		return null;
 	}
 	return shaderProgram;

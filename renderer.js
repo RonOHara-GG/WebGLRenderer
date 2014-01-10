@@ -83,7 +83,8 @@ function webGLCanvasSetup()
 	//ripColladaFile("./Soldier/cube.dae");
 		
 	webGLStart();
-	setupScene("./dragon/scene.xml", null);
+	//setupScene("./dragon/scene.xml", null);
+	setupScene("./scene.xml", null);
 }
 
 function setupScene(SceneFile, editor)
@@ -111,6 +112,8 @@ function webGLStart()
 	gl.lightUpdateToken = 0;
 
 	gl.enable(gl.DEPTH_TEST);
+	gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+	gl.enable(gl.BLEND);
 
 	InitImmediate(gl);
 
