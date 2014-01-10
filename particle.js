@@ -17,7 +17,7 @@ function ParticleUpdate(deltaTime, forces, colliders)
 		// Collide
 		for (var i = 0; i < colliders.length; i++)
 		{
-			colliders.collide(startPos, this.pos, this.pos, this.vel);
+			colliders[i].collide(startPos, this.pos, this.pos, this.vel);
 		}
 		
 		this.life -= deltaTime;

@@ -1,4 +1,63 @@
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// PlaneCollider
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+function PCUpdate(worldMtx)
+{
+	vec3.transformMat4(this.worldPt, this.point, worldMtx);
+
+	// Rotate normal into world space
+	var rotM = mat3.create();
+	mat3.fromMat4(rotM, worldMtx);
+	vec3.transformMat3(this.worldNormal, this.normal, rotM);
+	vec3.normalize(this.worldNormal, this.worldNormal);
+}
+
+function PlaneCollide(pointA, pointB, outPos, outVel)
+{
+	var collision = false;
+
+	// intersect line with plane
+	var seg = vec3.create();
+	vec3.sub(seg, pointB, pointA);
+
+	var denom = vec3.dot(this.worldNormal, seg);
+	if (denom != 0)
+	{
+		var ptOnPlane = vec3.create();
+		vec3.sub(ptOnPlane, this.worldPt, pointA);
+
+		var nume = vec3.dot(this.worldNormal, ptOnPlane);
+		var r = nume / denom;
+
+		if (r > 0 && r < 1)
+		{
+			collision = true;
+			vec3.scaleAndAdd(outPos, pointA, seg, r);
+			vec3.scale(outVel, this.worldNormal, this.bounce);
+		}
+	}
+
+	return collision;
+}
+
+function PlaneCollider(pointStrs, bounce)
+{
+	this.collide = PlaneCollide;
+	this.update = PCUpdate;
+
+	this.bounce = bounce;
+	this.point = vec3.fromValues(parseFloat(pointStrs[0]), parseFloat(pointStrs[1]), parseFloat(pointStrs[2]));
+	this.normal = vec3.fromValues(parseFloat(pointStrs[3]), parseFloat(pointStrs[4]), parseFloat(pointStrs[5]));
+
+	this.worldPt = vec3.create();
+	this.worldNormal = vec3.create();
+
+	vec3.normalize(this.normal, this.normal);
+}
+
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////
 // TriangleCollider
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -76,12 +135,12 @@ function TriangleCollide(pointA, pointB, outPos, outVel)
 	return collision;
 }
 
-function TraingleCollider(pointStrs)
+function TraingleCollider(pointStrs, bounce)
 {
 	this.collide = TriangleCollide;
 	this.update = TCUpdate;
 
-	this.bounce = 10;
+	this.bounce = bounce;
 	this.points = [];
 	this.normal = vec3.create();
 
@@ -99,7 +158,7 @@ function TraingleCollider(pointStrs)
 
 	vec3.sub(edge01, this.points[1], this.points[0]);
 	vec3.sub(edge02, this.points[2], this.points[1]);
-	vec3.cross(this.normal, edge01, edge02);
+	vec3.cross(this.normal, edge02, edge01);
 	vec3.normalize(this.normal, this.normal);
 }
 
@@ -188,8 +247,16 @@ function ParticleSystem(scene, name, src)
 							this.forces.push(force);
 							break;
 						case "triangleCollider":
+							var bounce = children[i].attributes.getNamedItem("bounce").value;
 							var points = children[i].textContent.split(",");
-							var collider = new TraingleCollider(points);
+							var collider = new TraingleCollider(points, parseFloat(bounce));
+							this.colliders.push(collider);
+							break;
+						case "planeCollider":
+							var bounce = children[i].attributes.getNamedItem("bounce").value;
+							var points = children[i].textContent.split(",");
+							var collider = new PlaneCollider(points, parseFloat(bounce));
+							this.colliders.push(collider);
 							break;
 						default:
 							break;

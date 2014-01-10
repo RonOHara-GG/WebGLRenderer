@@ -3,6 +3,10 @@
 <particleSystem name="Fountain">
   <particleEmitter name="Fountain1" src="fountain1.xml"/>
   <force>0,0,-3</force>
-  <force>0.125,0,0</force>
-  <triangleCollider>0,0,0,-1,-1,-1,-1,1,-1</triangleCollider>
+  <force>-0.125,0,0</force>
+  <triangleCollider bounce="0.5">0,0,0,-1,-1,-1,-1,1,-1</triangleCollider>
+  <triangleCollider bounce="0.5">0,0,0,-1,1,-1,1,1,-1</triangleCollider>
+  <triangleCollider bounce="0.5">0,0,0,1,1,-1,1,-1,-1</triangleCollider>
+  <triangleCollider bounce="0.75">0,0,0,1,-1,-1,-1,-1,-1</triangleCollider>
+  <planeCollider bounce="0.25">0,0,-2.5,0,0,1</planeCollider>
 </particleSystem>
