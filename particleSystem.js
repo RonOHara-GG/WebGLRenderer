@@ -127,7 +127,7 @@ function TriangleCollide(pointA, pointB, outPos, outVel)
 				// Intersection inside the triangle
 				collision = true;
 				vec3.scale(outVel, this.worldNormal, this.bounce);
-				vec3.copy(outPos, isect);
+				vec3.scaleAndAdd(outPos, isect, this.worldNormal, 0.1);
 			}
 		}
 	}

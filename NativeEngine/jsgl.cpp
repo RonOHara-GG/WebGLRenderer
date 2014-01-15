@@ -1,11 +1,14 @@
 #include "StdAfx.h"
 #include "jsgl.h"
+#include "ImageLoader.h"
 
 #define GLEW_STATIC
 #include "GL/glew.h"
 #include "GL/wglew.h"
 
 using namespace v8;
+
+int gGLTex2D = -1;
 
 
 jsgl::jsgl(HWND hWnd)
@@ -267,6 +270,26 @@ void GetGLProperty(Local<String> prop, const PropertyCallbackInfo<Value>& info)
         Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_DEPTH_ATTACHMENT));
         info.GetReturnValue().Set(val);
     }
+    else if( strcmp(*Property, "SRC_ALPHA") == 0 )
+    {
+        Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_SRC_ALPHA));
+        info.GetReturnValue().Set(val);
+    }
+    else if( strcmp(*Property, "ONE_MINUS_SRC_ALPHA") == 0 )
+    {
+        Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_ONE_MINUS_SRC_ALPHA));
+        info.GetReturnValue().Set(val);
+    }
+    else if( strcmp(*Property, "BLEND") == 0 )
+    {
+        Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_BLEND));
+        info.GetReturnValue().Set(val);
+    }
+    else if( strcmp(*Property, "UNPACK_FLIP_Y_WEBGL") == 0 )
+    {
+        Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(0));
+        info.GetReturnValue().Set(val);
+    }
     else
     {
         char first = (*Property)[0];
@@ -281,7 +304,7 @@ void GetGLProperty(Local<String> prop, const PropertyCallbackInfo<Value>& info)
             char szOut[8 * 1024];
             String::Utf8Value scriptName(sf->GetScriptName());
             String::Utf8Value funcName(sf->GetFunctionName());
-            sprintf(szOut, " -- %s (%d,%d):%s\n", *scriptName, sf->GetLineNumber(), sf->GetColumn(), *funcName);
+            sprintf_s(szOut, sizeof(szOut), " -- %s (%d,%d):%s\n", *scriptName, sf->GetLineNumber(), sf->GetColumn(), *funcName);
             OutputDebugStringA(szOut);
         }
     }
@@ -311,6 +334,17 @@ void glDisableCB(const v8::FunctionCallbackInfo<v8::Value>& args)
 
     int val = argval->Value();
     glDisable(val);
+}
+    
+void glBlendFuncCB(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 2) 
+        return;
+    
+    HandleScope scope(args.GetIsolate());
+    int src = args[0]->ToInt32()->Value();
+    int dst = args[1]->ToInt32()->Value();
+    glBlendFunc(src, dst);
 }
 
 void glDepthFuncCB(const v8::FunctionCallbackInfo<v8::Value>& args)
@@ -548,6 +582,9 @@ void glBindTextureCB(const v8::FunctionCallbackInfo<v8::Value>& args)
     int target = args[0]->ToInt32()->Value();
     int tex = args[1]->ToInt32()->Value();
 
+    if( target == GL_TEXTURE_2D )
+        gGLTex2D = tex;
+
     glBindTexture(target, tex);
 }
 
@@ -564,34 +601,62 @@ void glTexParameteriCB(const v8::FunctionCallbackInfo<v8::Value>& args)
     glTexParameteri(target, param, val);            
 }
 
-void glTexImage2DCB(const v8::FunctionCallbackInfo<v8::Value>& args)
+void glPixelStoreiCB(const v8::FunctionCallbackInfo<v8::Value>& args)
 {
-    if (args.Length() < 9) 
+    if (args.Length() < 2) 
         return;
 
+    HandleScope scope(args.GetIsolate());
+    int pname = args[0]->ToInt32()->Value();
+    int param = args[1]->ToInt32()->Value();
+
+    glPixelStorei(pname, param);        
+}
+
+void glTexImage2DCB(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 6) 
+        return;
+        
     HandleScope scope(args.GetIsolate());
     int target = args[0]->ToInt32()->Value();
     int level = args[1]->ToInt32()->Value();
     int internalFormat = args[2]->ToInt32()->Value();
-    int width = args[3]->ToInt32()->Value();
-    int height = args[4]->ToInt32()->Value();
-    int border = args[5]->ToInt32()->Value();
-    int format = args[6]->ToInt32()->Value();
-    int type = args[7]->ToInt32()->Value();
 
-    void* data = 0;
-    bool nullData = args[8]->IsNull();
-    if( !nullData )
-    {        
-        bool arrayData = args[8]->IsTypedArray();
-        if( arrayData )
+    if( args.Length() == 6 )
+    {
+        int format = args[3]->ToInt32()->Value();
+        int type = args[4]->ToInt32()->Value();
+
+        if( !args[5]->IsNull() && args[5]->IsExternal() )
         {
-            TypedArray* arr = TypedArray::Cast(*args[8]);
-            data = arr->Buffer()->BaseAddress();
+            Handle<External> ext = Handle<External>::Cast(args[5]);
+            ImageLoader* il = (ImageLoader*)ext->Value();
+            il->CreateGLTexture(gGLTex2D);
         }
     }
+    else
+    {
+        int width = args[3]->ToInt32()->Value();
+        int height = args[4]->ToInt32()->Value();
+        int border = args[5]->ToInt32()->Value();
+        int format = args[6]->ToInt32()->Value();
+        int type = args[7]->ToInt32()->Value();
 
-    glTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
+        void* data = 0;
+        bool nullData = args[8]->IsNull();
+        if( !nullData )
+        {        
+            bool arrayData = args[8]->IsTypedArray();
+            if( arrayData )
+            {
+                TypedArray* arr = TypedArray::Cast(*args[8]);
+                data = arr->Buffer()->BaseAddress();
+            }
+        }
+
+        glTexImage2D(target, level, internalFormat, width, height, border, format, type, data);
+    }
 }
 
 void glCreateFrameBufferCB(const v8::FunctionCallbackInfo<v8::Value>& args)
@@ -692,6 +757,47 @@ void glUniform3fvCB(const v8::FunctionCallbackInfo<v8::Value>& args)
     Float32Array* values = Float32Array::Cast(*args[1]);
 
     glUniform3fv(location, 1, (float*)values->Buffer()->BaseAddress());
+}
+
+void glUniform4fvCB(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 2) 
+        return;
+
+    HandleScope scope(args.GetIsolate());
+    int location = args[0]->ToInt32()->Value() - 1;
+    Float32Array* values = Float32Array::Cast(*args[1]);
+
+    glUniform4fv(location, 1, (float*)values->Buffer()->BaseAddress());
+}
+
+void glUniform3fCB(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 4) 
+        return;
+
+    HandleScope scope(args.GetIsolate());
+    int location = args[0]->ToInt32()->Value() - 1;
+    float x = (float)args[1]->ToNumber()->Value();
+    float y = (float)args[2]->ToNumber()->Value();
+    float z = (float)args[3]->ToNumber()->Value();
+
+    glUniform3f(location, x, y, z);
+}
+
+void glUniform4fCB(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if (args.Length() < 5) 
+        return;
+
+    HandleScope scope(args.GetIsolate());
+    int location = args[0]->ToInt32()->Value() - 1;
+    float x = (float)args[1]->ToNumber()->Value();
+    float y = (float)args[2]->ToNumber()->Value();
+    float z = (float)args[3]->ToNumber()->Value();
+    float w = (float)args[4]->ToNumber()->Value();
+
+    glUniform4f(location, x, y, z, w);
 }
 
 void glUniform1iCB(const v8::FunctionCallbackInfo<v8::Value>& args)
@@ -801,6 +907,7 @@ void jsgl::SetupTemplate(Handle<ObjectTemplate> templ)
 {
     templ->Set(String::New("enable"), FunctionTemplate::New(glEnableCB));
     templ->Set(String::New("disable"), FunctionTemplate::New(glDisableCB));
+    templ->Set(String::New("blendFunc"), FunctionTemplate::New(glBlendFuncCB));
     templ->Set(String::New("depthFunc"), FunctionTemplate::New(glDepthFuncCB));
     templ->Set(String::New("createShader"), FunctionTemplate::New(glCreateShaderCB));
     templ->Set(String::New("shaderSource"), FunctionTemplate::New(glShaderSourceCB));
@@ -820,6 +927,7 @@ void jsgl::SetupTemplate(Handle<ObjectTemplate> templ)
     templ->Set(String::New("createTexture"), FunctionTemplate::New(glCreateTextureCB));
     templ->Set(String::New("bindTexture"), FunctionTemplate::New(glBindTextureCB));
     templ->Set(String::New("texParameteri"), FunctionTemplate::New(glTexParameteriCB));
+    templ->Set(String::New("pixelStorei"), FunctionTemplate::New(glPixelStoreiCB));
     templ->Set(String::New("texImage2D"), FunctionTemplate::New(glTexImage2DCB));
     templ->Set(String::New("createFramebuffer"), FunctionTemplate::New(glCreateFrameBufferCB));
     templ->Set(String::New("bindFramebuffer"), FunctionTemplate::New(glBindFrameBufferCB));
@@ -830,6 +938,9 @@ void jsgl::SetupTemplate(Handle<ObjectTemplate> templ)
     templ->Set(String::New("uniformMatrix4fv"), FunctionTemplate::New(glUniformMatrix4fvCB));
     templ->Set(String::New("uniformMatrix3fv"), FunctionTemplate::New(glUniformMatrix3fvCB));
     templ->Set(String::New("uniform3fv"), FunctionTemplate::New(glUniform3fvCB));
+    templ->Set(String::New("uniform4fv"), FunctionTemplate::New(glUniform4fvCB));
+    templ->Set(String::New("uniform3f"), FunctionTemplate::New(glUniform3fCB));
+    templ->Set(String::New("uniform4f"), FunctionTemplate::New(glUniform4fCB));
     templ->Set(String::New("uniform1i"), FunctionTemplate::New(glUniform1iCB));
     templ->Set(String::New("enableVertexAttribArray"), FunctionTemplate::New(glEnableVertexAttribArrayCB));
     templ->Set(String::New("vertexAttribPointer"), FunctionTemplate::New(glVertexAttribPointerCB));

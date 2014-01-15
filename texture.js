@@ -15,11 +15,11 @@ function TextureLoaded(tex)
 	tex.glTexture = gl.createTexture();
 	gl.bindTexture(gl.TEXTURE_2D, tex.glTexture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, true);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, tex.magFilter);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, tex.minFilter);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, tex.wrapS);
-	gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, tex.wrapT);
     gl.texImage2D(gl.TEXTURE_2D, 0, tex.format, gl.RGBA, gl.UNSIGNED_BYTE, tex.image);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, tex.magFilter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, tex.minFilter);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, tex.wrapS);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, tex.wrapT);
 }
 
 function BindTexture(gl, texIndex)
@@ -51,11 +51,12 @@ function Texture(scene, name, src)
 
 	if (src && src != "frameBuffer")
 	{
-		this.image = new Image();
-		this.image.onload = function() { 
-			TextureLoaded(TheScene.getTexture(name, null)); 
-		};
-		this.image.src = src;
+		this.image = LoadImage(src, function () { TextureLoaded(TheScene.getTexture(name, null)); });
+		//this.image = new Image();
+		//this.image.onload = function() { 
+		//	TextureLoaded(TheScene.getTexture(name, null)); 
+		//};
+		//this.image.src = src;
 	}
 }
 

@@ -31,11 +31,13 @@ public:
     void RegisterFrameFunction(const char* functionName);
     Handle<Value> FindJSFunction(const char* funcName);
 
+    
+    Handle<Value> CallJSFunction(const v8::Persistent<v8::Function>& pfunc, int argCount, ...);
+
 private:
     void InitJSEngine(HANDLE hWnd);
     void LoadJSFile(const char* fileName);
     void SetGlobalPersistentFunction(const char* name, v8::Persistent<v8::Function>& pf);
-    Handle<Value> CallJSFunction(const v8::Persistent<v8::Function>& pfunc, int argCount, ...);
     Handle<Value> GetJSON(Handle<Value> object);
     void FetchData();
     void CallGlobal();

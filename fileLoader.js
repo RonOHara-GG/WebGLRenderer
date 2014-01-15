@@ -1,3 +1,11 @@
+function LoadImage(src, callback)
+{
+	var img = new Image();
+	img.onload = callback;
+	img.src = src;
+	return img;
+}
+
 function LoadFile(fileName)
 {
 	var result = "";

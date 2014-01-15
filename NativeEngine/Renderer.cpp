@@ -8,7 +8,12 @@
 #include "jsxml.h"
 #include "JavaScriptFunction.h"
 
+#include "ImageLoader.h"
+#include "PerfTimer.h"
+
 using namespace v8;
+
+ImageLoader    gImageLoaders;
 
 
 class MallocArrayBufferAllocator : public v8::ArrayBuffer::Allocator {
@@ -111,6 +116,21 @@ static void LoadFileCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
     args.GetReturnValue().Set(fileVal);
 }
 
+static void LoadImageCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
+{
+    if( args.Length() < 2 )
+        return;
+
+    HandleScope scope(args.GetIsolate());
+    String::Utf8Value src(args[0]);
+
+    Handle<Function> cbFunc = Handle<Function>::Cast(args[1]);
+    ImageLoader* image = gImageLoaders.LoadImage(*src, cbFunc, args.GetIsolate());
+    Handle<External> extPtr = External::New(image); 
+
+    args.GetReturnValue().Set(extPtr);
+}
+
 static void SaveFileCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
 {
     if (args.Length() < 2) 
@@ -120,8 +140,9 @@ static void SaveFileCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
     String::Utf8Value fileName(args[0]);
     String::Utf8Value fileData(args[1]);
         
-    char* str = (char*)malloc(fileData.length() + fileName.length() + 64);
-    sprintf(str, "SaveFile: %s\n%s\n", *fileName, *fileData);
+    int len = fileData.length() + fileName.length() + 64;
+    char* str = (char*)malloc(len);
+    sprintf_s(str, len, "SaveFile: %s\n%s\n", *fileName, *fileData);
     OutputDebugStringA(str);
     free(str);
 
@@ -166,7 +187,7 @@ int BreakDirs(char* dirs)
     bool endSlash = false;
 
     size_t totalSize = strlen(dirs);
-    for( int i = 0; i < totalSize; i++ )
+    for( size_t i = 0; i < totalSize; i++ )
     {
         if( dirs[i] == '\\' || dirs[i] == '/' )
         {
@@ -224,7 +245,7 @@ static void GetRelativePathCallback(const v8::FunctionCallbackInfo<v8::Value>& a
             if( clen != ilen )
                 break;  // Len doesnt match, this is obviously not a match
 
-            if( stricmp(cptr, iptr) != 0 )
+            if( _stricmp(cptr, iptr) != 0 )
                 break;  // No match
 
             // Still here, they match
@@ -312,6 +333,7 @@ void Renderer::InitJSEngine(HANDLE hWnd)
     global->Set(String::New("SetCurrentDirectory"), FunctionTemplate::New(SetCurrentDirectoryCallback));
     global->Set(String::New("GetFullPath"), FunctionTemplate::New(GetFullPathCallback));
     global->Set(String::New("GetRelativePath"), FunctionTemplate::New(GetRelativePathCallback));
+    global->Set(String::New("LoadImage"), FunctionTemplate::New(LoadImageCallback));
 
     // Create the context
     Handle<Context> ctx = Context::New(m_Isolate, 0, global);
@@ -340,7 +362,10 @@ void Renderer::InitJSEngine(HANDLE hWnd)
     LoadJSFile("./collada.js");
     LoadJSFile("./colladaRipper.js");
     LoadJSFile("./immediate.js");
-    
+    LoadJSFile("./particleSystem.js");
+    LoadJSFile("./particleEmitter.js");
+    LoadJSFile("./particle.js");
+        
     SetGlobalPersistentFunction("webGLStart", m_jsFunc_webGLStart);
     SetGlobalPersistentFunction("setupScene", m_jsFunc_setupScene);
 
@@ -700,7 +725,14 @@ void Renderer::ThreadSetup()
 
 void Renderer::RunFrame()
 {
+    PerfTimer t2("JSUpdate");
+    PerfTimer timer("JSFrame");
     HandleScope scope(m_Isolate);
+    
+    timer.Start();
+    timer.Stop();
+    gImageLoaders.Process();
+
     if( m_SceneLoadRequest && !m_jsFunc_setupScene.IsEmpty() )
     {
         Handle<Value> sceneJson = CallJSFunction(m_jsFunc_setupScene, 2, m_SceneLoadRequest, "NativeEngine");
@@ -739,12 +771,16 @@ void Renderer::RunFrame()
         m_JSFunc->Execute(m_Isolate, &m_V8Context);
     }
 
+    t2.Start();
     if( !m_jsFunc_frameFunc.IsEmpty() )
     {
         CallJSFunction(m_jsFunc_frameFunc, 0);
 
         m_jsgl->EndFrame();
     }
+    t2.Stop();
+    timer.Print();
+    t2.Print();
 }
 
 void Renderer::InitWindow(HANDLE hWnd)
