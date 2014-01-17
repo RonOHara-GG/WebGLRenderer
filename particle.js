@@ -55,12 +55,57 @@ function ParticleSpawn(location, direction)
 	return particle;
 }
 
+function ParticleDoAssignment(scene, property, propertyValue)
+{
+	var result = true;
+
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			break;
+		case "src":
+			this.src = propertyValue;
+			break;
+		case "cameraFacing":
+			this.cameraFacing = (propertyValue == "true");
+			break;
+		case "minSize":
+			this.minSize = parseFloat(propertyValue);
+			break;
+		case "maxSize":
+			this.maxSize = parseFloat(propertyValue);
+			break;
+		case "minLife":
+			this.minLife = parseFloat(propertyValue);
+			break;
+		case "maxLife":
+			this.maxSize = parseFloat(propertyValue);
+			break;
+		case "minSpeed":
+			this.minSpeed = parseFloat(propertyValue);
+			break;
+		case "maxSpeed":
+			this.maxSpeed = parseFloat(propertyValue);
+			break;
+		default:
+			console.log("Particle::doObjectAssignment - unsupported property: " + property);
+			result = false;
+			break;
+	}
+
+	return result;
+}
+
+
 function Particle(scene, name, src)
 {
 	this.name = name;
 	this.src = src;
 
 	this.spawn = ParticleSpawn;
+	this.toString = ParticleToString;
+	this.doObjectAssignment = ParticleDoAssignment;
 
 	this.cameraFacing = true;
 	this.minSize = 1.0;
@@ -136,4 +181,36 @@ function Particle(scene, name, src)
 
 		}
 	}
+}
+
+function ParticleToString()
+{
+	var str = "";
+
+	str += "particle:" + this.name + ";";
+	str += this.src + ";";
+
+	str += this.cameraFacing + ";";
+	str += this.minSize + ";";
+	str += this.maxSize + ";";
+	str += this.minLife + ";";
+	str += this.maxLife + ";";
+	str += this.minSpeed + ";";
+	str += this.maxSpeed + ";";
+
+	for (var i = 0; i < this.colors.length; i++)
+	{
+		if (i != 0)
+			str += ":";
+		str += Math.floor(this.colors[i][0] * 255) + "," + Math.floor(this.colors[i][1] * 255) + "," + Math.floor(this.colors[i][2] * 255) + "," + Math.floor(this.colors[i][3] * 255);
+	}
+	str += ";";
+
+	for (var i = 0; i < this.textures.length; i++)
+	{
+		str += this.textures[i].name + ",";
+	}
+	str += ";";
+
+	return str;
 }

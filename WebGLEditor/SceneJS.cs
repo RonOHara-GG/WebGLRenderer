@@ -18,6 +18,9 @@ namespace WebGLEditor
         int mSIndex = 0;
         int mLIndex = 0;
         int mTIndex = 0;
+        int mPartIndex = 0;
+        int mPartEIndex = 0;
+        int mPartSIndex = 0;
 
         public List<RenderObjectJS> mRenderObjects;
         public List<CameraJS> mCameras;
@@ -41,6 +44,9 @@ namespace WebGLEditor
             TreeNode snode = AddChildNode("Shaders", "New Shader", onNewShader);
             TreeNode lightnode = AddChildNode("Lights", "New Light", onNewLight);
             TreeNode texnode = AddChildNode("Textures", "New Texture", onNewTexture);
+            TreeNode particleNode = AddChildNode("Particles", "New Particle", onNewParticle);
+            TreeNode particleENode = AddChildNode("Particle Emitters", "New Emitter", onNewEmitter);
+            TreeNode particleSNode = AddChildNode("Particle Systems", "New Particle System", onNewParticleSystem);
 
             if (json != null)
             {
@@ -56,6 +62,10 @@ namespace WebGLEditor
                 string[] shaders = props[7].Split(',');
                 string[] lights = props[8].Split(',');
                 string[] textures = props[9].Split(',');
+                string[] particles = props[10].Split(',');
+                string[] particleEmitters = props[11].Split(',');
+                string[] particleSystems = props[12].Split(',');
+
 
                 for (int i = 0; i < updatePasses.Length; i++)
                 {
@@ -155,6 +165,36 @@ namespace WebGLEditor
                         TreeNode child = texnode.Nodes.Add(textures[i]);
                         TextureJS s = new TextureJS(textures[i], child);
                         child.Tag = s;
+                    }
+                }
+
+                for (int i = 0; i < particles.Length; i++)
+                {
+                    if (particles[i].Length > 0)
+                    {
+                        TreeNode child = particleNode.Nodes.Add(particles[i]);
+                        ParticleJS part = new ParticleJS(particles[i], child);
+                        child.Tag = part;
+                    }
+                }
+
+                for (int i = 0; i < particleEmitters.Length; i++)
+                {
+                    if (particleEmitters[i].Length > 0)
+                    {
+                        TreeNode child = particleENode.Nodes.Add(particleEmitters[i]);
+                        ParticleEmitterJS part = new ParticleEmitterJS(particleEmitters[i], child);
+                        child.Tag = part;
+                    }
+                }
+
+                for (int i = 0; i < particleSystems.Length; i++)
+                {
+                    if (particleSystems[i].Length > 0)
+                    {
+                        TreeNode child = particleSNode.Nodes.Add(particleSystems[i]);
+                        ParticleSystemJS part = new ParticleSystemJS(particleSystems[i], child);
+                        child.Tag = part;
                     }
                 }
             }
@@ -415,6 +455,57 @@ namespace WebGLEditor
             return obj;
         }
 
+        private ParticleJS CreateParticle()
+        {
+            TreeNode pnode = FindTreeNode("Particles");
+
+            string name;
+            do
+            {
+                name = "Particle_" + mPartIndex++;
+            } while (!IsUniqueName(pnode, name));
+
+            TreeNode node = pnode.Nodes.Add(name);
+            ParticleJS obj = new ParticleJS(name, node);
+            obj.Source = "./" + name + ".xml";
+            node.Tag = obj;
+            return obj;
+        }
+
+        private ParticleEmitterJS CreateEmitter()
+        {
+            TreeNode pnode = FindTreeNode("Particle Emitters");
+
+            string name;
+            do
+            {
+                name = "ParticleEmitter_" + mPartEIndex++;
+            } while (!IsUniqueName(pnode, name));
+
+            TreeNode node = pnode.Nodes.Add(name);
+            ParticleEmitterJS obj = new ParticleEmitterJS(name, node);
+            obj.Source = "./" + name + ".xml";
+            node.Tag = obj;
+            return obj;
+        }
+
+        private ParticleSystemJS CreateParticleSystem()
+        {
+            TreeNode pnode = FindTreeNode("Particle Systems");
+
+            string name;
+            do
+            {
+                name = "ParticleSystem_" + mPartSIndex++;
+            } while (!IsUniqueName(pnode, name));
+
+            TreeNode node = pnode.Nodes.Add(name);
+            ParticleSystemJS obj = new ParticleSystemJS(name, node);
+            obj.Source = "./" + name + ".xml";
+            node.Tag = obj;
+            return obj;
+        }
+
         public void onNewUpdatePass(object sender, EventArgs e)
         {
             CreateUpdatePass();
@@ -458,7 +549,22 @@ namespace WebGLEditor
         public void onNewTexture(object sender, EventArgs e)
         {
             CreateTexture();
-        }       
+        }
+
+        public void onNewParticle(object sender, EventArgs e)
+        {
+            CreateParticle();
+        }
+
+        public void onNewEmitter(object sender, EventArgs e)
+        {
+            CreateEmitter();
+        }
+
+        public void onNewParticleSystem(object sender, EventArgs e)
+        {
+            CreateParticleSystem();
+        }    
 
         public RenderObjectJS FindRenderObject(string name)
         {

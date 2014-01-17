@@ -168,7 +168,7 @@ function TraingleCollider(pointStrs, bounce)
 //////////////////////////////////////////////////////////////////////////////////////////////////////////////
 function PSUpdate(deltaTimeMS, worldMtx)
 {
-	var seconds = deltaTimeMS / 1000;
+	var seconds = Math.min(0.25, deltaTimeMS / 1000);
 
 	// Update all colliders
 	for (var i = 0; i < this.colliders.length; i++)
@@ -191,6 +191,38 @@ function PSDraw(gl, worldMtx)
 	}
 }
 
+function PSDoAssignment(scene, property, propertyValue)
+{
+	var result = true;
+
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			break;
+		case "src":
+			this.src = propertyValue;
+			break;
+		case "emitters":
+			var vals = propertyValue.split(",");
+			this.emitters = [];
+			for (var i = 0; i < vals.length; i++)
+			{
+				var part = scene.getParticleEmitter(vals[i], null, false);
+				if (part)
+					this.emitters.push(part);
+			}
+			break;
+		default:
+			console.log("ParticleSystem::doObjectAssignment - unsupported property: " + property);
+			result = false;
+			break;
+	}
+
+	return result;
+}
+
+
 function ParticleSystem(scene, name, src)
 {
 	this.name = name;
@@ -202,6 +234,8 @@ function ParticleSystem(scene, name, src)
 
 	this.update = PSUpdate;
 	this.draw = PSDraw;
+	this.toString = PSToString;
+	this.doObjectAssignment = PSDoAssignment;
 
 	if (src)
 	{
@@ -265,4 +299,22 @@ function ParticleSystem(scene, name, src)
 			}
 		}
 	}
+}
+
+function PSToString()
+{
+	var str = "";
+
+	str += "particleSystem:" + this.name + ";";
+	str += this.src + ";";
+
+	for (var i = 0; i < this.emitters.length; i++)
+	{
+		if (i != 0)
+			str += ",";
+		str += this.emitters[i].name;
+	}
+	str += ";";
+
+	return str;
 }

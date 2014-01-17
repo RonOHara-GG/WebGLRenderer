@@ -303,6 +303,15 @@ function FindSceneObject(objectName, objectType)
 		case "texture":
 			obj = this.getTexture(objectName, null);
 			break;
+		case "particle":
+			obj = this.getParticle(objectName, null);
+			break;
+		case "particleEmitter":
+			obj = this.getParticleEmitter(objectName, null);
+			break;
+		case "particleSystem":
+			obj = this.getParticleSystem(objectName, null);
+			break;
 		default:
 			console.log("Unsupported objectType given to FindSceneObject: " + objectType);
 			break;
@@ -1027,6 +1036,27 @@ function SceneToString()
 	{
 		str += this.textures[i].name;
 		if (i != this.textures.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.particles.length; i++)
+	{
+		str += this.particles[i].name;
+		if (i != this.particles.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.particleEmitters.length; i++)
+	{
+		str += this.particleEmitters[i].name;
+		if (i != this.particleEmitters.length - 1)
+			str += ","
+	}
+	str += ";";
+	for (var i = 0; i < this.particleSystems.length; i++)
+	{
+		str += this.particleSystems[i].name;
+		if (i != this.particleSystems.length - 1)
 			str += ","
 	}
 

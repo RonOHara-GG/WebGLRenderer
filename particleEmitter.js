@@ -226,6 +226,59 @@ function PEDraw(gl, worldMtx)
 	gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, null);
 }
 
+function PEDoAssignment(scene, property, propertyValue)
+{
+	var result = true;
+
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			break;
+		case "src":
+			this.src = propertyValue;
+			break;
+		case "pos":
+			var vals = propertyValue.split(",");
+			this.pos = vec3.fromValues(parseFloat(vals[0]), parseFloat(vals[1]), parseFloat(vals[2]));
+			break;
+		case "dir":
+			var vals = propertyValue.split(",");
+			this.dir = vec3.fromValues(parseFloat(vals[0]), parseFloat(vals[1]), parseFloat(vals[2]));
+			vec3.normalize(this.dir, this.dir);
+			break;
+		case "sortMode":
+			this.sortMode = propertyValue;
+			break;
+		case "angle":
+			var deg = parseFloat(propertyValue);
+			this.angle = deg * 0.0174532925;
+			break;
+		case "particlesPerSecond":
+			this.particlesPerSecond = parseFloat(propertyValue);
+			break;
+		case "maxParticles":
+			this.maxParticles = parseInt(propertyValue);
+			break;
+		case "particles":
+			var vals = propertyValue.split(",");
+			this.particleDefs = [];
+			for (var i = 0; i < vals.length; i++)
+			{
+				var part = scene.getParticle(vals[i], null, false);
+				if (part)
+					this.particleDefs.push(part);
+			}
+			break;
+		default:
+			console.log("ParticleEmitter::doObjectAssignment - unsupported property: " + property);
+			result = false;
+			break;
+	}
+
+	return result;
+}
+
 function ParticleEmitter(scene, name, src)
 {
 	this.name = name;
@@ -236,6 +289,8 @@ function ParticleEmitter(scene, name, src)
 	this.getSpawnPos = PESpawnPosition;
 	this.getEmitDir = PEEmitDir;
 	this.sort = PESort;
+	this.toString = PEToString;
+	this.doObjectAssignment = PEDoAssignment;
 
 	this.type = "cone";
 	this.pos = vec3.create();
@@ -271,7 +326,7 @@ function ParticleEmitter(scene, name, src)
 						vec3.normalize(this.dir, this.dir);
 						break;
 					case "particlesPerSecond":
-						this.particlesPerSecond = parseInt(attrib.value);
+						this.particlesPerSecond = parseFloat(attrib.value);
 						break;
 					case "maxParticles":
 						this.maxParticles = parseInt(attrib.value);
@@ -311,4 +366,31 @@ function ParticleEmitter(scene, name, src)
 
 
 	InitPointSprites(scene.gl, scene);
+}
+
+function PEToString()
+{
+	var str = "";
+
+	str += "emitter:" + this.name + ";";
+	str += this.src + ";";
+
+	str += this.type + ";";
+	str += this.pos[0] + "," + this.pos[1] + "," + this.pos[2] + ";";
+	str += this.dir[0] + "," + this.dir[1] + "," + this.dir[2] + ";";
+	str += this.angle + ";";
+	str += this.particlesPerSecond + ";";
+	str += this.maxParticles + ";";
+	str += this.sortMode + ";";
+
+	for (var i = 0; i < this.particleDefs.length; i++)
+	{
+		if (i != 0)
+			str += ",";
+		str += this.particleDefs[i].name;
+	}
+	str += ";";
+
+
+	return str;
 }

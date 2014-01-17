@@ -119,5 +119,20 @@ namespace WebGLEditor
             IntPtr ptr = FetchData("getTexture", name, create);
             return PtrToStringUtf8(ptr);
         }
+        public static string GetParticle(string name, bool create = true)
+        {
+            IntPtr ptr = FetchData("getParticle", name, create);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetParticleEmitter(string name, bool create = true)
+        {
+            IntPtr ptr = FetchData("getParticleEmitter", name, create);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetParticleSystem(string name, bool create = true)
+        {
+            IntPtr ptr = FetchData("getParticleSystem", name, create);
+            return PtrToStringUtf8(ptr);
+        }
     }
 }

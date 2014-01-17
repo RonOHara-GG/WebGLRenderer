@@ -725,12 +725,8 @@ void Renderer::ThreadSetup()
 
 void Renderer::RunFrame()
 {
-    PerfTimer t2("JSUpdate");
-    PerfTimer timer("JSFrame");
     HandleScope scope(m_Isolate);
     
-    timer.Start();
-    timer.Stop();
     gImageLoaders.Process();
 
     if( m_SceneLoadRequest && !m_jsFunc_setupScene.IsEmpty() )
@@ -771,16 +767,12 @@ void Renderer::RunFrame()
         m_JSFunc->Execute(m_Isolate, &m_V8Context);
     }
 
-    t2.Start();
     if( !m_jsFunc_frameFunc.IsEmpty() )
     {
         CallJSFunction(m_jsFunc_frameFunc, 0);
 
         m_jsgl->EndFrame();
     }
-    t2.Stop();
-    timer.Print();
-    t2.Print();
 }
 
 void Renderer::InitWindow(HANDLE hWnd)
