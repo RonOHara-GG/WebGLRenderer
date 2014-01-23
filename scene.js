@@ -852,6 +852,14 @@ function Scene(sceneXMLFile, gl)
 
 								thePass.cameras.push(cam);
 							}
+							else if (renderObjectNodes[j].nodeName == "texture")
+							{
+								objName = renderObjectNodes[j].attributes.getNamedItem("name").value;
+								objSrc = renderObjectNodes[j].attributes.getNamedItem("src").value;
+								var tex = this.getTexture(objName, objSrc);
+
+								thePass.textures.push(tex);
+							}
 						}
 					}
 				}

@@ -7,6 +7,8 @@
     <renderObject name="fountainRO" src="./fountainRO.xml"/>
     <camera name="MainCamera" src="./mainCamera.xml"/>
     <camera name="ShadowCamera" src="./shadowCamera.xml"/>
+    <!--<texture name="Video" src="video;./Open.mp4" texIndex="0"/>-->
+    <texture name="Video" src="youtube;cTl3U6aSd2w" texIndex="0"/>
   </updatePass>
 
   <renderPass name="ShadowPass" src="./shadowPass.xml">

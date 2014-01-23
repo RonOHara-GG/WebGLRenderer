@@ -18,6 +18,12 @@ function DoUpdatePass(deltaTimeMS)
 	{
 		this.lights[i].update(deltaTimeMS);
 	}
+
+	// Update all textures
+	for( var i = 0; i < this.textures.length; i++ )
+	{
+		this.textures[i].update(deltaTimeMS);
+	}
 }
 
 function UpdatePassDoAssignment(scene, property, propertyValue)
@@ -47,6 +53,7 @@ function UpdatePass(scene, name, src)
 	this.renderObjects = [];
 	this.lights = [];
 	this.cameras = [];
+	this.textures = [];
 
 	//this.scene = scene;
 	this.name = name;
@@ -95,6 +102,14 @@ function UpdatePassToString()
 	{
 		str += this.cameras[i].name;
 		if (i < (this.cameras.length - 1))
+			str += ",";
+	}
+	str += ";";
+
+	for (var i = 0; i < this.textures.length; i++)
+	{
+		str += this.textures[i].name;
+		if (i < (this.textures.length - 1))
 			str += ",";
 	}
 

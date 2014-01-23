@@ -55,6 +55,17 @@ function canvasClick(e)
 	}
 }
 
+function test()
+{
+	var url = getYoutubeURL("cTl3U6aSd2w");
+	var vid = document.createElement('video');
+	vid.preload = "auto";
+	vid.src = url;
+	vid.controls = "true";
+	vid.autoplay = "true";
+	document.body.appendChild(vid);
+}
+
 function webGLCanvasSetup()
 {
 	window.requestAnimFrame = (function (callback) { return window.requestAnimationFrame || window.webkitRequestAnimationFrame || window.mozRequestAnimationFrame || window.oRequestAnimationFrame || window.msRequestAnimationFrame || function (callback) { window.setTimeout(callback, 1000 / 60); }; })();
@@ -69,7 +80,7 @@ function webGLCanvasSetup()
 		gl.wireframe = false;
 
 		gl.depthTextureExt = gl.getExtension("WEBGL_depth_texture");
-		gl.angleInstArraysExt = gl.getExtension("ANGLE_instanced_arrays");
+		//gl.angleInstArraysExt = gl.getExtension("ANGLE_instanced_arrays");
 	} catch (e)
 	{
 	}
@@ -78,13 +89,15 @@ function webGLCanvasSetup()
 		alert("Could not initialise WebGL, sorry :-(");
 	}
 
-	TheCanvas.addEventListener("click", canvasClick, false);
+	//TheCanvas.addEventListener("click", canvasClick, false);
 
-	//ripColladaFile("./Soldier/cube.dae");
+	//ripColladaFile("./Soldier/cube.dae");ab
 		
 	webGLStart();
 	//setupScene("./dragon/scene.xml", null);
-	setupScene("./scene.xml", null);
+	//setupScene("./scene.xml", null);
+	setupScene("./demo/scene.xml", null);
+	
 }
 
 function setupScene(SceneFile, editor)
