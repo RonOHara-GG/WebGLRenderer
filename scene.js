@@ -10,7 +10,8 @@ function GetRenderPass(passName, src)
 	// Doesnt exist, load it now
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var renderPass = new RenderPass(this, passName, src);
 		this.renderPasses.push(renderPass);
 		return renderPass;
@@ -29,7 +30,8 @@ function GetUpdatePass(passName, src)
 	// Doesnt exist, load it now
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var updatePass = new UpdatePass(this, passName, src);
 		this.updatePasses.push(updatePass);
 		return updatePass;
@@ -48,7 +50,8 @@ function GetRenderObject(objName, src)
 	// Doesnt exist, load it now
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var renderObj = new RenderObject(this, objName, src);
 		this.renderObjects.push(renderObj);
 		return renderObj;
@@ -67,7 +70,8 @@ function GetViewport(name, src)
 	// Doesnt exist, load it now
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var viewport = new Viewport(this, name, src);
 		this.viewports.push(viewport);
 		return viewport;
@@ -86,7 +90,8 @@ function GetCamera(name, src)
 	// Doesnt exist, load it now
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var camera = new Camera(this, name, src);
 		this.cameras.push(camera);
 		return camera;
@@ -105,7 +110,8 @@ function GetFrameBuffer(name, src)
 	if( src )
 	{
 		// Doesnt exist, load it now
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var frameBuffer = new FrameBuffer(this, name, src);
 		this.frameBuffers.push(frameBuffer);
 		return frameBuffer;
@@ -123,7 +129,8 @@ function GetMesh(name, src)
 
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var mesh = new Mesh(this, name, src);
 		this.meshes.push(mesh);
 		return mesh;
@@ -144,7 +151,8 @@ function GetShader(name, src)
 
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var shader = new Shader(this, name, src);
 		this.shaders.push(shader);
 		return shader;
@@ -162,7 +170,8 @@ function GetLight(name, src)
 
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var light = new Light(this, name, src);
 		this.lights.push(light);
 		return light;
@@ -180,7 +189,8 @@ function GetTexture(name, src)
 
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var tex = new Texture(this, name, src);
 		this.textures.push(tex);
 		return tex;
@@ -198,7 +208,8 @@ function GetParticleSystem(name, src)
 
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var ps = new ParticleSystem(this, name, src);
 		this.particleSystems.push(ps);
 		return ps;
@@ -216,7 +227,8 @@ function GetParticleEmitter(name, src)
 
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var emitter = new ParticleEmitter(this, name, src);
 		this.particleEmitters.push(emitter);
 		return emitter;
@@ -234,7 +246,8 @@ function GetParticle(name, src)
 
 	if (src)
 	{
-		if (src == "create") src = null;
+		if (src == "create")
+			src = null;
 		var part = new Particle(this, name, src);
 		this.particles.push(part);
 		return part;
@@ -293,6 +306,9 @@ function FindSceneObject(objectName, objectType)
 			break;
 		case "frameBuffer":
 			obj = this.getFrameBuffer(objectName, null);
+			break;
+		case "mesh":
+			obj = this.getMesh(objectName, null);
 			break;
 		case "shader":
 			obj = this.getShader(objectName, null);
@@ -401,6 +417,11 @@ function SelectObject(objectName, objectType)
 	}
 
 	return result;
+}
+
+function GetSelectedObject()
+{
+	return this.selectedObject;
 }
 
 function UnprojPoint(point, iproj, iview)
@@ -771,6 +792,7 @@ function Scene(sceneXMLFile, gl)
 
 	this.gl = gl;
 	this.src = sceneXMLFile;
+	this.path = "./";
 
 	this.getRenderPass = GetRenderPass;
 	this.getUpdatePass = GetUpdatePass;
@@ -793,14 +815,18 @@ function Scene(sceneXMLFile, gl)
 	this.update = UpdateScene;
 	this.resize = ResizeScene;
 	this.toString = SceneToString;
+	this.updatePath = DoUpdateScenePath;
 	this.save = DoSaveScene;
 	this.selectObject = SelectObject;
+	this.getSelected = GetSelectedObject;
 	this.pickObjects = PickSceneObjects;
 	this.getDragAxes = GetDragAxes;
-
+	
 	var sceneXML = LoadXML(sceneXMLFile);
 	if (sceneXML)
 	{
+		this.updatePath(sceneXMLFile);
+
 		childNodes = sceneXML.documentElement.childNodes
 		for (var i = 0; i < childNodes.length; i++)
 		{
@@ -868,12 +894,25 @@ function Scene(sceneXMLFile, gl)
 	}
 }
 
-function DoSaveScene(path)
+function DoUpdateScenePath(inpath)
 {
-	var lastChar = path[path.length - 1];
-	if (lastChar != '/' && lastChar != '\\')
-		path += "\\";
+	var pieces = inpath.split("/");
+	var path = "";
 
+	for (var i = 0; i < (pieces.length - 1); i++)
+	{
+		if (pieces[i].length > 0)
+		{
+			path += pieces[i] + "/";
+		}
+	}
+	
+	this.path = path;
+	console.log("scene.updatePath(" + inpath + ") - " + this.path);
+}
+
+function DoSaveScene()
+{
 	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
 
 	xml += "<scene>\n";
@@ -928,47 +967,47 @@ function DoSaveScene(path)
 	}
 	else
 		srcFile = "scene.xml";
-	SaveFile(path + srcFile, xml);
+	SaveFile(this.path + srcFile, xml);
 
 	for (var i = 0; i < this.renderPasses.length; i++)
 	{
-		this.renderPasses[i].save(path);
+		this.renderPasses[i].save(this.path);
 	}
 	for (var i = 0; i < this.updatePasses.length; i++)
 	{
-		this.updatePasses[i].save(path);
+		this.updatePasses[i].save(this.path);
 	}
 	for (var i = 0; i < this.renderObjects.length; i++)
 	{
-		this.renderObjects[i].save(path);
+		this.renderObjects[i].save(this.path);
 	}
 	for (var i = 0; i < this.viewports.length; i++)
 	{
-		this.viewports[i].save(path);
+		this.viewports[i].save(this.path);
 	}
 	for (var i = 0; i < this.cameras.length; i++)
 	{
-		this.cameras[i].save(path);
+		this.cameras[i].save(this.path);
 	}
 	for (var i = 0; i < this.frameBuffers.length; i++)
 	{
-		this.frameBuffers[i].save(path);
+		this.frameBuffers[i].save(this.path);
 	}
 	for (var i = 0; i < this.meshes.length; i++)
 	{
-		this.meshes[i].save(path);
+		this.meshes[i].save(this.path);
 	}
 	for (var i = 0; i < this.shaders.length; i++)
 	{
-		this.shaders[i].save(path);
+		this.shaders[i].save(this.path);
 	}
 	for (var i = 0; i < this.lights.length; i++)
 	{
-		this.lights[i].save(path);
+		this.lights[i].save(this.path);
 	}
 	for (var i = 0; i < this.textures.length; i++)
 	{
-		this.textures[i].save(path);
+		this.textures[i].save(this.path);
 	}
 }
 
@@ -1067,6 +1106,8 @@ function SceneToString()
 		if (i != this.particleSystems.length - 1)
 			str += ","
 	}
+	str += ";";
+	str += this.path;
 
 	return str;
 }

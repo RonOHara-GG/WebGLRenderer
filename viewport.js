@@ -77,14 +77,17 @@ function Viewport(scene, name, src)
 	this.percentageMode = true;
 
 	// load the xml
-	viewportXML = LoadXML(src);
-	if (viewportXML)
+	if (src)
 	{
-		this.left = parseFloat(viewportXML.documentElement.attributes.getNamedItem("left").value);
-		this.top = parseFloat(viewportXML.documentElement.attributes.getNamedItem("top").value);
-		this.width = parseFloat(viewportXML.documentElement.attributes.getNamedItem("width").value);
-		this.height = parseFloat(viewportXML.documentElement.attributes.getNamedItem("height").value);
-		this.percentageMode = viewportXML.documentElement.attributes.getNamedItem("percentageMode").value === "true";
+		viewportXML = LoadXML(scene.path + src);
+		if (viewportXML)
+		{
+			this.left = parseFloat(viewportXML.documentElement.attributes.getNamedItem("left").value);
+			this.top = parseFloat(viewportXML.documentElement.attributes.getNamedItem("top").value);
+			this.width = parseFloat(viewportXML.documentElement.attributes.getNamedItem("width").value);
+			this.height = parseFloat(viewportXML.documentElement.attributes.getNamedItem("height").value);
+			this.percentageMode = viewportXML.documentElement.attributes.getNamedItem("percentageMode").value === "true";
+		}
 	}
 }
 

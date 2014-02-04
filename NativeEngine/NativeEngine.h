@@ -16,7 +16,8 @@ NATIVEENGINE_API void InitRenderWindow(HANDLE hWnd);
 NATIVEENGINE_API void ResizeRenderWindow(HANDLE hWnd);
 
 NATIVEENGINE_API const char* LoadScene(const char* sceneFile);
-NATIVEENGINE_API void SaveScene(const char* path);
+NATIVEENGINE_API void UpdatePath(const char* path);
+NATIVEENGINE_API void SaveScene();
 NATIVEENGINE_API const char* ImportFileData(const char* fileName);
 NATIVEENGINE_API const char* FetchData(const char* fetchFunctionName, const char* objectName, bool create);
 NATIVEENGINE_API const char* PickObjects(float x, float y);
@@ -26,5 +27,7 @@ NATIVEENGINE_API void RipColladaFile(const char* fileName);
 NATIVEENGINE_API bool SetObjectAssignment(const char* objectName, const char* objectType, const char* propertyName, const char* propertyObject);
 NATIVEENGINE_API bool AddObjectToPass(const char* passType, const char* passName, const char* objectType, const char* objectName);
 NATIVEENGINE_API bool SelectSceneObject(const char* objectName, const char* objectType);
+
+NATIVEENGINE_API const char* GetRelativePath(const char* path);
 
 }

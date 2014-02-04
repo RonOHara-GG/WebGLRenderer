@@ -10,7 +10,6 @@ using namespace v8;
 
 int gGLTex2D = -1;
 
-
 jsgl::jsgl(HWND hWnd)
 {    
     mWnd = hWnd;
@@ -223,6 +222,11 @@ void GetGLProperty(Local<String> prop, const PropertyCallbackInfo<Value>& info)
     else if( strcmp(*Property, "RGBA") == 0 )
     {
         Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_RGBA));
+        info.GetReturnValue().Set(val);
+    }
+    else if( strcmp(*Property, "LINEAR") == 0 )
+    {
+        Handle<Integer> val = Handle<Integer>::New(info.GetIsolate(), Int32::New(GL_LINEAR));
         info.GetReturnValue().Set(val);
     }
     else if( strcmp(*Property, "NEAREST") == 0 )

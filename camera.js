@@ -7,6 +7,11 @@ function BindCamera(gl)
 
 function UpdateCamera(deltaTimeMS)
 {
+	if (this.updateCallback)
+	{
+		this.updateCallback(deltaTimeMS);
+	}
+	
 	// Update view matrix
 	if( !this.identityView )
 		mat4.lookAt(this.view, this.pos, this.target, this.up);
@@ -124,6 +129,10 @@ function CamDoAssignment(scene, property, propertyValue)
 				result = true;
 			}
 			break;
+		case "updateFunction":
+			this.updateFunctionName = propertyValue;
+			this.updateCallback = window[this.updateFunctionName];
+			result = true;
 		default:
 			console.log("Camera::doObjectAssignment - unsupported property: " + property);
 			break;
@@ -165,81 +174,90 @@ function Camera(scene, name, src)
 	this.identityView = false;
 	this.shadowCamera = false;
 	this.shadowMatrix = null;
+	this.updateFunctionName = null;
+	this.updateCallback = null;
 
-	cameraXML = LoadXML(src);
-	if (cameraXML)
+	if (src)
 	{
-		for (var i = 0; i < cameraXML.documentElement.attributes.length; i++)
+		cameraXML = LoadXML(scene.path + src);
+		if (cameraXML)
 		{
-			var attrib = cameraXML.documentElement.attributes[i];
-			switch (attrib.name)
+			for (var i = 0; i < cameraXML.documentElement.attributes.length; i++)
 			{
-				case "ortho":
-					this.ortho = (attrib.value == "true");
-					break;
-				case "fov":
-					this.fov = parseFloat(attrib.value);
-					break;
-				case "near":
-					this.near = parseFloat(attrib.value);
-					break;
-				case "far":
-					this.far = parseFloat(attrib.value);
-					break;
-				case "left":
-					this.left = parseFloat(attrib.value);
-					break;
-				case "right":
-					this.right = parseFloat(attrib.value);
-					break;
-				case "top":
-					this.top = parseFloat(attrib.value);
-					break;
-				case "bottom":
-					this.bottom = parseFloat(attrib.value);
-					break;
-				case "static":
-					this.static = (attrib.value == "true");
-					break;
-				case "shadowDistance":
-					this.shadowDistance = parseFloat(attrib.value);
-					break;
-				case "identityView":
-					this.identityView = (attrib.value === "true");
-				default:
-					break;
+				var attrib = cameraXML.documentElement.attributes[i];
+				switch (attrib.name)
+				{
+					case "ortho":
+						this.ortho = (attrib.value == "true");
+						break;
+					case "fov":
+						this.fov = parseFloat(attrib.value);
+						break;
+					case "near":
+						this.near = parseFloat(attrib.value);
+						break;
+					case "far":
+						this.far = parseFloat(attrib.value);
+						break;
+					case "left":
+						this.left = parseFloat(attrib.value);
+						break;
+					case "right":
+						this.right = parseFloat(attrib.value);
+						break;
+					case "top":
+						this.top = parseFloat(attrib.value);
+						break;
+					case "bottom":
+						this.bottom = parseFloat(attrib.value);
+						break;
+					case "static":
+						this.static = (attrib.value == "true");
+						break;
+					case "shadowDistance":
+						this.shadowDistance = parseFloat(attrib.value);
+						break;
+					case "identityView":
+						this.identityView = (attrib.value === "true");
+					case "update":
+						this.updateFunctionName = attrib.value;
+						this.updateCallback = window[this.updateFunctionName];
+						break;
+					default:
+						break;
+				}
 			}
-		}
 
-		children = cameraXML.documentElement.childNodes;
-		for (var i = 0; i < children.length; i++)
-		{
-			if (children[i].nodeType == 1)
+			children = cameraXML.documentElement.childNodes;
+			for (var i = 0; i < children.length; i++)
 			{
-				if (children[i].nodeName == "position")
+				if (children[i].nodeType == 1)
 				{
-					var posX = parseFloat(children[i].attributes.getNamedItem("x").value);
-					var posY = parseFloat(children[i].attributes.getNamedItem("y").value);
-					var posZ = parseFloat(children[i].attributes.getNamedItem("z").value);
-					this.pos = vec3.fromValues(posX, posY, posZ);
-				}
-				else if (children[i].nodeName == "lookAt")
-				{
-					var lookAtX = parseFloat(children[i].attributes.getNamedItem("x").value);
-					var lookAtY = parseFloat(children[i].attributes.getNamedItem("y").value);
-					var lookAtZ = parseFloat(children[i].attributes.getNamedItem("z").value);
-					this.target = vec3.fromValues(lookAtX, lookAtY, lookAtZ);
-				}
-				else if (children[i].nodeName == "up")
-				{
-					var upX = parseFloat(children[i].attributes.getNamedItem("x").value);
-					var upY = parseFloat(children[i].attributes.getNamedItem("y").value);
-					var upZ = parseFloat(children[i].attributes.getNamedItem("z").value);
-					this.up = vec3.fromValues(upX, upY, upZ);
-				}
-				else if (children[i].nodeName == "shadowLight")
-				{
-					this.shadowLight = scene.getLight(children[i].attributes.getNamedItem("name").value, children[i].attributes.getNamedItem("src").value);
+					if (children[i].nodeName == "position")
+					{
+						var posX = parseFloat(children[i].attributes.getNamedItem("x").value);
+						var posY = parseFloat(children[i].attributes.getNamedItem("y").value);
+						var posZ = parseFloat(children[i].attributes.getNamedItem("z").value);
+						this.pos = vec3.fromValues(posX, posY, posZ);
+					}
+					else if (children[i].nodeName == "lookAt")
+					{
+						var lookAtX = parseFloat(children[i].attributes.getNamedItem("x").value);
+						var lookAtY = parseFloat(children[i].attributes.getNamedItem("y").value);
+						var lookAtZ = parseFloat(children[i].attributes.getNamedItem("z").value);
+						this.target = vec3.fromValues(lookAtX, lookAtY, lookAtZ);
+					}
+					else if (children[i].nodeName == "up")
+					{
+						var upX = parseFloat(children[i].attributes.getNamedItem("x").value);
+						var upY = parseFloat(children[i].attributes.getNamedItem("y").value);
+						var upZ = parseFloat(children[i].attributes.getNamedItem("z").value);
+						this.up = vec3.fromValues(upX, upY, upZ);
+					}
+					else if (children[i].nodeName == "shadowLight")
+					{
+						this.shadowLight = scene.getLight(children[i].attributes.getNamedItem("name").value, children[i].attributes.getNamedItem("src").value);
+					}
 				}
 			}
 		}
@@ -292,7 +310,10 @@ function SaveCamera(path)
 {
 	var xml = "<?xml version=\"1.0\" encoding=\"utf-8\"?>\n\n";
 
-	xml += "<camera name=\"" + this.name + "\" ortho=\"" + this.ortho + "\" fov=\"" + this.fov + "\" near=\"" + this.near + "\" far=\"" + this.far + "\" static=\"" + this.static + "\" left=\"" + this.left + "\" right=\"" + this.right + "\" top=\"" + this.top + "\" bottom=\"" + this.bottom + "\" identityView=\"" + this.identityView + "\" shadowDistance=\"" + this.shadowDistance + "\">\n";
+	xml += "<camera name=\"" + this.name + "\" ortho=\"" + this.ortho + "\" fov=\"" + this.fov + "\" near=\"" + this.near + "\" far=\"" + this.far + "\" static=\"" + this.static + "\" left=\"" + this.left + "\" right=\"" + this.right + "\" top=\"" + this.top + "\" bottom=\"" + this.bottom + "\" identityView=\"" + this.identityView + "\" shadowDistance=\"" + this.shadowDistance;
+	if (this.updateCallback)
+		xml += "\" update=\"" + this.updateFunctionName;
+	xml += "\">\n";
 
 	xml += "\t<position x=\"" + this.pos[0] + "\" y=\"" + this.pos[1] + "\" z=\"" + this.pos[2] + "\"/>\n";
 	xml += "\t<lookAt x=\"" + this.target[0] + "\" y=\"" + this.target[1] + "\" z=\"" + this.target[2] + "\"/>\n";

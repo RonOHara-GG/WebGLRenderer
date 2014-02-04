@@ -10,6 +10,7 @@
 
 #include "ImageLoader.h"
 #include "PerfTimer.h"
+#include "NativeEngine.h"
 
 using namespace v8;
 
@@ -181,29 +182,6 @@ static void GetFullPathCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
     args.GetReturnValue().Set(str);
 }
 
-int BreakDirs(char* dirs)
-{
-    int count = 0;
-    bool endSlash = false;
-
-    size_t totalSize = strlen(dirs);
-    for( size_t i = 0; i < totalSize; i++ )
-    {
-        if( dirs[i] == '\\' || dirs[i] == '/' )
-        {
-            if( i == totalSize - 1 )
-                endSlash = true;
-
-            dirs[i] = 0;
-            count++;
-        }
-    }
-    if( !endSlash )
-        count++;
-
-    return count;
-}
-
 static void GetRelativePathCallback(const v8::FunctionCallbackInfo<v8::Value>& args)
 {
     if (args.Length() < 1) 
@@ -212,97 +190,9 @@ static void GetRelativePathCallback(const v8::FunctionCallbackInfo<v8::Value>& a
     HandleScope scope(args.GetIsolate());
     String::Utf8Value path(args[0]);
 
-    char currentDir[2 * 1024];
-    char cdrive[32];
-    char cdir[2 * 1024];
-    GetCurrentDirectoryA(sizeof(currentDir), currentDir);
-    char* endC = &currentDir[strlen(currentDir) - 1];
-    if( *endC != '\\' && *endC != '/' )
-    {
-        endC[1] = '/';
-        endC[2] = 0;
-    }
-    _splitpath_s(currentDir, cdrive, sizeof(cdrive), cdir, sizeof(cdir), NULL, NULL, NULL, NULL);    
-
-    char idrive[32];
-    char idir[2 * 1024];
-    char ifile[256];
-    char iext[32];
-    _splitpath_s(*path, idrive, sizeof(idrive), idir, sizeof(idir), ifile, sizeof(ifile), iext, sizeof(iext));
-    
-    if( strcmp(cdrive, idrive) == 0 )
-    {
-        char* cptr = &cdir[1];
-        char* iptr = &idir[1];
-        int ccount = BreakDirs(cptr);
-        int icount = BreakDirs(iptr);
-
-        // Find matches
-        while( ccount > 0 && icount > 0 )
-        {
-            size_t clen = strlen(cptr);
-            size_t ilen = strlen(iptr);
-            if( clen != ilen )
-                break;  // Len doesnt match, this is obviously not a match
-
-            if( _stricmp(cptr, iptr) != 0 )
-                break;  // No match
-
-            // Still here, they match
-            // Move to the next dirs
-            cptr += clen + 1;
-            iptr += ilen + 1;
-            ccount--;
-            icount--;
-        }
-
-        // Now we are at a common root path
-        char relative[4 * 1024];
-        char* prel = relative;
-        if( ccount )
-        {
-            // put one double dot for each dir remaining in current path to get to the common path
-            for( int i = 0; i < ccount; i++ )
-            {
-                prel[0] = '.';
-                prel[1] = '.';
-                prel[2] = '/';
-                prel += 3;
-                prel[0] = 0;
-            }
-        }
-        else
-        {
-            // Put a ./ for the current directory
-            prel[0] = '.';
-            prel[1] = '/';
-            prel[2] = 0;
-            prel += 2;
-        }
-        // put each remaining dir of the input path
-        for( int i = 0; i < icount; i++ )
-        {
-            size_t len = strlen(iptr);
-            memcpy(prel, iptr, len);
-            prel += len;
-            iptr += len + 1;
-                        
-            prel[0] = '/';
-            prel[1] = 0;
-            prel++;
-        }
-        // now add file/ext
-        {
-            size_t len = strlen(ifile);
-            memcpy(prel, ifile, len);
-            prel += len;
-
-            len = strlen(iext);
-            memcpy(prel, iext, len);
-            prel += len;
-            prel[0] = 0;
-        }
-
+    const char* relative = GetRelativePath(*path);
+    if( relative )
+    {        
         Handle<String> str = Handle<String>::New(args.GetIsolate(), String::New(relative));
         args.GetReturnValue().Set(str);
     }
@@ -802,15 +692,25 @@ const char* Renderer::LoadScene(const char* sceneFile)
     return m_JSFunc->m_ReturnValue.val.s;
 }
 
-void Renderer::SaveScene(const char* path)
+void Renderer::UpdatePath(const char* path)
 {
-    m_GlobalFunction = "saveScene";
-    m_FunctionParamString = path;
+    if( m_JSFunc )
+        delete m_JSFunc;
 
-    while( m_GlobalFunction )
-    {
-        Sleep(200);
-    }
+    m_JSFunc = new JavaScriptFunction("updatePath", true, JavaScriptFunction::JST_VOID);
+    m_JSFunc->AddParam(path);
+
+    m_JSFunc->Call();    
+}
+
+void Renderer::SaveScene()
+{
+    if( m_JSFunc )
+        delete m_JSFunc;
+
+    m_JSFunc = new JavaScriptFunction("save", true, JavaScriptFunction::JST_VOID);
+
+    m_JSFunc->Call();  
 }
 
 const char* Renderer::ImportFileData(const char* fileName)

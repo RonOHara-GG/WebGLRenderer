@@ -150,7 +150,7 @@ function ShaderDoAssignment(scene, property, propertyValue)
 			result = true;
 			break;
 		case "vs":
-			var source = LoadFile(propertyValue);
+			var source = LoadFile(scene.path + propertyValue);
 			if (source)
 			{
 				this.vsSrc = propertyValue;
@@ -165,7 +165,7 @@ function ShaderDoAssignment(scene, property, propertyValue)
 			}
 			break;
 		case "fs":
-			var source = LoadFile(propertyValue);
+			var source = LoadFile(scene.path + propertyValue);
 			if (source)
 			{
 				this.fsSrc = propertyValue;
@@ -248,58 +248,62 @@ function Shader(scene, name, src)
 	this.lightUpdateToken = 0;
 
 	this.textureCount = 0;
-	
-	shaderXML = LoadXML(src);
-	if (shaderXML)
-	{
-		for (var i = 0; i < shaderXML.documentElement.attributes.length; i++)
-		{
-			var attrib = shaderXML.documentElement.attributes[i];
-			switch (attrib.name)
-			{
-				case "maxDLights":
-					this.maxDLights = parseInt(attrib.value);
-					break;
-				case "maxPLights":
-					this.maxPLights = parseInt(attrib.value);
-					break;
-				case "textureCount":
-					this.textureCount = parseInt(attrib.value);
-				default:
-					break;
-			}
-		}
 
-		var children = shaderXML.documentElement.childNodes;
-		for (var i = 0; i < children.length; i++)
+	if (src)
+	{
+		var file = scene ? scene.path + src : src;
+		shaderXML = LoadXML(file);
+		if (shaderXML)
 		{
-			if (children[i].nodeType == 1)
+			for (var i = 0; i < shaderXML.documentElement.attributes.length; i++)
 			{
-				var childName = children[i].attributes.getNamedItem("name").value;
-				var childSrc = children[i].attributes.getNamedItem("src").value;
-				switch (children[i].nodeName)
+				var attrib = shaderXML.documentElement.attributes[i];
+				switch (attrib.name)
 				{
-					case "vertshader":
-						this.vsName = childName;
-						this.vsSrc = childSrc;
-						this.vertShaderSrc = LoadFile(childSrc);
+					case "maxDLights":
+						this.maxDLights = parseInt(attrib.value);
 						break;
-					case "fragshader":
-						this.fsName = childName;
-						this.fsSrc = childSrc;
-						this.fragShaderSrc = LoadFile(childSrc);
+					case "maxPLights":
+						this.maxPLights = parseInt(attrib.value);
+						break;
+					case "textureCount":
+						this.textureCount = parseInt(attrib.value);
+					default:
 						break;
 				}
 			}
-		}
 
-		if (this.vertShaderSrc && this.fragShaderSrc)
-			this.initShaderProgram(scene.gl, this.vertShaderSrc, this.fragShaderSrc);
+			var children = shaderXML.documentElement.childNodes;
+			for (var i = 0; i < children.length; i++)
+			{
+				if (children[i].nodeType == 1)
+				{
+					var childName = children[i].attributes.getNamedItem("name").value;
+					var childSrc = children[i].attributes.getNamedItem("src").value;
+					switch (children[i].nodeName)
+					{
+						case "vertshader":
+							this.vsName = childName;
+							this.vsSrc = childSrc;
+							this.vertShaderSrc = LoadFile(scene.path + childSrc);
+							break;
+						case "fragshader":
+							this.fsName = childName;
+							this.fsSrc = childSrc;
+							this.fragShaderSrc = LoadFile(scene.path + childSrc);
+							break;
+					}
+				}
+			}
 
-		if (!EditorName)
-		{
-			this.vertShaderSrc = null;
-			this.fragShaderSrc = null;
+			if (this.vertShaderSrc && this.fragShaderSrc)
+				this.initShaderProgram(scene.gl, this.vertShaderSrc, this.fragShaderSrc);
+
+			if (!EditorName)
+			{
+				this.vertShaderSrc = null;
+				this.fragShaderSrc = null;
+			}
 		}
 	}
 

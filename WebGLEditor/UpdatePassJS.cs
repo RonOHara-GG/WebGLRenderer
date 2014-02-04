@@ -66,6 +66,14 @@ namespace WebGLEditor
             }
         }
 
+        public void AddRenderObject(string roname)
+        {
+            if (NativeWrapper.AddObjectToPass("updatePass", mName, "renderObject", roname))
+            {
+                mRONode.Nodes.Add(roname);
+            }
+        }
+
         public void onAddRenderObject(object sender, EventArgs e)
         {
             ObjectPickerDlg dlg = new ObjectPickerDlg();
@@ -94,10 +102,7 @@ namespace WebGLEditor
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
                 string roname = (string)dlg.ObjectList.SelectedItem;
-                if (NativeWrapper.AddObjectToPass("updatePass", mName, "renderObject", roname))
-                {
-                    mRONode.Nodes.Add(roname);
-                }
+                AddRenderObject(roname);
             }
         }
 

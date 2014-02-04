@@ -43,20 +43,44 @@ namespace WebGLEditor
             dlg.FileName = "scene.xml";
             if (dlg.ShowDialog() != DialogResult.Cancel)
             {
-                NewScene(dlg.FileName);
+                string relative = NativeWrapper.GetRelative(dlg.FileName);
+                NewScene(relative);
             }
         }
 
         private void saveSceneToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            FolderBrowserDialog dlg = new FolderBrowserDialog();
-            dlg.ShowNewFolderButton = true;
-            dlg.SelectedPath = Directory.GetCurrentDirectory();
-            if (dlg.ShowDialog() != DialogResult.Cancel)
+            SceneJS scene = (SceneJS)treeView1.Nodes[0].Tag;
+            if (scene.mFilename == null)
+            {
+                saveSceneAsToolStripMenuItem_Click(sender, e);
+            }
+            else
             {
                 WaitCursor(true);
-                NativeWrapper.SaveScene(dlg.SelectedPath);
+                NativeWrapper.SaveScene();
                 WaitCursor(false);
+            }
+        }
+
+        private void saveSceneAsToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SceneJS scene = (SceneJS)treeView1.Nodes[0].Tag;
+            if (scene != null)
+            {
+                FolderBrowserDialog dlg = new FolderBrowserDialog();
+                dlg.ShowNewFolderButton = true;
+                dlg.SelectedPath = Directory.GetCurrentDirectory();
+                if (dlg.ShowDialog() != DialogResult.Cancel)
+                {
+                    WaitCursor(true);
+                    string relative = NativeWrapper.GetRelative(dlg.SelectedPath) + "/";
+                    scene.mFilename = relative;
+                    treeView1.Nodes[0].Text = relative;
+                    NativeWrapper.UpdatePath(relative);
+                    NativeWrapper.SaveScene();
+                    WaitCursor(false);
+                }
             }
         }
 
@@ -98,12 +122,19 @@ namespace WebGLEditor
                 object obj = treeView1.SelectedNode.Tag;
                 if (obj != null)
                 {
-                    propertyGrid1.SelectedObject = obj;
-                    RenderObjectJS ro = (RenderObjectJS)obj;
-                    if (ro != null)
+                    List<object> selected = new List<object>();
+                    foreach (TreeNode n in treeView1.SelectedNodes)
                     {
-                        ro.Select();
+                        selected.Add(n.Tag);
                     }
+
+                    propertyGrid1.SelectedObjects = selected.ToArray();
+                    //propertyGrid1.SelectedObject = obj;
+                    //RenderObjectJS ro = (RenderObjectJS)obj;
+                    //if (ro != null)
+                    //{
+                    //    ro.Select();
+                    //}
                 }
             }
         }
@@ -188,16 +219,9 @@ namespace WebGLEditor
                             RenderObjectJS ro = scene.FindRenderObject(obj);
                             if (ro != null)
                             {
-                                string[] spos = ro.Position.Split(',');
-                                string newPos = "";
-                                for (int i = 0; i < 3; i++)
-                                {
-                                    float pos = Convert.ToSingle(spos[i]) + axesDelta[i] + axesDelta[i + 3];
-                                    newPos += pos.ToString();
-                                    if (i < 2)
-                                        newPos += ",";
-                                }
-                                ro.Position = newPos;
+                                ro.Position.X += axesDelta[0] + axesDelta[3];
+                                ro.Position.Y += axesDelta[1] + axesDelta[4];
+                                ro.Position.Z += axesDelta[2] + axesDelta[5];
                             }
                         }
                     }
@@ -223,8 +247,10 @@ namespace WebGLEditor
             TreeNode node = treeView1.Nodes.Add((filename != null) ? filename : "untitled");
             SceneJS scene = new SceneJS(sceneJson, node);
 
-            if( filename == null )
+            if (filename == null)
                 scene.CreateDefault();
+            else
+                scene.mFilename = filename;
             node.Tag = scene;
 
             WaitCursor(false);
@@ -233,6 +259,78 @@ namespace WebGLEditor
         private void nativeControl1_Load(object sender, EventArgs e)
         {
             NewScene(null);
+        }
+
+        private void copyToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            /*
+            SceneJS scene = (SceneJS)treeView1.Nodes[0].Tag;
+            if (scene != null)
+            {
+                object obj = scene.GetSelectedObject();
+                if( obj != null )
+                {
+                    Clipboard.SetData("WebGLSceneObject", obj);
+                }
+            } 
+            */
+
+            Clipboard.Clear();
+            List<object> selected = new List<object>();
+            foreach (TreeNode n in treeView1.SelectedNodes)
+            {
+                selected.Add(n.Tag);
+            }
+
+            DataFormats.Format df = DataFormats.GetFormat(typeof(List<object>).FullName);
+            IDataObject dato = new DataObject();
+            dato.SetData(df.Name, false, selected);
+
+            Clipboard.SetDataObject(dato, false);            
+        }
+
+        private void cutToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void pasteToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            IDataObject dato = Clipboard.GetDataObject();
+            if (dato != null)
+            {
+                string df = typeof(List<object>).FullName;
+                if (dato.GetDataPresent(df))
+                {
+                    List<object> selected = dato.GetData(df) as List<object>;
+                    if (selected != null)
+                    {
+                        SceneJS scene = (SceneJS)treeView1.Nodes[0].Tag;
+                        foreach (object obj in selected)
+                        {
+                            scene.CreateCopy(obj);
+                        }
+                    }
+                }
+            }
+
+            /*
+            if (Clipboard.ContainsData("WebGLSceneObject"))
+            {
+                object obj = Clipboard.GetData("WebGLSceneObject");
+                
+                if (scene != null)
+                {
+                    scene.CreateCopy(obj);
+                }
+            }
+            */
+        }
+
+        private void buildWallToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            SceneJS scene = (SceneJS)treeView1.Nodes[0].Tag;
+            scene.BuildWall();
         }
     }
 }

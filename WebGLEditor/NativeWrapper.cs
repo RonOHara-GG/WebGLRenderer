@@ -21,6 +21,13 @@ namespace WebGLEditor
             System.Runtime.InteropServices.Marshal.Copy(ptr, array, 0, len);
             return System.Text.Encoding.UTF8.GetString(array);
         }
+        [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern IntPtr GetRelativePath(string path);
+        public static string GetRelative(string path)
+        {
+            IntPtr ptr = GetRelativePath(path);
+            return PtrToStringUtf8(ptr);
+        }
 
         [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         public static extern void InitRenderWindow(IntPtr hWnd);
@@ -34,7 +41,10 @@ namespace WebGLEditor
         }
 
         [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
-        public static extern void SaveScene(string path);
+        public static extern void UpdatePath(string path);
+
+        [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
+        public static extern void SaveScene();
 
         [DllImport("NativeEngine.dll", CallingConvention = CallingConvention.Cdecl)]
         private static extern IntPtr ImportFileData(string fileName);
@@ -104,6 +114,11 @@ namespace WebGLEditor
             IntPtr ptr = FetchData("getFrameBuffer", name, create);
             return PtrToStringUtf8(ptr);
         }
+        public static string GetMesh(string name, bool create = true)
+        {
+            IntPtr ptr = FetchData("getMesh", name, create);
+            return PtrToStringUtf8(ptr);
+        }
         public static string GetShader(string name, bool create = true)
         {
             IntPtr ptr = FetchData("getShader", name, create);
@@ -132,6 +147,11 @@ namespace WebGLEditor
         public static string GetParticleSystem(string name, bool create = true)
         {
             IntPtr ptr = FetchData("getParticleSystem", name, create);
+            return PtrToStringUtf8(ptr);
+        }
+        public static string GetSelectedObject()
+        {
+            IntPtr ptr = FetchData("getSelected", null, false);
             return PtrToStringUtf8(ptr);
         }
     }

@@ -15,6 +15,7 @@ namespace WebGLEditor
         int mVPIndex = 0;
         int mCamIndex = 0;
         int mFBIndex = 0;
+        int mMeshIndex = 0;
         int mSIndex = 0;
         int mLIndex = 0;
         int mTIndex = 0;
@@ -22,9 +23,13 @@ namespace WebGLEditor
         int mPartEIndex = 0;
         int mPartSIndex = 0;
 
+        string mScenePath;
+
         public List<RenderObjectJS> mRenderObjects;
         public List<CameraJS> mCameras;
         public List<LightJS> mLights;
+
+        public string mFilename = null;
         
         public SceneJS(string json, TreeNode node)
         {
@@ -40,13 +45,15 @@ namespace WebGLEditor
             TreeNode vpnode = AddChildNode("Viewports", "New Viewport", onNewViewport);
             TreeNode camnode = AddChildNode("Cameras", "New Camera", onNewCamera);
             TreeNode fbnode = AddChildNode("Frame Buffers", "New Frame Buffer", onNewFrameBuffer);
-            TreeNode mnode = AddChildNode("Meshes", null, null);
+            TreeNode mnode = AddChildNode("Meshes", "New Mesh", onNewMesh);
             TreeNode snode = AddChildNode("Shaders", "New Shader", onNewShader);
             TreeNode lightnode = AddChildNode("Lights", "New Light", onNewLight);
             TreeNode texnode = AddChildNode("Textures", "New Texture", onNewTexture);
             TreeNode particleNode = AddChildNode("Particles", "New Particle", onNewParticle);
             TreeNode particleENode = AddChildNode("Particle Emitters", "New Emitter", onNewEmitter);
             TreeNode particleSNode = AddChildNode("Particle Systems", "New Particle System", onNewParticleSystem);
+
+            texnode.ContextMenu.MenuItems.Add("Import", onImportTextures);
 
             if (json != null)
             {
@@ -65,6 +72,7 @@ namespace WebGLEditor
                 string[] particles = props[10].Split(',');
                 string[] particleEmitters = props[11].Split(',');
                 string[] particleSystems = props[12].Split(',');
+                mScenePath = props[13];
 
 
                 for (int i = 0; i < updatePasses.Length; i++)
@@ -217,6 +225,59 @@ namespace WebGLEditor
             rp.ClearMode = RenderPassJS.eClearMode.ColorDepthStencil;
         }
 
+        public void CreateCopy(object obj)
+        {
+            Type t = obj.GetType();
+            switch (t.ToString())
+            {
+                case "WebGLEditor.RenderObjectJS":
+                    RenderObjectJS ro = (RenderObjectJS)obj;
+                    RenderObjectJS newro = CreateRenderObject(ro.Name);
+                    newro.CopyFrom(ro);
+
+                    // Add to all appropriate update passes
+                    TreeNode passes = FindTreeNode("Update Passes");
+                    foreach( TreeNode pass in passes.Nodes )
+                    {
+                        if( FindTreeNode(ro.Name, FindTreeNode("Render Objects", pass)) != null )
+                        {
+                            UpdatePassJS up = (UpdatePassJS)pass.Tag;
+                            up.AddRenderObject(newro.Name);
+                        }
+                    }
+                    
+                    // Add to all appropriate render passes
+                    passes = FindTreeNode("Render Passes");
+                    foreach( TreeNode pass in passes.Nodes )
+                    {
+                        if( FindTreeNode(ro.Name, FindTreeNode("Render Objects", pass)) != null )
+                        {
+                            RenderPassJS rp = (RenderPassJS)pass.Tag;
+                            rp.AddRenderObject(newro.Name);
+                        }
+                    }
+                    break;
+                default:
+                    break;
+            }
+
+            /*
+            UpdatePassJS up = (UpdatePassJS)obj;
+            RenderPassJS rp = (RenderPassJS)obj;
+            RenderObjectJS ro = (RenderObjectJS)obj;
+            ViewportJS vp = (ViewportJS)obj;
+            CameraJS cam = (CameraJS)obj;
+            FrameBufferJS fb = (FrameBufferJS)obj;
+            MeshJS mesh = (MeshJS)obj;
+            ShaderJS sh = (ShaderJS)obj;
+            LightJS light = (LightJS)obj;
+            TextureJS tex = (TextureJS)obj;
+            ParticleJS part = (ParticleJS)obj;
+            ParticleEmitterJS pe = (ParticleEmitterJS)obj;
+            ParticleSystemJS ps = (ParticleSystemJS)obj;
+            */
+        }
+
         private TreeNode AddChildNode(string nodeName, string newTag, EventHandler newFunc)
         {
             TreeNode node = mTreeNode.Nodes.Add(nodeName);
@@ -247,7 +308,7 @@ namespace WebGLEditor
                 case "renderObject":
                     node = FindTreeNode("Render Objects");
                     RenderObjectJS ro = new RenderObjectJS(name, node);
-                    ro.Source = "./" + name + ".xml";
+                    ro.Source = name + ".xml";
                     mRenderObjects.Add(ro);
                     obj = ro;
                     break;
@@ -266,10 +327,12 @@ namespace WebGLEditor
             }
         }
 
-        private TreeNode FindTreeNode(string nodeText)
+        private TreeNode FindTreeNode(string nodeText, TreeNode parent = null)
         {
+            if (parent == null)
+                parent = mTreeNode;
             TreeNode theNode = null;
-            foreach (TreeNode node in mTreeNode.Nodes)
+            foreach (TreeNode node in parent.Nodes)
             {
                 if (node.Text == nodeText)
                 {
@@ -308,7 +371,7 @@ namespace WebGLEditor
 
             TreeNode node = upnode.Nodes.Add(name);
             UpdatePassJS up = new UpdatePassJS(name, node);
-            up.Source = "./" + name + ".xml";
+            up.Source = name + ".xml";
             node.Tag = up;
 
             return up;
@@ -326,25 +389,29 @@ namespace WebGLEditor
 
             TreeNode node = rpnode.Nodes.Add(name);
             RenderPassJS rp = new RenderPassJS(name, node);
-            rp.Source = "./" + name + ".xml";
+            rp.Source = name + ".xml";
             node.Tag = rp;
 
             return rp;
         }
 
-        private RenderObjectJS CreateRenderObject()
+        private RenderObjectJS CreateRenderObject(string inname = null)
         {
             TreeNode ronode = FindTreeNode("Render Objects");
 
             string name;
+            int idx = 0;
             do
             {
-                name = "RenderObject_" + mROIndex++;
+                if (inname == null)
+                    name = "RenderObject_" + mROIndex++;
+                else
+                    name = inname + "_" + idx++;
             } while (!IsUniqueName(ronode, name));
 
             TreeNode node = ronode.Nodes.Add(name);
             RenderObjectJS obj = new RenderObjectJS(name, node);
-            obj.Source = "./" + name + ".xml";
+            obj.Source = name + ".xml";
             mRenderObjects.Add(obj);
             node.Tag = obj;
             return obj;
@@ -362,7 +429,7 @@ namespace WebGLEditor
 
             TreeNode node = pnode.Nodes.Add(name);
             ViewportJS obj = new ViewportJS(name, node);
-            obj.Source = "./" + name + ".xml";
+            obj.Source = name + ".xml";
             node.Tag = obj;
             return obj;
         }
@@ -379,7 +446,7 @@ namespace WebGLEditor
 
             TreeNode node = pnode.Nodes.Add(name);
             CameraJS obj = new CameraJS(name, node);
-            obj.Source = "./" + name + ".xml";
+            obj.Source = name + ".xml";
             node.Tag = obj;
             mCameras.Add(obj);
 
@@ -398,7 +465,24 @@ namespace WebGLEditor
 
             TreeNode node = pnode.Nodes.Add(name);
             FrameBufferJS obj = new FrameBufferJS(name, node);
-            obj.Source = "./" + name + ".xml";
+            obj.Source = name + ".xml";
+            node.Tag = obj;
+            return obj;
+        }
+
+        private MeshJS CreateMesh()
+        {
+            TreeNode pnode = FindTreeNode("Meshes");
+
+            string name;
+            do
+            {
+                name = "Mesh_" + mMeshIndex++;
+            } while (!IsUniqueName(pnode, name));
+
+            TreeNode node = pnode.Nodes.Add(name);
+            MeshJS obj = new MeshJS(name, node);
+            obj.Source = name + ".xml";
             node.Tag = obj;
             return obj;
         }
@@ -415,7 +499,7 @@ namespace WebGLEditor
 
             TreeNode node = pnode.Nodes.Add(name);
             ShaderJS obj = new ShaderJS(name, node);
-            obj.Source = "./" + name + ".xml";
+            obj.Source = name + ".xml";
             node.Tag = obj;
             return obj;
         }
@@ -432,7 +516,7 @@ namespace WebGLEditor
 
             TreeNode node = pnode.Nodes.Add(name);
             LightJS obj = new LightJS(name, node);
-            obj.Source = "./" + name + ".xml";
+            obj.Source = name + ".xml";
             node.Tag = obj;
             mLights.Add(obj);
             return obj;
@@ -450,7 +534,7 @@ namespace WebGLEditor
 
             TreeNode node = pnode.Nodes.Add(name);
             TextureJS obj = new TextureJS(name, node);
-            obj.Source = "./" + name + ".xml";
+            obj.Source = name + ".xml";
             node.Tag = obj;
             return obj;
         }
@@ -467,7 +551,7 @@ namespace WebGLEditor
 
             TreeNode node = pnode.Nodes.Add(name);
             ParticleJS obj = new ParticleJS(name, node);
-            obj.Source = "./" + name + ".xml";
+            obj.Source = name + ".xml";
             node.Tag = obj;
             return obj;
         }
@@ -484,7 +568,7 @@ namespace WebGLEditor
 
             TreeNode node = pnode.Nodes.Add(name);
             ParticleEmitterJS obj = new ParticleEmitterJS(name, node);
-            obj.Source = "./" + name + ".xml";
+            obj.Source = name + ".xml";
             node.Tag = obj;
             return obj;
         }
@@ -501,7 +585,7 @@ namespace WebGLEditor
 
             TreeNode node = pnode.Nodes.Add(name);
             ParticleSystemJS obj = new ParticleSystemJS(name, node);
-            obj.Source = "./" + name + ".xml";
+            obj.Source = name + ".xml";
             node.Tag = obj;
             return obj;
         }
@@ -536,6 +620,11 @@ namespace WebGLEditor
             CreateFrameBuffer();
         }
 
+        public void onNewMesh(object sender, EventArgs e)
+        {
+            CreateMesh();
+        }
+
         public void onNewShader(object sender, EventArgs e)
         {
             CreateShader();
@@ -564,7 +653,40 @@ namespace WebGLEditor
         public void onNewParticleSystem(object sender, EventArgs e)
         {
             CreateParticleSystem();
-        }    
+        }
+
+        public void onImportTextures(object sender, EventArgs e)
+        {
+            OpenFileDialog dlg = new OpenFileDialog();
+            dlg.Multiselect = true;
+            if (dlg.ShowDialog() != DialogResult.Cancel)
+            {
+                TreeNode pnode = FindTreeNode("Textures");
+
+                foreach (string filename in dlg.FileNames)
+                {
+                    string relative = NativeWrapper.GetRelative(filename);
+                    int lastSlash = relative.LastIndexOf('/');
+                    string imagePath = relative.Substring(0, lastSlash + 1);
+                    string imageName = relative.Substring(lastSlash + 1);
+
+                    if (imagePath.Substring(0, mScenePath.Length) == mScenePath)
+                        imagePath = imagePath.Substring(mScenePath.Length);
+
+                    string texName = imageName;
+                    int idx = 0;
+                    while (!IsUniqueName(pnode, texName))
+                    {
+                        texName = filename + "_" + idx++;
+                    }
+
+                    TreeNode node = pnode.Nodes.Add(texName);
+                    TextureJS obj = new TextureJS(texName, node);
+                    obj.Source = imagePath + imageName;
+                    node.Tag = obj;
+                }
+            }
+        }
 
         public RenderObjectJS FindRenderObject(string name)
         {
@@ -575,6 +697,114 @@ namespace WebGLEditor
             }
 
             return null;
+        }
+
+        public object FindObject(string type, string name)
+        {
+            object obj = null;
+            TreeNode node = null;
+            switch (type)
+            {
+                case "updatePass":
+                    node = FindTreeNode("Update Passes");
+                    break;
+                case "renderPass":
+                    node = FindTreeNode("Render Passes");
+                    break;
+                case "renderObject":
+                    node = FindTreeNode("Render Objects");
+                    break;
+                case "viewport":
+                    node = FindTreeNode("Viewports");
+                    break;
+                case "camera":
+                    node = FindTreeNode("Cameras");
+                    break;
+                case "frameBuffer":
+                    node = FindTreeNode("Frame Buffers");
+                    break;
+                case "mesh":
+                    node = FindTreeNode("Meshes");
+                    break;
+                case "shader":
+                    node = FindTreeNode("Shaders");
+                    break;
+                case "light":
+                    node = FindTreeNode("Lights");
+                    break;
+                case "texture":
+                    node = FindTreeNode("Textures");
+                    break;
+                case "particle":
+                    node = FindTreeNode("Particles");
+                    break;
+                case "particleEmitter":
+                    node = FindTreeNode("Particle Emitters");
+                    break;
+                case "particleSystem":
+                    node = FindTreeNode("Particle Systems");
+                    break;
+                default:
+                    break;
+            }
+
+            if (node != null)
+            {
+                foreach (TreeNode child in node.Nodes)
+                {
+                    if (child.Text == name)
+                    {
+                        obj = child.Tag;
+                        break;
+                    }
+                }
+            }
+
+            return obj;
+        }
+
+        public object GetSelectedObject()
+        {
+            object obj = null;
+
+            string[] objdata = NativeWrapper.GetSelectedObject().Split(';');
+            if( objdata.Length > 0 )
+            {
+                string[] names = objdata[0].Split(':');                
+                if (names.Length > 0)
+                {
+                    obj = FindObject(names[0], names[1]);                    
+                }
+            }
+
+            return obj;
+        }
+
+        public void BuildWall()
+        {
+            TreeNode rpnode = FindTreeNode("Render Passes").Nodes[0];
+            RenderPassJS rp = (RenderPassJS)rpnode.Tag;
+
+            for( int y = 0; y < 8; y++ )
+            {
+                for (int x = 0; x < 8; x++)
+                {
+                    RenderObjectJS js = CreateRenderObject();
+                    js.Name = "wall_f_" + (y + 1) + "_" + (x + 1);
+                    js.Source = "walls/" + js.Name + ".xml";
+                    js.Texture = "f_" + (y + 1) + "_" + (x + 1) + ".jpg";
+                    js.Position.X = 400 - (x * 100);
+                    js.Position.Y = 300 - (y * 100);
+                    js.Position.Z = 400;
+                    js.Rotation.Y = 180;
+                    js.Mesh = "quad";
+                    js.Shader = "Shader_0";
+                    js.Scale.X = 100;
+                    js.Scale.Y = 100;
+
+                    rp.AddRenderObject(js.Name);
+                }
+            }
         }
         
     }

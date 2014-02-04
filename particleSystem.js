@@ -239,7 +239,7 @@ function ParticleSystem(scene, name, src)
 
 	if (src)
 	{
-		var xml = LoadXML(src);
+		var xml = LoadXML(scene.path + src);
 		if (xml)
 		{
 		/*

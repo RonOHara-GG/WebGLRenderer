@@ -16,7 +16,8 @@ public:
 
 
     const char* LoadScene(const char* sceneFile);
-    void SaveScene(const char* path);
+    void UpdatePath(const char* path);
+    void SaveScene();
     const char* ImportFileData(const char* fileName);
     const char* FetchData(const char* dataFetchFunction, const char* objectName, bool create);
     const char* PickObjects(float x, float y);

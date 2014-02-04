@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<shader name="Shader_0" maxDLights="0" maxPLights="0" textureCount="1">
+	<vertshader name="null" src="shaders/defaultVS.glsl"/>
+	<fragshader name="null" src="shaders/defaultFS.glsl"/>
+</shader>

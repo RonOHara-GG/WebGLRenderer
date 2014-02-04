@@ -140,7 +140,8 @@ function DrawRenderObject(gl)
 			{
 				this.textures[i].bind(gl, i);
 			}
-		}	
+		}
+
 		this.mesh.draw(gl);
 	}
 
@@ -152,7 +153,11 @@ function DrawRenderObject(gl)
 
 function ROUpdateWorldMatrix()
 {
-	mat4.fromRotationTranslation(this.worldMatrix, this.rot, this.pos);
+	mat4.identity(this.worldMatrix);
+	mat4.translate(this.worldMatrix, this.worldMatrix, this.pos);
+	mat4.rotateX(this.worldMatrix, this.worldMatrix, this.rot[0] * 0.0174532925);
+	mat4.rotateY(this.worldMatrix, this.worldMatrix, this.rot[1] * 0.0174532925);
+	mat4.rotateZ(this.worldMatrix, this.worldMatrix, this.rot[2] * 0.0174532925);
 	mat4.scale(this.worldMatrix, this.worldMatrix, this.scale);
 }
 
@@ -196,20 +201,20 @@ function RODoAssignment(scene, property, propertyValue)
 			result = true;
 			break;
 		case "pos":
-			var split = propertyValue.csvToArray();
-			this.pos = vec3.fromValues(parseFloat(split[0][0]), parseFloat(split[0][1]), parseFloat(split[0][2]));
+			var split = propertyValue.split(',');
+			this.pos = vec3.fromValues(parseFloat(split[0]), parseFloat(split[1]), parseFloat(split[2]));
 			this.updateWorldMatrix();
 			result = true;
 			break;
 		case "rot":
-			var split = propertyValue.csvToArray();
-			this.rot = quat.fromValues(parseFloat(split[0][0]), parseFloat(split[0][1]), parseFloat(split[0][2]), parseFloat(split[0][3]));
+			var split = propertyValue.split(',');
+			this.rot = vec3.fromValues(parseFloat(split[0]), parseFloat(split[1]), parseFloat(split[2]));
 			this.updateWorldMatrix();
 			result = true;
 			break;
 		case "scale":
-			var split = propertyValue.csvToArray();
-			this.scale = vec3.fromValues(parseFloat(split[0][0]), parseFloat(split[0][1]), parseFloat(split[0][2]));
+			var split = propertyValue.split(',');
+			this.scale = vec3.fromValues(parseFloat(split[0]), parseFloat(split[1]), parseFloat(split[2]));
 			this.updateWorldMatrix();
 			result = true;
 			break;
@@ -232,6 +237,20 @@ function RODoAssignment(scene, property, propertyValue)
 			{
 				this.mesh = mesh;
 				result = true;
+			}
+			break;
+		case "textures":
+			this.textures = [];
+			var texnames = propertyValue.split(",");
+			result = true;
+			for (var i = 0; i < texnames.length; i++)
+			{
+				if (texnames[i].length > 0)
+				{
+					var tex = scene.getTexture(texnames[i]);
+					if (tex)
+						this.textures.push(tex);
+				}
 			}
 			break;
 		case "shadowCamera":
@@ -258,7 +277,7 @@ function ROPositionToString()
 
 function RORotationToString()
 {
-	var str = this.rot[0] + "," + this.rot[1] + "," + this.rot[2] + "," + this.rot[3];
+	var str = this.rot[0] + "," + this.rot[1] + "," + this.rot[2];
 	return str;
 }
 
@@ -436,7 +455,7 @@ function RenderObject(scene, name, src)
 	this.mesh = null;
 	this.shader = null;
 	this.pos = vec3.create();
-	this.rot = quat.create();
+	this.rot = vec3.create();
 	this.scale = vec3.fromValues(1,1,1);
 	this.worldMatrix = mat4.create();
 	this.updateFunctionName = null;
@@ -447,96 +466,97 @@ function RenderObject(scene, name, src)
 
 	this.selected = false;
 
-	roXML = LoadXML(src);
-	if( roXML )
+	if (src)
 	{
-
-		for (var i = 0; i < roXML.documentElement.attributes.length; i++)
+		roXML = LoadXML(scene.path + src);
+		if (roXML)
 		{
-			var attrib = roXML.documentElement.attributes[i];
-			switch (attrib.name)
+
+			for (var i = 0; i < roXML.documentElement.attributes.length; i++)
 			{
-				case "pos":
-					var pos = attrib.value;
-					var values = pos.csvToArray();
-					this.pos = vec3.fromValues(values[0][0], values[0][1], values[0][2]);
-					break;
-				case "rot":
-					var rot = attrib.value;
-					var values = rot.csvToArray();
-					this.rot = quat.fromValues(values[0][0], values[0][1], values[0][2], values[0][3]);
-					break;
-				case "scale":
-					var values = attrib.value.csvToArray();
-					this.scale = vec3.fromValues(values[0][0], values[0][1], values[0][2]);
-					break;
-				case "update":
-					this.updateFunctionName = attrib.value;
-					this.updateCallback = window[this.updateFunctionName];
-					break;
-				default:
-					break;
+				var attrib = roXML.documentElement.attributes[i];
+				switch (attrib.name)
+				{
+					case "pos":
+						var values = attrib.value.split(",");
+						this.pos = vec3.fromValues(values[0], values[1], values[2]);
+						break;
+					case "rot":
+						var values = attrib.value.split(",");
+						this.rot = vec3.fromValues(values[0], values[1], values[2]);
+						break;
+					case "scale":
+						var values = attrib.value.split(",");
+						this.scale = vec3.fromValues(values[0], values[1], values[2]);
+						break;
+					case "update":
+						this.updateFunctionName = attrib.value;
+						this.updateCallback = window[this.updateFunctionName];
+						break;
+					default:
+						break;
+				}
 			}
-		}
 
-		var children = roXML.documentElement.childNodes;
-		for( var i = 0; i < children.length; i++ )
-		{
-			if( children[i].nodeType == 1 )
+			var children = roXML.documentElement.childNodes;
+			for (var i = 0; i < children.length; i++)
 			{
-				var nodeName = children[i].attributes.getNamedItem("name").value;
-				var nodeSrc = children[i].attributes.getNamedItem("src").value;
-				if (children[i].nodeName == "mesh")
+				if (children[i].nodeType == 1)
 				{
-					this.mesh = scene.getMesh(nodeName, nodeSrc);
-				}
-				else if (children[i].nodeName == "shader")
-				{
-					this.shader = scene.getShader(nodeName, nodeSrc);
-				}
-				else if (children[i].nodeName == "texture")
-				{
-					var tex = null;
-					if (nodeSrc == "frameBuffer")
+					var nodeName = children[i].attributes.getNamedItem("name").value;
+					var nodeSrc = children[i].attributes.getNamedItem("src").value;
+					if (children[i].nodeName == "mesh")
 					{
-						var depthTexture = false;
-						var dtAttr = children[i].attributes.getNamedItem("depthTexture");
-						if (dtAttr)
-							depthTexture = (dtAttr.value === "true");
-
-						var fb = scene.getFrameBuffer(nodeName, null);
-						if (fb)
+						this.mesh = scene.getMesh(nodeName, nodeSrc);
+					}
+					else if (children[i].nodeName == "shader")
+					{
+						this.shader = scene.getShader(nodeName, nodeSrc);
+					}
+					else if (children[i].nodeName == "texture")
+					{
+						var tex = null;
+						if (nodeSrc == "frameBuffer")
 						{
-							if (depthTexture)
-								tex = fb.depthTexture;
-							else
-								tex = fb.colorTexture;
+							var depthTexture = false;
+							var dtAttr = children[i].attributes.getNamedItem("depthTexture");
+							if (dtAttr)
+								depthTexture = (dtAttr.value === "true");
+
+							var fb = scene.getFrameBuffer(nodeName, null);
+							if (fb)
+							{
+								if (depthTexture)
+									tex = fb.depthTexture;
+								else
+									tex = fb.colorTexture;
+							}
+						}
+						else
+						{
+							// Normal texture
+							tex = scene.getTexture(nodeName, nodeSrc);
+						}
+
+						if (tex)
+						{
+							var texIndex = 0;
+							var index = children[i].attributes.getNamedItem("texIndex");
+							if (index)
+								texIndex = parseInt(index.value);
+
+							this.textures[texIndex] = tex;
 						}
 					}
-					else
+					else if (children[i].nodeName == "shadowCamera")
 					{
-						// Normal texture
-						tex = scene.getTexture(nodeName, nodeSrc);
+						this.shadowCamera = scene.getCamera(nodeName, nodeSrc);
 					}
-
-					if (tex)
+					else if (children[i].nodeName == "particleSystem")
 					{
-						var texIndex = 0;
-						var index = children[i].attributes.getNamedItem("texIndex");
-						if (index)
-							texIndex = parseInt(index.value);
-
-						this.textures[texIndex] = tex;
+						var ps = scene.getParticleSystem(nodeName, nodeSrc);
+						this.particleSystems.push(ps);
 					}
-				}
-				else if (children[i].nodeName == "shadowCamera")
-				{
-					this.shadowCamera = scene.getCamera(nodeName, nodeSrc);
-				}
-				else if (children[i].nodeName == "particleSystem")
-				{
-					var ps = scene.getParticleSystem(nodeName, nodeSrc);
-					this.particleSystems.push(ps);
 				}
 			}
 		}

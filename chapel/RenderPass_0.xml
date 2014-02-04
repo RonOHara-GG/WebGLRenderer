@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<renderPass name="RenderPass_0" sortMode="none" clearMode="color_depth_stencil" clearColor="119,136,153" clearDepth="1" clearStencil="0" debugDraw="false">
+	<viewport name="Viewport_0" src="Viewport_0.xml"/>
+	<camera name="Camera_0" src="Camera_0.xml"/>
+</renderPass>

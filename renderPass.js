@@ -208,62 +208,65 @@ function RenderPass(scene, name, src)
 	this.doObjectAssignment = RenderPassDoAssignment;
 
 	// Load the source
-	rpXML = LoadXML(src);
-	if (rpXML)
+	if (src)
 	{
-		// Get the attribute properties
-		for( var i = 0; i < rpXML.documentElement.attributes.length; i++ )
+		rpXML = LoadXML(scene.path + src);
+		if (rpXML)
 		{
-			var attrib = rpXML.documentElement.attributes[i];
-			switch( attrib.name )
+			// Get the attribute properties
+			for (var i = 0; i < rpXML.documentElement.attributes.length; i++)
 			{
-				case "sortMode":
-					this.sortMode = attrib.value;
-					break;
-				case "clearMode":
-					this.clearMode = attrib.value;
-					this.parseClearMode();
-					break;
-				case "clearDepth":
-					this.clearDepthVal = attrib.value;
-					break;
-				case "clearStencil":
-					this.clearStencilVal = attrib.value;
-					break;
-				case "clearColor":
-					this.clearColorValue = attrib.value;
-					this.parseClearColor();
-					break;
-				case "debugDraw":
-					this.debugDraw = (attrib.value == "true");
-					break;
-				default:
-					break;
+				var attrib = rpXML.documentElement.attributes[i];
+				switch (attrib.name)
+				{
+					case "sortMode":
+						this.sortMode = attrib.value;
+						break;
+					case "clearMode":
+						this.clearMode = attrib.value;
+						this.parseClearMode();
+						break;
+					case "clearDepth":
+						this.clearDepthVal = attrib.value;
+						break;
+					case "clearStencil":
+						this.clearStencilVal = attrib.value;
+						break;
+					case "clearColor":
+						this.clearColorValue = attrib.value;
+						this.parseClearColor();
+						break;
+					case "debugDraw":
+						this.debugDraw = (attrib.value == "true");
+						break;
+					default:
+						break;
+				}
 			}
-		}
 
-		childElements = rpXML.documentElement.childNodes;
-		for (var i = 0; i < childElements.length; i++)
-		{
-			if (childElements[i].nodeType == 1)
+			childElements = rpXML.documentElement.childNodes;
+			for (var i = 0; i < childElements.length; i++)
 			{
-				objName = childElements[i].attributes.getNamedItem("name").value;
-				objSrc = childElements[i].attributes.getNamedItem("src").value;
-				if (childElements[i].nodeName == "viewport")
+				if (childElements[i].nodeType == 1)
 				{
-					this.viewport = scene.getViewport(objName, objSrc);
-				}
-				else if (childElements[i].nodeName == "camera")
-				{
-					this.camera = scene.getCamera(objName, objSrc);
-				}
-				else if (childElements[i].nodeName == "frameBuffer")
-				{
-					this.frameBuffer = scene.getFrameBuffer(objName, objSrc);
-				}
-				else if (childElements[i].nodeName == "overrideShader")
-				{
-					this.overrideShader = scene.getShader(objName, objSrc);
+					objName = childElements[i].attributes.getNamedItem("name").value;
+					objSrc = childElements[i].attributes.getNamedItem("src").value;
+					if (childElements[i].nodeName == "viewport")
+					{
+						this.viewport = scene.getViewport(objName, objSrc);
+					}
+					else if (childElements[i].nodeName == "camera")
+					{
+						this.camera = scene.getCamera(objName, objSrc);
+					}
+					else if (childElements[i].nodeName == "frameBuffer")
+					{
+						this.frameBuffer = scene.getFrameBuffer(objName, objSrc);
+					}
+					else if (childElements[i].nodeName == "overrideShader")
+					{
+						this.overrideShader = scene.getShader(objName, objSrc);
+					}
 				}
 			}
 		}

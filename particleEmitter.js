@@ -305,7 +305,7 @@ function ParticleEmitter(scene, name, src)
 
 	if (src)
 	{
-		var xml = LoadXML(src);
+		var xml = LoadXML(scene.path + src);
 		if (xml)
 		{
 			for (var i = 0; i < xml.documentElement.attributes.length; i++)

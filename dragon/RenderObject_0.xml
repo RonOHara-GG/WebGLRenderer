@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <renderobject name="RenderObject_0" pos="0,0,0" rot="0,0,0,1" scale="1,1,1" update="UpdatePyramid">
-	<mesh name="default" src="./dragon/default.xml"/>
-	<shader name="DefaultShader" src="./dragon/DefaultShader.xml"/>
+	<mesh name="default" src="default.xml"/>
+	<shader name="DefaultShader" src="DefaultShader.xml"/>
 </renderobject>

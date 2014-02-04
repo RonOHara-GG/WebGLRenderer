@@ -63,28 +63,32 @@ function MeshToString()
 	return str;
 }
 
-function Mesh(scene, name, src)
+function MeshDoAssignment(scene, property, propertyValue)
 {
-	//this.scene = scene;
-	this.name = name;
-	this.src = src;
+	var result = true;
 
-	this.draw = DrawMesh;
-	this.toString = MeshToString;
-	this.save = SaveMesh;
+	switch (property)
+	{
+		case "name":
+			this.name = propertyValue;
+			break;
+		case "src":
+			this.src = propertyValue;
+			this.loadMesh(scene.path + this.src, scene.gl);
+			break;
+		default:
+			console.log("Mesh::doObjectAssignment - unsupported property: " + property);
+			result = false;
+			break;
+	}
 
-	this.vb = null;
-	this.ib = null;
-	this.triangleCount = 0;
-	this.vertexStride = 0;
-	this.boxMin = vec3.create();
-	this.boxMax = vec3.create();
+	return result;
+}
 
-	if (EditorName)
-		this.fullPath = GetFullPath(src);
-
+function MeshLoadFromSource(src, gl)
+{
 	meshXML = LoadXML(src);
-	if( meshXML )
+	if (meshXML)
 	{
 		this.triangleCount = parseInt(meshXML.documentElement.attributes.getNamedItem("triangleCount").value);
 
@@ -199,21 +203,47 @@ function Mesh(scene, name, src)
 						}
 					}
 
-					this.vb = scene.gl.createBuffer();
-					scene.gl.bindBuffer(scene.gl.ARRAY_BUFFER, this.vb);
-					scene.gl.bufferData(scene.gl.ARRAY_BUFFER, new Float32Array(interleaved), scene.gl.STATIC_DRAW);
+					this.vb = gl.createBuffer();
+					gl.bindBuffer(gl.ARRAY_BUFFER, this.vb);
+					gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(interleaved), gl.STATIC_DRAW);
 				}
 				else if (meshChildren[i].nodeName == "indices")
 				{
 					var vals = meshChildren[i].textContent.csvToArray();
 
-					this.ib = scene.gl.createBuffer();
-					scene.gl.bindBuffer(scene.gl.ELEMENT_ARRAY_BUFFER, this.ib);
-					scene.gl.bufferData(scene.gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vals[0]), scene.gl.STATIC_DRAW);
+					this.ib = gl.createBuffer();
+					gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.ib);
+					gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(vals[0]), gl.STATIC_DRAW);
 				}
 			}
 		}
 	}
+}
+
+function Mesh(scene, name, src)
+{
+	//this.scene = scene;
+	this.name = name;
+	this.src = src;
+
+	this.draw = DrawMesh;
+	this.toString = MeshToString;
+	this.save = SaveMesh;
+	this.doObjectAssignment = MeshDoAssignment;
+	this.loadMesh = MeshLoadFromSource;
+
+	this.vb = null;
+	this.ib = null;
+	this.triangleCount = 0;
+	this.vertexStride = 0;
+	this.boxMin = vec3.create();
+	this.boxMax = vec3.create();
+
+	if (EditorName)
+		this.fullPath = GetFullPath(src);
+
+	if( src )
+		this.loadMesh(scene.path + src, scene.gl);	
 }
 
 function SaveMesh(path)
@@ -221,7 +251,7 @@ function SaveMesh(path)
 	if (EditorName)
 	{
 		// Load the original mesh file and save it in the new directory
-		var file = LoadFile(this.fullPath);
-		SaveFile(path + this.src, file);
+		//var file = LoadFile(this.fullPath);
+		//SaveFile(path + this.src, file);
 	}
 }

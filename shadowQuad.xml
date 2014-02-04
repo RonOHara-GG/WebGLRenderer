@@ -5,5 +5,6 @@
   <mesh name="sprite" src="./sprite.xml"></mesh>
   <!--<texture name="ShadowMap" src="frameBuffer" depthTexture="true" texIndex="0"/>-->
   <!--<texture name="Video" src="video;./Open.mp4" texIndex="0"/>-->
-  <texture name="Video" src="youtube;cTl3U6aSd2w" texIndex="0"/>
+  <!--<texture name="Video" src="youtube;cTl3U6aSd2w" texIndex="0"/>-->
+  <texture name="Video" src="video;http://videos-cdn.mozilla.net/uploads/mozhacks/demos/resources/immersivevideo/dubai.r.webm" texIndex="0"/>
 </renderobject>

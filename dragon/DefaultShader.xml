@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 
 <shader name="DefaultShader" maxDLights="1" maxPLights="1" textureCount="0">
-	<vertshader name="null" src="./dragon/shaders/defaultVS.glsl"/>
-	<fragshader name="null" src="./dragon/shaders/defaultFS.glsl"/>
+	<vertshader name="null" src="shaders/defaultVS.glsl"/>
+	<fragshader name="null" src="shaders/defaultFS.glsl"/>
 </shader>

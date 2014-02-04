@@ -83,14 +83,17 @@ function FrameBuffer(scene, name, src)
 	this.depthTexture = null;
 	this.frameBuffer = null;
 
-	fbXML = LoadXML(src);
-	if (fbXML)
+	if (src)
 	{
-		this.width = parseInt(fbXML.documentElement.attributes.getNamedItem("width").value);
-		this.height = parseInt(fbXML.documentElement.attributes.getNamedItem("height").value);
-		this.colorFormat = fbXML.documentElement.attributes.getNamedItem("colorFormat").value;
+		fbXML = LoadXML(scene.path + src);
+		if (fbXML)
+		{
+			this.width = parseInt(fbXML.documentElement.attributes.getNamedItem("width").value);
+			this.height = parseInt(fbXML.documentElement.attributes.getNamedItem("height").value);
+			this.colorFormat = fbXML.documentElement.attributes.getNamedItem("colorFormat").value;
 
-		this.build(scene);
+			this.build(scene);
+		}
 	}
 }
 

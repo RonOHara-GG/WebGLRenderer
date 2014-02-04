@@ -14,11 +14,14 @@ function RenderTarget(scene, name, src)
 	this.height = 0;
 	this.format = "RGBA32";
 
-	rtXML = LoadXML(src);
-	if (rtXML)
+	if (src)
 	{
-		this.width = parseInt(rtXML.documentElement.attributes.getNamedItem("width").value);
-		this.height = parseInt(rtXML.documentElement.attributes.getNamedItem("height").value);
-		this.format = rtXML.documentElement.attributes.getNamedItem("format").value;
+		rtXML = LoadXML(scene.path + src);
+		if (rtXML)
+		{
+			this.width = parseInt(rtXML.documentElement.attributes.getNamedItem("width").value);
+			this.height = parseInt(rtXML.documentElement.attributes.getNamedItem("height").value);
+			this.format = rtXML.documentElement.attributes.getNamedItem("format").value;
+		}
 	}
 }

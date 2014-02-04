@@ -51,6 +51,35 @@ function BindTexture(gl, texIndex)
 	gl.bindTexture(gl.TEXTURE_2D, this.glTexture);
 }
 
+function TexLoadFromSource(scene)
+{
+	if (this.src && this.src != "frameBuffer")
+	{
+		var pieces = this.src.split(";");
+		var srcIndex = 0;
+		if (pieces.length > 1)
+		{
+			this.type = pieces[0];
+			srcIndex++;
+		}
+
+		var srcUrl = scene.path + pieces[srcIndex];
+		if (this.type == "youtube")
+		{
+			srcUrl = getYoutubeURL(srcUrl);
+		}
+
+		console.log("Loading " + srcUrl + "(" + this.type + ")");
+		var name = this.name;
+		this.image = LoadImage(srcUrl, function () { TextureLoaded(TheScene.getTexture(name, null)); }, this.type);
+
+		if (this.type == "video" || this.type == "youtube")
+		{
+			this.initVideo(scene.gl);
+		}
+	}
+}
+
 function Texture(scene, name, src)
 {
 	this.scene = scene;
@@ -64,6 +93,7 @@ function Texture(scene, name, src)
 	this.doObjectAssignment = TextureDoAssignment;
 	this.initVideo = TexInitVideo;
 	this.update = TexUpdate;
+	this.loadSource = TexLoadFromSource;
 
 	this.width = 0;
 	this.height = 0;
@@ -75,30 +105,7 @@ function Texture(scene, name, src)
 	this.glTexture = null;
 	this.type = "image";
 
-	if (src && src != "frameBuffer")
-	{
-		var pieces = src.split(";");
-		var srcIndex = 0;
-		if (pieces.length > 1)
-		{
-			this.type = pieces[0];
-			srcIndex++;
-		}
-
-		var srcUrl = pieces[srcIndex];
-		if (this.type == "youtube")
-		{
-			srcUrl = getYoutubeURL(srcUrl);
-		}
-
-		console.log("Loading " + srcUrl + "(" + this.type + ")");
-		this.image = LoadImage(srcUrl, function () { TextureLoaded(TheScene.getTexture(name, null)); }, this.type);
-
-		if (this.type == "video" || this.type == "youtube")
-		{
-			this.initVideo(scene.gl);
-		}
-	}
+	this.loadSource(scene);
 }
 
 function TextureDoAssignment(scene, property, propertyValue)
@@ -112,6 +119,7 @@ function TextureDoAssignment(scene, property, propertyValue)
 			break;
 		case "src":
 			this.src = propertyValue;
+			this.loadSource(scene);
 			break;
 		default:
 			console.log("Texture::doObjectAssignment - unsupported property: " + property);
@@ -124,7 +132,7 @@ function TextureDoAssignment(scene, property, propertyValue)
 
 function TextureToString()
 {
-	var str = this.name + ";";
+	var str = "texture:" + this.name + ";";
 	str += this.src + ";";
 
 	return str;

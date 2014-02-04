@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<renderobject name="wall_u_3_7" pos="-200,400,-100" rot="90,0,180" scale="100,100,1">
+	<mesh name="quad" src="meshes/quad.xml"/>
+	<shader name="Shader_0" src="Shader_0.xml"/>
+	<texture name="u_3_7.jpg" src="images/sis/u_3_7.jpg" texIndex="0"/>
+</renderobject>

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<camera name="Camera_0" ortho="false" fov="45" near="1" far="10000" static="false" left="0" right="0" top="0" bottom="0" identityView="false" shadowDistance="100" update="ChapelCameraUpdate">
+	<position x="0" y="0" z="0"/>
+	<lookAt x="0" y="0" z="1"/>
+	<up x="0" y="1" z="0"/>
+</camera>

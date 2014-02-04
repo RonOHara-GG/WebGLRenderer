@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<mesh name="quad" triangleCount="2">
+  <verts count="4" format="P3N3T2">
+    <positions>
+      <v3>0, 0, 0.0</v3>
+      <v3>1, 0, 0.0</v3>
+      <v3>1, 1, 0.0</v3>
+      <v3>0, 1, 0.0</v3>
+    </positions>
+    <normals>
+      <v3>0, 0, 1.0</v3>
+      <v3>0, 0, 1.0</v3>
+      <v3>0, 0, 1.0</v3>
+      <v3>0, 0, 1.0</v3>
+    </normals>
+    <texcoords>
+      <v2>0, 0</v2>
+      <v2>1, 0</v2>
+      <v2>1, 1</v2>
+      <v2>0, 1</v2>
+    </texcoords>
+  </verts>
+  <indices>0,1,2,0,2,3</indices>
+</mesh>

@@ -96,7 +96,7 @@ function webGLCanvasSetup()
 	webGLStart();
 	//setupScene("./dragon/scene.xml", null);
 	//setupScene("./scene.xml", null);
-	setupScene("./demo/scene.xml", null);
+	//setupScene("./demo/scene.xml", null);
 	
 }
 
